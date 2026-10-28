@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sistema de Gestão Teatral & Financeiro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #f8fafc; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col overflow-hidden text-slate-900">
+
+    <!-- CONTAINER DE NOTIFICAÇÕES (TOASTS) -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 md:px-0"></div>
+
+    <!-- ==========================================
+         TELA DE LOGIN E CADASTRO
+    =========================================== -->
+    <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="bg-indigo-600 p-6 text-white text-center">
+                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="drama" class="w-7 h-7"></i>
+                </div>
+                <h1 class="text-xl font-bold">Gestão de Equipe & Teatro</h1>
+                <p class="text-xs text-indigo-100 mt-1">Elenco, Peças, Faltas e Controle Financeiro</p>
+            </div>
+
+            <!-- Abas Login / Cadastro -->
+            <div class="flex border-b border-slate-200">
+                <button onclick="toggleAuthMode('login')" id="tab-auth-login" class="flex-1 py-3 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600">Entrar</button>
+                <button onclick="toggleAuthMode('register')" id="tab-auth-register" class="flex-1 py-3 text-sm font-semibold text-slate-500 hover:text-slate-800">Criar Conta (User)</button>
+            </div>
+
+            <!-- Formulário de Login -->
+            <form id="login-form" onsubmit="handleLogin(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Usuário / Login</label>
+                    <input type="text" id="login-user" required placeholder="Ex: admin" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Senha</label>
+                    <input type="password" id="login-pass" required placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-sm shadow-md transition">Acessar Sistema</button>
+            </form>
+
+            <!-- Formulário de Cadastro Novo -->
+            <form id="register-form" onsubmit="handleRegister(event)" class="p-6 space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nome Completo</label>
+                    <input type="text" id="reg-name" required placeholder="Seu nome" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Usuário para Login</label>
+                    <input type="text" id="reg-user" required placeholder="Escolha um login" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Senha</label>
+                    <input type="password" id="reg-pass" required placeholder="Crie uma senha" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                    Novos cadastros entram automaticamente como <strong>Usuário (Visualizador)</strong>. Apenas o Master pode editar valores.
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl text-sm shadow-md transition">Cadastrar e Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         SISTEMA PRINCIPAL (TELA CHEIA)
+    =========================================== -->
+    <div id="app-screen" class="w-full h-full flex overflow-hidden hidden">
+        
+        <!-- Overlay Mobile -->
+        <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+
+        <!-- SIDEBAR / MENU LATERAL -->
+        <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-100 flex flex-col justify-between transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out h-full shrink-0">
+            <div>
+                <!-- Logo Header -->
+                <div class="p-5 flex items-center justify-between border-b border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-indigo-600 p-2 rounded-xl text-white">
+                            <i data-lucide="drama" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-base tracking-tight block leading-none">EncenaPro</span>
+                            <span id="role-badge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 mt-1 inline-block">MASTER</span>
+                        </div>
+                    </div>
+                    <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Navegação -->
+                <nav class="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)] no-scrollbar">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        <span>Dashboard Geral</span>
+                    </button>
+                    <button onclick="switchTab('membros')" id="nav-membros" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>Membros & Taxas</span>
+                    </button>
+                    <button onclick="switchTab('pecas')" id="nav-pecas" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="clapperboard" class="w-4 h-4"></i>
+                        <span>Peças & Personagens</span>
+                    </button>
+                    <button onclick="switchTab('escalacao')" id="nav-escalacao" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                        <span>Quem Interpreta</span>
+                    </button>
+                    <button onclick="switchTab('faltas')" id="nav-faltas" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                        <span>Controle de Faltas</span>
+                    </button>
+                    <button onclick="switchTab('financeiro')" id="nav-financeiro" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="dollar-sign" class="w-4 h-4"></i>
+                        <span>Financeiro</span>
+                    </button>
+                    <button onclick="switchTab('ranking')" id="nav-ranking" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="trophy" class="w-4 h-4"></i>
+                        <span>Ranking de Frequência</span>
+                    </button>
+                    <!-- Exclusivo Master -->
+                    <button onclick="switchTab('usuarios')" id="nav-usuarios" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hidden">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                        <span>Usuários (Master)</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Rodapé Usuário Logado -->
+            <div class="p-3 border-t border-slate-800 bg-slate-950/50">
+                <div class="flex items-center justify-between px-2 py-1.5">
+                    <div class="truncate pr-2">
+                        <p id="current-user-name" class="text-xs font-semibold text-white truncate">Administrador</p>
+                        <p id="current-user-login" class="text-[11px] text-slate-400 truncate">@admin</p>
+                    </div>
+                    <button onclick="handleLogout()" title="Sair" class="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ÁREA DE CONTEÚDO PRINCIPAL -->
+        <div class="flex-1 flex flex-col h-full w-full overflow-hidden">
+            
+            <!-- HEADER TOPO -->
+            <header class="bg-white border-b border-slate-200 px-4 md:px-6 py-3.5 flex items-center justify-between shrink-0">
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleSidebar()" class="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <h2 id="page-title" class="text-lg md:text-xl font-bold text-slate-800 truncate">Dashboard Geral</h2>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="view-only-notice" class="hidden text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium">
+                        Modo Leitura (Usuário)
+                    </span>
+                </div>
+            </header>
+
+            <!-- CONTEÚDO ROLÁVEL (OCUPA 100% DO ESPAÇO RESTANTE) -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 w-full space-y-6">
+
+                <!-- ==========================================
+                     ABA 1: DASHBOARD GERAL
+                =========================================== -->
+                <section id="tab-dashboard" class="space-y-6">
+                    <!-- Resumo Geral e Financeiro -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                            <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
+                                <span>Total Arrecadado</span>
+                                <i data-lucide="trending-up" class="w-5 h-5 text-emerald-600"></i>
+                            </div>
+                            <p id="dash-arrecadado" class="text-2xl font-bold text-emerald-600 mt-2">R$ 0,00</p>
+                            <p class="text-xs text-slate-400 mt-1">Soma das taxas pagas</p>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                            <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
+                                <span>Total Usado (Gastos)</span>
+                                <i data-lucide="trending-down" class="w-5 h-5 text-rose-600"></i>
+                            </div>
+                            <p id="dash-usado" class="text-2xl font-bold text-rose-600 mt-2">R$ 0,00</p>
+                            <p class="text-xs text-slate-400 mt-1">Despesas registradas</p>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                            <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
+                                <span>Falta para a Meta</span>
+                                <i data-lucide="target" class="w-5 h-5 text-amber-600"></i>
+                            </div>
+                            <p id="dash-falta" class="text-2xl font-bold text-amber-600 mt-2">R$ 0,00</p>
+                            <p id="dash-meta-desc" class="text-xs text-slate-400 mt-1">Meta esperada: R$ 0,00</p>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                            <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
+                                <span>Equipe & Peças</span>
+                                <i data-lucide="users" class="w-5 h-5 text-indigo-600"></i>
+                            </div>
+                            <p id="dash-membros-count" class="text-2xl font-bold text-slate-800 mt-2">0 Membros</p>
+                            <p id="dash-pecas-count" class="text-xs text-slate-400 mt-1">0 Peças / 0 Ensaios</p>
+                        </div>
+                    </div>
+
+                    <!-- Atalhos Rápidos -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <i data-lucide="drama" class="w-4 h-4 text-indigo-600"></i>
+                                <span>Elenco Escalado Recentemente</span>
+                            </h3>
+                            <div id="dash-casting-preview" class="space-y-2 text-sm"></div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-4 h-4 text-indigo-600"></i>
+                                <span>Últimos Ensaios / Reuniões</span>
+                            </h3>
+                            <div id="dash-meetings-preview" class="space-y-2 text-sm"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================
+                     ABA 2: MEMBROS & TAXAS
+                =========================================== -->
+                <section id="tab-membros" class="space-y-6 hidden">
+                    <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800">Membros da Equipe & Taxas</h3>
+                                <p class="text-xs text-slate-500">Cada membro possui Tx. do Encontro (R$ 60,00) + Tx. da Equipe (R$ 60,00) = Total R$ 120,00</p>
+                            </div>
+                            <button onclick="openMemberModal()" class="master-only bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shrink-0">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                <span>Adicionar Membro</span>
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto -mx-4 md:mx-0">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
+                                <thead>
+                                    <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
+                                        <th class="py-3 px-4">Membro / Função</th>
+                                        <th class="py-3 px-4">Tx. Encontro (R$ 60)</th>
+                                        <th class="py-3 px-4">Tx. Equipe (R$ 60)</th>
+                                        <th class="py-3 px-4">Total Pago</th>
+                                        <th class="py-3 px-4">Status Financeiro</th>
+                                        <th class="py-3 px-4 text-right master-only">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="members-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================
+                     ABA 3: PEÇAS & PERSONAGENS
+                =========================================== -->
+                <section id="tab-pecas" class="space-y-6 hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Coluna 1: Cadastrar Peça e Personagem -->
+                        <div class="space-y-6 master-only">
+                            <!-- Nova Peça -->
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                                <h3 class="font-bold text-slate-800 text-base mb-4">1. Cadastrar Nova Peça</h3>
+                                <form onsubmit="savePlay(event)" class="space-y-3">
+                                    <input type="hidden" id="play-id">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nome da Peça</label>
+                                        <input type="text" id="play-title" required placeholder="Ex: O Auto da Compadecida" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição / Observação</label>
+                                        <input type="text" id="play-desc" placeholder="Ex: Apresentação de Domingo" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button type="submit" id="btn-save-play" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-semibold">Salvar Peça</button>
+                                        <button type="button" onclick="resetPlayForm()" id="btn-cancel-play" class="hidden px-3 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs">Cancelar</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Novo Personagem -->
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                                <h3 class="font-bold text-slate-800 text-base mb-4">2. Incluir Personagem na Peça</h3>
+                                <form onsubmit="saveCharacter(event)" class="space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Selecione a Peça</label>
+                                        <select id="char-play-select" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm"></select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Personagem</label>
+                                        <input type="text" id="char-name" required placeholder="Ex: João Grilo" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                                        <p class="text-[11px] text-slate-400 mt-1">O sistema verifica duplicados ignorando acentos e maiúsculas.</p>
+                                    </div>
+                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold">Adicionar Personagem</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Coluna 2 e 3: Listagem de Peças e Seus Personagens -->
+                        <div class="lg:col-span-2 space-y-4">
+                            <h3 class="font-bold text-slate-800 text-base">Peças e Personagens Cadastrados</h3>
+                            <div id="plays-list-container" class="space-y-4"></div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- ==========================================
+                     ABA 4: ESCALAÇÃO (QUEM VAI INTERPRETAR)
+                =========================================== -->
+                <section id="tab-escalacao" class="space-y-6 hidden">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-800 mb-1">Distribuição de Papéis Separados por Peça</h3>
+                        <p class="text-xs text-slate-500 mb-6">Defina quem vai interpretar cada personagem. Personagens já alocados mostram o status em verde.</p>
+                        <div id="casting-by-play-container" class="space-y-6"></div>
+                    </div>
+                </section>
+
+                <!-- ==========================================
+                     ABA 5: CONTROLE DE FALTAS (ENSAIOS / REUNIÕES)
+                =========================================== -->
+                <section id="tab-faltas" class="space-y-6 hidden">
+                    <!-- Barra de Legenda e Criação -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div class="space-y-2">
+                            <h3 class="text-lg font-bold text-slate-800">Reuniões & Ensaios</h3>
+                            <div class="flex flex-wrap gap-2 text-xs">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-semibold">P = Presença</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-semibold">FJ = Falta Justificada</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 font-semibold">FSJ = Falta Sem Justificativa</span>
+                            </div>
+                        </div>
+
+                        <form onsubmit="createMeeting(event)" class="master-only flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="meeting-title" required placeholder="Título (Ex: Ensaio Geral)" class="px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                            <input type="date" id="meeting-date" required class="px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shrink-0 flex items-center justify-center gap-1.5">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                <span>Criar Reunião</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Grid de Cards de Reuniões -->
+                    <div id="meetings-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </section>
+
+                <!-- ==========================================
+                     ABA 6: FINANCEIRO COMPLETO
+                =========================================== -->
+                <section id="tab-ranking" class="space-y-6 hidden">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800">Ranking de Frequência</h3>
+                                <p class="text-xs text-slate-500">Ordenado pelo % de presença (P ÷ ensaios com registro).</p>
+                            </div>
+                            <label class="flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" id="rank-show-ex" onchange="renderAll()"> Mostrar ex-integrantes</label>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[560px]">
+                                <thead>
+                                    <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
+                                        <th class="py-3 px-3">#</th>
+                                        <th class="py-3 px-3">Membro</th>
+                                        <th class="py-3 px-3">P</th>
+                                        <th class="py-3 px-3">FJ</th>
+                                        <th class="py-3 px-3">FSJ</th>
+                                        <th class="py-3 px-3">% Presença</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ranking-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tab-financeiro" class="space-y-6 hidden">
+                    <!-- Cards Financeiros -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-xs">
+                            <span class="text-xs uppercase font-bold opacity-80">Total Arrecadado</span>
+                            <h4 id="fin-arrecadado" class="text-2xl font-extrabold mt-2">R$ 0,00</h4>
+                            <p class="text-[11px] opacity-80 mt-1">Recebido dos membros</p>
+                        </div>
+                        <div class="bg-rose-600 text-white p-5 rounded-2xl shadow-xs">
+                            <span class="text-xs uppercase font-bold opacity-80">Total Usado (Despesas)</span>
+                            <h4 id="fin-usado" class="text-2xl font-extrabold mt-2">R$ 0,00</h4>
+                            <p class="text-[11px] opacity-80 mt-1">Gastos da equipe</p>
+                        </div>
+                        <div class="bg-indigo-600 text-white p-5 rounded-2xl shadow-xs">
+                            <span class="text-xs uppercase font-bold opacity-80">Saldo Disponível</span>
+                            <h4 id="fin-saldo" class="text-2xl font-extrabold mt-2">R$ 0,00</h4>
+                            <p class="text-[11px] opacity-80 mt-1">Arrecadado - Usado</p>
+                        </div>
+                        <div class="bg-amber-500 text-white p-5 rounded-2xl shadow-xs">
+                            <span class="text-xs uppercase font-bold opacity-80">Falta Arrecadar</span>
+                            <h4 id="fin-falta" class="text-2xl font-extrabold mt-2">R$ 0,00</h4>
+                            <p id="fin-esperado" class="text-[11px] opacity-90 mt-1">De R$ 0,00 esperados</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Pagamentos por Membro -->
+                        <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-4">Controle de Pagamentos por Membro (Meta: R$ 120,00/membro)</h3>
+                            <div class="overflow-x-auto -mx-4 md:mx-0">
+                                <table class="w-full text-left border-collapse min-w-[600px]">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
+                                            <th class="py-3 px-3">Membro</th>
+                                            <th class="py-3 px-3">Tx. Encontro (R$ 60)</th>
+                                            <th class="py-3 px-3">Tx. Equipe (R$ 60)</th>
+                                            <th class="py-3 px-3">Falta Pagar</th>
+                                            <th class="py-3 px-3">Status</th>
+                                            <th class="py-3 px-3 text-right master-only">Editar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="fin-members-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Registro de Gastos / Valores Usados -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
+                            <h3 class="font-bold text-slate-800">Despesas / Valores Usados</h3>
+                            <form onsubmit="addExpense(event)" class="master-only space-y-3 pb-4 border-b border-slate-100">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição do Gasto</label>
+                                    <input type="text" id="exp-desc" required placeholder="Ex: Figurino, Maquiagem, Lanche" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Usado (R$)</label>
+                                    <input type="number" step="0.01" min="0.01" id="exp-val" required placeholder="0.00" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                                </div>
+                                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-xl text-xs font-semibold">Registrar Gasto</button>
+                            </form>
+                            <div id="expenses-list" class="space-y-2 max-h-80 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================
+                     ABA 7: GERENCIAR USUÁRIOS (EXCLUSIVO MASTER)
+                =========================================== -->
+                <section id="tab-usuarios" class="space-y-6 hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Criar Novo Usuário -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-4">Cadastrar Usuário</h3>
+                            <form onsubmit="masterCreateUser(event)" class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nome</label>
+                                    <input type="text" id="mu-name" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Login</label>
+                                    <input type="text" id="mu-user" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Senha</label>
+                                    <input type="text" id="mu-pass" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Permissão</label>
+                                    <select id="mu-role" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                                        <option value="user">User (Apenas Visualiza)</option>
+                                        <option value="master">Master (Edita Tudo)</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-semibold">Criar Usuário</button>
+                            </form>
+                        </div>
+
+                        <!-- Lista de Usuários com visualização e alteração de senha -->
+                        <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-4">Usuários Cadastrados no Sistema</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse min-w-[550px]">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
+                                            <th class="py-3 px-3">Nome</th>
+                                            <th class="py-3 px-3">Login</th>
+                                            <th class="py-3 px-3">Perfil</th>
+                                            <th class="py-3 px-3">Senha (Visível p/ Master)</th>
+                                            <th class="py-3 px-3 text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="users-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL: CRIAR / EDITAR MEMBRO & TAXAS
+    =========================================== -->
+    <div id="member-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="member-modal-title" class="font-bold text-lg text-slate-800">Adicionar Membro</h3>
+                <button onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="saveMember(event)" class="space-y-4">
+                <input type="hidden" id="mem-id">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nome do Integrante</label>
+                    <input type="text" id="mem-name" required placeholder="Ex: Lucas Oliveira" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Função na Equipe</label>
+                    <input type="text" id="mem-role" required placeholder="Ex: Ator, Diretor, Som, Apoio" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Pago Tx. Encontro (Máx 60)</label>
+                        <input type="number" step="0.01" min="0" max="60" id="mem-tx-encontro" required value="0" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Pago Tx. Equipe (Máx 60)</label>
+                        <input type="number" step="0.01" min="0" max="60" id="mem-tx-equipe" required value="0" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeMemberModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700">Salvar Dados</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL: CHAMADA / FREQUÊNCIA DA REUNIÃO
+    =========================================== -->
+    <div id="attendance-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                <div>
+                    <h3 id="att-modal-title" class="font-bold text-lg text-slate-800">Frequência do Ensaio</h3>
+                    <p id="att-modal-date" class="text-xs text-slate-500"></p>
+                </div>
+                <button onclick="closeAttendanceModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Legenda -->
+            <div class="flex flex-wrap gap-2 text-xs bg-slate-50 p-3 rounded-xl">
+                <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">P = Presença</span>
+                <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold">FJ = Falta Justificada</span>
+                <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-semibold">FSJ = Falta Sem Justificativa</span>
+            </div>
+
+            <!-- Lista de Membros para Chamada -->
+            <div id="attendance-list-container" class="flex-1 overflow-y-auto divide-y divide-slate-100 pr-1"></div>
+
+            <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                <button id="btn-delete-meeting" onclick="deleteCurrentMeeting()" class="master-only text-xs font-semibold text-rose-600 hover:underline flex items-center gap-1">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Excluir Reunião
+                </button>
+                <div class="flex gap-2 ml-auto">
+                    <button onclick="closeAttendanceModal()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700">Fechar</button>
+                    <button onclick="saveAttendanceChanges()" class="master-only px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700">Salvar Frequência</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         SCRIPT COMPLETO DE LÓGICA DO SISTEMA
+    =========================================== -->
+    <script>
+        // Utilitário para ignorar maiúsculas/minúsculas e acentos
+        function normalizeStr(str) {
+            return (str || '')
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+        }
+
+        // Caixa de Notificação e Mensagem "Salvo com sucesso!"
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bg = type === 'error' ? 'bg-rose-600' : (type === 'warning' ? 'bg-amber-600' : 'bg-emerald-600');
+            toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-lg flex items-center justify-between gap-3 text-sm font-medium pointer-events-auto transition-all duration-300`;
+            toast.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span>✓</span>
+                    <span>${message}</span>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-white/80 hover:text-white text-xs font-bold">✕</button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 3500);
+        }
+
+        // Estado local (os dados reais vêm do servidor)
+        let state = { users: [], members: [], plays: [], characters: [], meetings: [], expenses: [] };
+        let token = null, rev = 0, pending = false, saveTimer = null, pollTimer = null;
+        try { token = localStorage.getItem('teatro_token'); } catch (e) {}
+        async function api(path, opts = {}) {
+            return fetch(path, { method: opts.method || 'GET', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+        }
+        function applyServer(d) {
+            state = d.state; rev = d.rev;
+            if (currentUser && d.me) {
+                const roleChanged = d.me.role !== currentUser.role;
+                currentUser = d.me;
+                if (roleChanged) { loginSuccess(d.me); showNotification('Seu perfil foi alterado para ' + d.me.role.toUpperCase() + '.', 'warning'); return; }
+            }
+            renderAll();
+        }
+        async function startSession(d) {
+            token = d.token || token;
+            try { localStorage.setItem('teatro_token', token); } catch (e) {}
+            state = d.state; rev = d.rev;
+            loginSuccess(d.me);
+            clearInterval(pollTimer);
+            pollTimer = setInterval(async () => {
+                if (pending || !token) return;
+                try {
+                    const r = await api('/api/state');
+                    if (r.status === 401) { handleLogout(); showNotification('Sessão expirada. Entre novamente.', 'warning'); return; }
+                    if (!r.ok) return;
+                    const j = await r.json();
+                    if (!pending && j.rev !== rev) applyServer(j);
+                } catch (e) {}
+            }, 8000);
+        }
+        async function pushState() {
+            try {
+                const r = await api('/api/state', { method: 'PUT', body: { rev, state } });
+                const j = await r.json().catch(() => ({}));
+                if (r.status === 409) { applyServer(j); showNotification('Os dados foram alterados por outra pessoa. Refaça a alteração.', 'warning'); }
+                else if (!r.ok) showNotification(j.error || 'Não foi possível salvar no servidor.', 'error');
+                else { rev = j.rev; state.users.forEach(u => { delete u.password; }); }
+            } catch (e) { showNotification('Sem conexão com o servidor. Alteração não salva.', 'error'); }
+            pending = false;
+        }
+
+        let currentUser = null;
+        let activeMeetingId = null;
+
+        function saveState() {
+            renderAll();
+            pending = true;
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(pushState, 300);
+        }
+
+        // ==========================================
+        // AUTENTICAÇÃO E PERMISSÕES (MASTER vs USER)
+        // ==========================================
+        function toggleAuthMode(mode) {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            const tabLogin = document.getElementById('tab-auth-login');
+            const tabReg = document.getElementById('tab-auth-register');
+
+            if (mode === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                tabLogin.className = 'flex-1 py-3 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600';
+                tabReg.className = 'flex-1 py-3 text-sm font-semibold text-slate-500 hover:text-slate-800';
+            } else {
+                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden');
+                tabReg.className = 'flex-1 py-3 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600';
+                tabLogin.className = 'flex-1 py-3 text-sm font-semibold text-slate-500 hover:text-slate-800';
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            token = null;
+            try {
+                const r = await api('/api/login', { method: 'POST', body: { username: document.getElementById('login-user').value, password: document.getElementById('login-pass').value } });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok) { showNotification(j.error || 'Falha ao entrar.', 'error'); return; }
+                startSession(j);
+            } catch (err) { showNotification('Sem conexão com o servidor.', 'error'); }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            try {
+                const r = await api('/api/register', { method: 'POST', body: { name: document.getElementById('reg-name').value, username: document.getElementById('reg-user').value, password: document.getElementById('reg-pass').value } });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok) { showNotification(j.error || 'Falha no cadastro.', 'error'); return; }
+                showNotification('Cadastro realizado com sucesso como Usuário!');
+                startSession(j);
+            } catch (err) { showNotification('Sem conexão com o servidor.', 'error'); }
+        }
+
+        function loginSuccess(user) {
+            currentUser = user;
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('current-user-name').innerText = user.name;
+            document.getElementById('current-user-login').innerText = '@' + user.username;
+
+            const badge = document.getElementById('role-badge');
+            badge.innerText = user.role.toUpperCase();
+            badge.className = user.role === 'master'
+                ? 'text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 mt-1 inline-block'
+                : 'text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 mt-1 inline-block';
+
+            applyPermissions();
+            renderAll();
+            switchTab('dashboard');
+        }
+
+        function handleLogout() {
+            currentUser = null; token = null; clearInterval(pollTimer);
+            try { localStorage.removeItem('teatro_token'); } catch (e) {}
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('login-form').reset();
+        }
+
+        function isMaster() {
+            return currentUser && currentUser.role === 'master';
+        }
+
+        function applyPermissions() {
+            const masterElements = document.querySelectorAll('.master-only');
+            masterElements.forEach(el => {
+                if (isMaster()) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            const navUsers = document.getElementById('nav-usuarios');
+            const notice = document.getElementById('view-only-notice');
+            if (isMaster()) {
+                navUsers.classList.remove('hidden');
+                notice.classList.add('hidden');
+            } else {
+                navUsers.classList.add('hidden');
+                notice.classList.remove('hidden');
+            }
+        }
+
+        // ==========================================
+        // NAVEGAÇÃO ENTRE ABAS E SIDEBAR MOBILE
+        // ==========================================
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            const ov = document.getElementById('mobile-overlay');
+            sb.classList.toggle('-translate-x-full');
+            ov.classList.toggle('hidden');
+        }
+
+        function switchTab(tabId) {
+            if (tabId === 'usuarios' && !isMaster()) return;
+            const tabs = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'usuarios'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`nav-${t}`);
+                if (btn) {
+                    btn.className = t === 'usuarios'
+                        ? 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800'
+                        : 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white';
+                }
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white';
+            }
+
+            const titles = {
+                dashboard: 'Dashboard Geral',
+                membros: 'Membros da Equipe & Taxas',
+                pecas: 'Peças & Personagens',
+                escalacao: 'Escalação: Quem Vai Interpretar',
+                faltas: 'Controle de Faltas e Ensaios',
+                financeiro: 'Dashboard & Controle Financeiro',
+                ranking: 'Ranking de Frequência',
+                usuarios: 'Gerenciamento de Usuários (Master)'
+            };
+            document.getElementById('page-title').innerText = titles[tabId];
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('mobile-overlay').classList.add('hidden');
+            }
+            applyPermissions();
+        }
+
+        // ==========================================
+        // MEMBROS & TAXAS (TX ENCONTRO 60 / TX EQUIPE 60)
+        // ==========================================
+        function getFinancialStatus(txEncontro, txEquipe) {
+            const total = (Number(txEncontro) || 0) + (Number(txEquipe) || 0);
+            if (total >= 120) return { label: 'QUITADO', classes: 'bg-emerald-100 text-emerald-800' };
+            if (total > 0) return { label: 'PAGAMENTO PARCIAL', classes: 'bg-amber-100 text-amber-800' };
+            return { label: 'PENDENTE', classes: 'bg-rose-100 text-rose-800' };
+        }
+
+        function openMemberModal(memberId = null) {
+            if (!isMaster()) return;
+            const modal = document.getElementById('member-modal');
+            if (memberId) {
+                const m = state.members.find(x => x.id === memberId);
+                document.getElementById('member-modal-title').innerText = 'Editar Membro e Valores';
+                document.getElementById('mem-id').value = m.id;
+                document.getElementById('mem-name').value = m.name;
+                document.getElementById('mem-role').value = m.role;
+                document.getElementById('mem-tx-encontro').value = m.txEncontro;
+                document.getElementById('mem-tx-equipe').value = m.txEquipe;
+            } else {
+                document.getElementById('member-modal-title').innerText = 'Adicionar Membro';
+                document.getElementById('mem-id').value = '';
+                document.getElementById('mem-name').value = '';
+                document.getElementById('mem-role').value = '';
+                document.getElementById('mem-tx-encontro').value = 0;
+                document.getElementById('mem-tx-equipe').value = 0;
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeMemberModal() {
+            document.getElementById('member-modal').classList.add('hidden');
+        }
+
+        function saveMember(e) {
+            e.preventDefault();
+            if (!isMaster()) return;
+            const id = document.getElementById('mem-id').value;
+            const name = document.getElementById('mem-name').value.trim();
+            const role = document.getElementById('mem-role').value.trim();
+            const txEncontro = Math.min(60, Math.max(0, parseFloat(document.getElementById('mem-tx-encontro').value) || 0));
+            const txEquipe = Math.min(60, Math.max(0, parseFloat(document.getElementById('mem-tx-equipe').value) || 0));
+
+            const duplicate = state.members.find(m => normalizeStr(m.name) === normalizeStr(name) && String(m.id) !== String(id));
+            if (duplicate) {
+                showNotification('Já existe um membro cadastrado com este nome!', 'error');
+                return;
+            }
+
+            if (id) {
+                const index = state.members.findIndex(m => String(m.id) === String(id));
+                state.members[index] = { ...state.members[index], name, role, txEncontro, txEquipe };
+                showNotification('Salvo com sucesso! Membro atualizado.');
+            } else {
+                state.members.push({ id: Date.now(), name, role, txEncontro, txEquipe });
+                showNotification('Salvo com sucesso! Novo membro incluído.');
+            }
+            closeMemberModal();
+            saveState();
+        }
+
+        function toggleMemberActive(id) {
+            if (!isMaster()) return;
+            const m = state.members.find(x => x.id === id);
+            if (!m) return;
+            if (m.active !== false) {
+                m.active = false;
+                state.characters.forEach(c => { if (c.memberId === id) c.memberId = null; });
+                showNotification('Salvo com sucesso! ' + m.name + ' agora é ex-integrante (pagamentos mantidos).');
+            } else {
+                m.active = true;
+                showNotification('Salvo com sucesso! ' + m.name + ' foi reativado.');
+            }
+            saveState();
+        }
+
+        function deleteMember(id) {
+            if (!isMaster()) return;
+            state.members = state.members.filter(m => m.id !== id);
+            state.characters.forEach(c => { if (c.memberId === id) c.memberId = null; });
+            saveState();
+            showNotification('Salvo com sucesso! Membro excluído.');
+        }
+
+        // ==========================================
+        // PEÇAS & PERSONAGENS (SEM ACENTOS / MAIÚSCULAS)
+        // ==========================================
+        function savePlay(e) {
+            e.preventDefault();
+            if (!isMaster()) return;
+            const id = document.getElementById('play-id').value;
+            const title = document.getElementById('play-title').value.trim();
+            const desc = document.getElementById('play-desc').value.trim();
+
+            const exists = state.plays.find(p => normalizeStr(p.title) === normalizeStr(title) && String(p.id) !== String(id));
+            if (exists) {
+                showNotification('Esta peça já está cadastrada!', 'error');
+                return;
+            }
+
+            if (id) {
+                const idx = state.plays.findIndex(p => String(p.id) === String(id));
+                state.plays[idx] = { ...state.plays[idx], title, desc };
+                showNotification('Salvo com sucesso! Peça atualizada.');
+            } else {
+                state.plays.push({ id: Date.now(), title, desc });
+                showNotification('Salvo com sucesso! Peça criada.');
+            }
+            resetPlayForm();
+            saveState();
+        }
+
+        function editPlay(id) {
+            const p = state.plays.find(x => x.id === id);
+            if (!p) return;
+            document.getElementById('play-id').value = p.id;
+            document.getElementById('play-title').value = p.title;
+            document.getElementById('play-desc').value = p.desc;
+            document.getElementById('btn-save-play').innerText = 'Atualizar Peça';
+            document.getElementById('btn-cancel-play').classList.remove('hidden');
+        }
+
+        function resetPlayForm() {
+            document.getElementById('play-id').value = '';
+            document.getElementById('play-title').value = '';
+            document.getElementById('play-desc').value = '';
+            document.getElementById('btn-save-play').innerText = 'Salvar Peça';
+            document.getElementById('btn-cancel-play').classList.add('hidden');
+        }
+
+        function deletePlay(id) {
+            if (!isMaster()) return;
+            state.plays = state.plays.filter(p => p.id !== id);
+            state.characters = state.characters.filter(c => c.playId !== id);
+            saveState();
+            showNotification('Salvo com sucesso! Peça e seus personagens removidos.');
+        }
+
+        function saveCharacter(e) {
+            e.preventDefault();
+            if (!isMaster()) return;
+            const playId = Number(document.getElementById('char-play-select').value);
+            const name = document.getElementById('char-name').value.trim();
+
+            if (!playId) {
+                showNotification('Cadastre e selecione uma peça primeiro!', 'error');
+                return;
+            }
+
+            // Verifica se o personagem já existe naquela peça ignorando maiúsculas e acentos
+            const existingChar = state.characters.find(c =>
+                c.playId === playId && normalizeStr(c.name) === normalizeStr(name)
+            );
+
+            if (existingChar) {
+                const assignedMember = state.members.find(m => m.id === existingChar.memberId);
+                if (assignedMember) {
+                    showNotification(`Personagem "${existingChar.name}" já existe nesta peça e já foi alocado para ${assignedMember.name}!`, 'error');
+                } else {
+                    showNotification(`Personagem "${existingChar.name}" já existe nesta peça (aguardando alocação)!`, 'warning');
+                }
+                return;
+            }
+
+            state.characters.push({ id: Date.now(), playId, name, memberId: null });
+            document.getElementById('char-name').value = '';
+            saveState();
+            showNotification('Salvo com sucesso! Personagem adicionado.');
+        }
+
+        function deleteCharacter(charId) {
+            if (!isMaster()) return;
+            state.characters = state.characters.filter(c => c.id !== charId);
+            saveState();
+            showNotification('Salvo com sucesso! Personagem excluído.');
+        }
+
+        function assignCharacterMember(charId, memberIdVal) {
+            if (!isMaster()) return;
+            const char = state.characters.find(c => c.id === charId);
+            if (!char) return;
+            char.memberId = memberIdVal ? Number(memberIdVal) : null;
+            saveState();
+            showNotification('Salvo com sucesso! Intérprete definido.');
+        }
+
+        // ==========================================
+        // CONTROLE DE FALTAS (ENSAIOS E REUNIÕES)
+        // ==========================================
+        function createMeeting(e) {
+            e.preventDefault();
+            if (!isMaster()) return;
+            const title = document.getElementById('meeting-title').value.trim();
+            const date = document.getElementById('meeting-date').value;
+
+            const attendance = {};
+            state.members.filter(m => m.active !== false).forEach(m => { attendance[m.id] = 'P'; });
+
+            state.meetings.unshift({ id: Date.now(), title, date, attendance });
+            document.getElementById('meeting-title').value = '';
+            document.getElementById('meeting-date').value = '';
+            saveState();
+            showNotification('Salvo com sucesso! Card de reunião criado.');
+        }
+
+        function openAttendanceModal(meetingId) {
+            activeMeetingId = meetingId;
+            const meeting = state.meetings.find(m => m.id === meetingId);
+            if (!meeting) return;
+
+            document.getElementById('att-modal-title').innerText = meeting.title;
+            document.getElementById('att-modal-date').innerText = 'Data: ' + meeting.date.split('-').reverse().join('/');
+
+            const container = document.getElementById('attendance-list-container');
+            container.innerHTML = state.members.filter(m => m.active !== false || (meeting.attendance && meeting.attendance[m.id])).map(m => {
+                const inactive = m.active === false;
+                const status = (meeting.attendance && meeting.attendance[m.id]) || 'P';
+                const disabled = (isMaster() && !inactive) ? '' : 'disabled';
+                return `
+                    <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <p class="font-semibold text-sm text-slate-800">${m.name}${inactive ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">DESATIVADO</span>' : ''}</p>
+                            <p class="text-xs text-slate-400">${m.role}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="att-${m.id}" value="P" ${status === 'P' ? 'checked' : ''} ${disabled} class="peer hidden">
+                                <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 inline-block">P (Presença)</span>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="att-${m.id}" value="FJ" ${status === 'FJ' ? 'checked' : ''} ${disabled} class="peer hidden">
+                                <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:border-amber-500 inline-block">FJ</span>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="att-${m.id}" value="FSJ" ${status === 'FSJ' ? 'checked' : ''} ${disabled} class="peer hidden">
+                                <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 peer-checked:bg-rose-600 peer-checked:text-white peer-checked:border-rose-600 inline-block">FSJ</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            }).join('') || '<p class="text-sm text-slate-400 py-4">Nenhum membro cadastrado.</p>';
+
+            document.getElementById('attendance-modal').classList.remove('hidden');
+            applyPermissions();
+            lucide.createIcons();
+        }
+
+        function closeAttendanceModal() {
+            document.getElementById('attendance-modal').classList.add('hidden');
+            activeMeetingId = null;
+        }
+
+        function saveAttendanceChanges() {
+            if (!isMaster() || !activeMeetingId) return;
+            const meeting = state.meetings.find(m => m.id === activeMeetingId);
+            if (!meeting) return;
+
+            state.members.filter(m => m.active !== false).forEach(m => {
+                const checked = document.querySelector(`input[name="att-${m.id}"]:checked`);
+                if (checked) {
+                    meeting.attendance[m.id] = checked.value;
+                }
+            });
+            saveState();
+            closeAttendanceModal();
+            showNotification('Salvo com sucesso! Frequência atualizada.');
+        }
+
+        function deleteCurrentMeeting() {
+            if (!isMaster() || !activeMeetingId) return;
+            state.meetings = state.meetings.filter(m => m.id !== activeMeetingId);
+            saveState();
+            closeAttendanceModal();
+            showNotification('Salvo com sucesso! Reunião excluída.');
+        }
+
+        // ==========================================
+        // DESPESAS FINANCEIRAS
+        // ==========================================
+        function addExpense(e) {
+            e.preventDefault();
+            if (!isMaster()) return;
+            const desc = document.getElementById('exp-desc').value.trim();
+            const amount = parseFloat(document.getElementById('exp-val').value) || 0;
+            state.expenses.unshift({ id: Date.now(), desc, amount });
+            document.getElementById('exp-desc').value = '';
+            document.getElementById('exp-val').value = '';
+            saveState();
+            showNotification('Salvo com sucesso! Gasto registrado.');
+        }
+
+        function deleteExpense(id) {
+            if (!isMaster()) return;
+            state.expenses = state.expenses.filter(x => x.id !== id);
+            saveState();
+            showNotification('Salvo com sucesso! Despesa removida.');
+        }
+
+        // ==========================================
+        // GERENCIAMENTO DE USUÁRIOS (MASTER)
+        // ==========================================
+        function masterCreateUser(e) {
+            e.preventDefault();
+            if (!isMaster()) return;
+            const name = document.getElementById('mu-name').value.trim();
+            const username = document.getElementById('mu-user').value.trim();
+            const password = document.getElementById('mu-pass').value;
+            const role = document.getElementById('mu-role').value;
+
+            if (state.users.some(u => normalizeStr(u.username) === normalizeStr(username))) {
+                showNotification('Login já cadastrado!', 'error');
+                return;
+            }
+
+            state.users.push({ id: Date.now(), name, username, password, role });
+            e.target.reset();
+            saveState();
+            showNotification('Salvo com sucesso! Usuário criado.');
+        }
+
+        function updateUserPassword(userId, newPass) {
+            if (!isMaster()) return;
+            const u = state.users.find(x => x.id === userId);
+            if (!u || !newPass.trim()) return;
+            u.password = newPass.trim();
+            saveState();
+            showNotification(`Salvo com sucesso! Senha de @${u.username} alterada.`);
+        }
+
+        function changeUserRole(userId, newRole) {
+            if (!isMaster()) return;
+            const u = state.users.find(x => x.id === userId);
+            if (!u || u.role === newRole || !['master', 'user'].includes(newRole)) return;
+            if (u.role === 'master' && newRole === 'user' && state.users.filter(x => x.role === 'master').length <= 1) {
+                showNotification('Precisa existir pelo menos um Master!', 'error');
+                renderAll();
+                return;
+            }
+            u.role = newRole;
+            const self = currentUser && currentUser.id === userId;
+            saveState();
+            showNotification(`Salvo com sucesso! @${u.username} agora é ${newRole.toUpperCase()}.`);
+            if (self) loginSuccess(u);
+        }
+
+        function deleteUser(userId) {
+            if (!isMaster()) return;
+            if (currentUser && currentUser.id === userId) {
+                showNotification('Você não pode excluir seu próprio usuário logado!', 'error');
+                return;
+            }
+            state.users = state.users.filter(u => u.id !== userId);
+            saveState();
+            showNotification('Salvo com sucesso! Usuário removido.');
+        }
+
+        // ==========================================
+        // RENDERIZAÇÃO COMPLETA DA INTERFACE
+        // ==========================================
+        function formatBRL(v) {
+            return 'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',');
+        }
+
+        function renderAll() {
+            // Cálculos Financeiros
+            const activeMembers = state.members.filter(m => m.active !== false);
+            const exCount = state.members.length - activeMembers.length;
+            const totalEsperado = activeMembers.length * 120;
+            const totalArrecadado = state.members.reduce((acc, m) => acc + (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0), 0);
+            const totalUsado = state.expenses.reduce((acc, x) => acc + (Number(x.amount) || 0), 0);
+            const faltaArrecadar = activeMembers.reduce((a, m) => a + Math.max(0, 120 - ((Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0))), 0);
+            const saldoDisponivel = totalArrecadado - totalUsado;
+
+            // 1. Dashboard Cards
+            document.getElementById('dash-arrecadado').innerText = formatBRL(totalArrecadado);
+            document.getElementById('dash-usado').innerText = formatBRL(totalUsado);
+            document.getElementById('dash-falta').innerText = formatBRL(faltaArrecadar);
+            document.getElementById('dash-meta-desc').innerText = `Meta total (${activeMembers.length} membros ativos): ${formatBRL(totalEsperado)}` + (exCount ? ` · ${exCount} ex-integrante(s) com pagamentos contabilizados` : '');
+            document.getElementById('dash-membros-count').innerText = `${activeMembers.length} Membros`;
+            document.getElementById('dash-pecas-count').innerText = `${state.plays.length} Peças / ${state.meetings.length} Ensaios`;
+
+            // Previews do Dashboard
+            document.getElementById('dash-casting-preview').innerHTML = state.characters.slice(0, 5).map(c => {
+                const play = state.plays.find(p => p.id === c.playId);
+                const member = state.members.find(m => m.id === c.memberId);
+                return `
+                    <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-50">
+                        <div>
+                            <span class="font-semibold text-slate-800">${c.name}</span>
+                            <span class="text-xs text-slate-400 block">${play ? play.title : ''}</span>
+                        </div>
+                        <span class="text-xs font-semibold px-2.5 py-1 rounded-lg ${member ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                            ${member ? member.name : 'Sem ator definido'}
+                        </span>
+                    </div>
+                `;
+            }).join('') || '<p class="text-slate-400 text-xs">Nenhum personagem cadastrado.</p>';
+
+            document.getElementById('dash-meetings-preview').innerHTML = state.meetings.slice(0, 4).map(m => `
+                <div onclick="openAttendanceModal(${m.id})" class="cursor-pointer flex justify-between items-center p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 transition">
+                    <span class="font-semibold text-slate-800">${m.title}</span>
+                    <span class="text-xs text-slate-500">${m.date.split('-').reverse().join('/')}</span>
+                </div>
+            `).join('') || '<p class="text-slate-400 text-xs">Nenhuma reunião registrada.</p>';
+
+            // 2. Tabela Membros & Taxas
+            document.getElementById('members-table-body').innerHTML = state.members.map(m => {
+                const totalPago = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
+                const st = getFinancialStatus(m.txEncontro, m.txEquipe);
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-4">
+                            <p class="font-semibold text-slate-800">${m.name}${m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}</p>
+                            <p class="text-xs text-slate-400">${m.role}</p>
+                        </td>
+                        <td class="py-3 px-4 font-medium">${formatBRL(m.txEncontro)} <span class="text-xs text-slate-400">/ R$ 60</span></td>
+                        <td class="py-3 px-4 font-medium">${formatBRL(m.txEquipe)} <span class="text-xs text-slate-400">/ R$ 60</span></td>
+                        <td class="py-3 px-4 font-bold text-slate-800">${formatBRL(totalPago)}</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${st.classes}">${st.label}</span>
+                        </td>
+                        <td class="py-3 px-4 text-right master-only space-x-2">
+                            <button onclick="openMemberModal(${m.id})" class="text-indigo-600 hover:underline text-xs font-semibold">Editar</button>
+                            <button onclick="toggleMemberActive(${m.id})" class="text-amber-600 hover:underline text-xs font-semibold">${m.active === false ? 'Reativar' : 'Desativar'}</button>
+                            <button onclick="deleteMember(${m.id})" class="text-rose-600 hover:underline text-xs font-semibold">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="6" class="py-6 text-center text-slate-400">Nenhum membro cadastrado.</td></tr>';
+
+            // Ranking de frequência
+            const showEx = document.getElementById('rank-show-ex') && document.getElementById('rank-show-ex').checked;
+            const rank = state.members.filter(m => showEx || m.active !== false).map(m => {
+                let p = 0, fj = 0, fsj = 0;
+                state.meetings.forEach(mt => {
+                    const s = mt.attendance && mt.attendance[m.id];
+                    if (s === 'P') p++; else if (s === 'FJ') fj++; else if (s === 'FSJ') fsj++;
+                });
+                const total = p + fj + fsj;
+                return { m, p, fj, fsj, pct: total ? (p / total) * 100 : null };
+            }).sort((a, b) => ((b.pct ?? -1) - (a.pct ?? -1)) || (b.p - a.p) || a.m.name.localeCompare(b.m.name));
+            document.getElementById('ranking-tbody').innerHTML = rank.map((r, i) => {
+                const medal = ['🥇', '🥈', '🥉'][i] || (i + 1);
+                const color = r.pct === null ? 'bg-slate-100 text-slate-500' : (r.pct >= 75 ? 'bg-emerald-100 text-emerald-800' : (r.pct >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'));
+                return `<tr class="hover:bg-slate-50 ${r.m.active === false ? 'opacity-60' : ''}">
+                    <td class="py-3 px-3 font-bold text-slate-700">${medal}</td>
+                    <td class="py-3 px-3"><span class="font-semibold text-slate-800">${r.m.name}</span>${r.m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}<span class="block text-xs text-slate-400">${r.m.role}</span></td>
+                    <td class="py-3 px-3 font-semibold text-emerald-700">${r.p}</td>
+                    <td class="py-3 px-3 font-semibold text-amber-600">${r.fj}</td>
+                    <td class="py-3 px-3 font-semibold text-rose-600">${r.fsj}</td>
+                    <td class="py-3 px-3"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${color}">${r.pct === null ? 'Sem registros' : r.pct.toFixed(0) + '%'}</span></td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="6" class="py-6 text-center text-slate-400">Nenhum membro para exibir.</td></tr>';
+
+            // 3. Select de Peças e Lista de Peças + Personagens
+            const playSelect = document.getElementById('char-play-select');
+            playSelect.innerHTML = state.plays.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+
+            document.getElementById('plays-list-container').innerHTML = state.plays.map(p => {
+                const chars = state.characters.filter(c => c.playId === p.id);
+                return `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-base">${p.title}</h4>
+                                <p class="text-xs text-slate-400">${p.desc || 'Sem descrição'}</p>
+                            </div>
+                            <div class="master-only flex gap-2">
+                                <button onclick="editPlay(${p.id})" class="text-xs font-semibold text-indigo-600 hover:underline">Editar</button>
+                                <button onclick="deletePlay(${p.id})" class="text-xs font-semibold text-rose-600 hover:underline">Excluir Peça</button>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-xs font-bold uppercase text-slate-400">Personagens (${chars.length}):</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                ${chars.map(c => {
+                                    const actor = state.members.find(m => m.id === c.memberId);
+                                    return `
+                                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                                            <div>
+                                                <p class="font-semibold text-sm text-slate-800">${c.name}</p>
+                                                <span class="text-[11px] font-medium ${actor ? 'text-emerald-600' : 'text-amber-600'}">
+                                                    ${actor ? '✓ Alocado: ' + actor.name : '• Disponível (Sem ator)'}
+                                                </span>
+                                            </div>
+                                            <button onclick="deleteCharacter(${c.id})" class="master-only text-rose-500 hover:text-rose-700 text-xs font-bold px-2">Excluir</button>
+                                        </div>
+                                    `;
+                                }).join('') || '<p class="text-xs text-slate-400">Nenhum personagem adicionado nesta peça.</p>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('') || '<div class="bg-white p-6 rounded-2xl border text-center text-slate-400">Nenhuma peça cadastrada.</div>';
+
+            // 4. Escalação Separada por Peças
+            document.getElementById('casting-by-play-container').innerHTML = state.plays.map(p => {
+                const chars = state.characters.filter(c => c.playId === p.id);
+                return `
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                        <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center">
+                            <span class="font-bold text-sm">${p.title}</span>
+                            <span class="text-xs text-slate-400">${chars.length} personagem(ns)</span>
+                        </div>
+                        <div class="p-4 divide-y divide-slate-100">
+                            ${chars.map(c => {
+                                const actor = state.members.find(m => m.id === c.memberId);
+                                return `
+                                    <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div>
+                                            <span class="font-bold text-slate-800 text-sm">${c.name}</span>
+                                            <span class="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-full ${actor ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                                ${actor ? 'JÁ ALOCADO' : 'AGUARDANDO ESCALAÇÃO'}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs text-slate-500">Intérprete:</span>
+                                            <select onchange="assignCharacterMember(${c.id}, this.value)" ${isMaster() ? '' : 'disabled'} class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-medium bg-white">
+                                                <option value="">-- Ninguém selecionado --</option>
+                                                ${state.members.filter(m => m.active !== false).map(m => `<option value="${m.id}" ${c.memberId === m.id ? 'selected' : ''}>${m.name} (${m.role})</option>`).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('') || '<p class="text-xs text-slate-400 py-2">Sem personagens nesta peça.</p>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 5. Cards de Reuniões / Controle de Faltas
+            document.getElementById('meetings-cards-grid').innerHTML = state.meetings.map(m => {
+                const values = Object.values(m.attendance || {});
+                const pCount = values.filter(v => v === 'P').length;
+                const fjCount = values.filter(v => v === 'FJ').length;
+                const fsjCount = values.filter(v => v === 'FSJ').length;
+                return `
+                    <div onclick="openAttendanceModal(${m.id})" class="cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-base">${m.title}</h4>
+                                <p class="text-xs text-slate-500 mt-0.5">Data: ${m.date.split('-').reverse().join('/')}</p>
+                            </div>
+                            <span class="text-xs text-indigo-600 font-semibold">Abrir Chamada →</span>
+                        </div>
+                        <div class="flex gap-2 pt-2 border-t border-slate-100 text-xs font-bold">
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700">P: ${pCount}</span>
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700">FJ: ${fjCount}</span>
+                            <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700">FSJ: ${fsjCount}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('') || '<p class="text-sm text-slate-400 col-span-full text-center py-8">Nenhuma reunião criada ainda.</p>';
+
+            // 6. Aba Financeiro
+            document.getElementById('fin-arrecadado').innerText = formatBRL(totalArrecadado);
+            document.getElementById('fin-usado').innerText = formatBRL(totalUsado);
+            document.getElementById('fin-saldo').innerText = formatBRL(saldoDisponivel);
+            document.getElementById('fin-falta').innerText = formatBRL(faltaArrecadar);
+            document.getElementById('fin-esperado').innerText = `Meta Total: ${formatBRL(totalEsperado)}`;
+
+            document.getElementById('fin-members-tbody').innerHTML = state.members.map(m => {
+                const pago = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
+                const faltaMembro = m.active === false ? 0 : Math.max(0, 120 - pago);
+                const st = getFinancialStatus(m.txEncontro, m.txEquipe);
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-3 font-semibold text-slate-800">${m.name}${m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}</td>
+                        <td class="py-3 px-3">${formatBRL(m.txEncontro)}</td>
+                        <td class="py-3 px-3">${formatBRL(m.txEquipe)}</td>
+                        <td class="py-3 px-3 font-bold text-rose-600">${formatBRL(faltaMembro)}</td>
+                        <td class="py-3 px-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${st.classes}">${st.label}</span></td>
+                        <td class="py-3 px-3 text-right master-only">
+                            <button onclick="openMemberModal(${m.id})" class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-semibold hover:bg-indigo-100">Inserir / Editar Valor</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('expenses-list').innerHTML = state.expenses.map(x => `
+                <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm">
+                    <div>
+                        <p class="font-semibold text-slate-800">${x.desc}</p>
+                        <p class="text-xs font-bold text-rose-600">- ${formatBRL(x.amount)}</p>
+                    </div>
+                    <button onclick="deleteExpense(${x.id})" class="master-only text-xs text-rose-500 hover:underline">Remover</button>
+                </div>
+            `).join('') || '<p class="text-xs text-slate-400 text-center py-4">Nenhum gasto registrado.</p>';
+
+            // 7. Aba Usuários (Visível somente ao Master)
+            if (isMaster()) {
+                document.getElementById('users-table-body').innerHTML = state.users.map(u => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-3 font-semibold text-slate-800">${u.name}</td>
+                        <td class="py-3 px-3 font-mono text-xs text-slate-600">@${u.username}</td>
+                        <td class="py-3 px-3">
+                            <select onchange="changeUserRole(${u.id}, this.value)" class="px-2 py-1 border border-slate-300 rounded-lg text-[11px] font-bold uppercase ${u.role === 'master' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-700'}">
+                                <option value="master" ${u.role === 'master' ? 'selected' : ''}>Master</option>
+                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>User</option>
+                            </select>
+                        </td>
+                        <td class="py-3 px-3">
+                            <div class="flex items-center gap-1.5">
+                                <input type="text" id="pass-inp-${u.id}" value="" placeholder="nova senha" class="px-2 py-1 border border-slate-300 rounded-lg text-xs font-mono w-28">
+                                <button onclick="updateUserPassword(${u.id}, document.getElementById('pass-inp-${u.id}').value)" class="px-2 py-1 bg-emerald-600 text-white rounded-lg text-[11px] font-semibold">Salvar Senha</button>
+                            </div>
+                        </td>
+                        <td class="py-3 px-3 text-right">
+                            <button onclick="deleteUser(${u.id})" class="text-rose-600 hover:underline text-xs font-semibold">Remover</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            applyPermissions();
+            lucide.createIcons();
+        }
+
+        lucide.createIcons();
+        (async () => {
+            if (!token) return;
+            try {
+                const r = await api('/api/state');
+                if (r.ok) startSession(await r.json());
+            } catch (e) {}
+        })();
+    </script>
+</body>
+</html>
