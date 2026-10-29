@@ -8,12 +8,15 @@
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <!-- Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #f8fafc; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .nav-btn[data-locked="1"]{opacity:.45}
     </style>
 </head>
 <body class="w-screen h-screen flex flex-col overflow-hidden text-slate-900">
@@ -132,7 +135,23 @@
                         <i data-lucide="trophy" class="w-4 h-4"></i>
                         <span>Ranking de Frequência</span>
                     </button>
+                    <button onclick="switchTab('avisos')" id="nav-avisos" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="megaphone" class="w-4 h-4"></i>
+                        <span>Avisos Importantes</span>
+                    </button>
+                    <button onclick="switchTab('conquistas')" id="nav-conquistas" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="award" class="w-4 h-4"></i>
+                        <span>Conquistas</span>
+                    </button>
+                    <button onclick="switchTab('relatorios')" id="nav-relatorios" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span>Relatórios</span>
+                    </button>
                     <!-- Exclusivo Master -->
+                    <button onclick="switchTab('acessos')" id="nav-acessos" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hidden">
+                        <i data-lucide="key-round" class="w-4 h-4"></i>
+                        <span>Acessos e Permissões</span>
+                    </button>
                     <button onclick="switchTab('usuarios')" id="nav-usuarios" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hidden">
                         <i data-lucide="shield-alert" class="w-4 h-4"></i>
                         <span>Usuários (Master)</span>
@@ -166,6 +185,7 @@
                     <h2 id="page-title" class="text-lg md:text-xl font-bold text-slate-800 truncate">Dashboard Geral</h2>
                 </div>
                 <div class="flex items-center space-x-2">
+                    <div id="bell-wrap" class="hidden relative"><button onclick="toggleBell()" class="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100"><i data-lucide="bell" class="w-5 h-5"></i><span id="bell-count" class="hidden absolute -top-0.5 -right-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">0</span></button><div id="bell-panel" class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto"></div></div>
                     <span id="view-only-notice" class="hidden text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium">
                         Modo Leitura (Usuário)
                     </span>
@@ -276,6 +296,7 @@
                      ABA 3: PEÇAS & PERSONAGENS
                 =========================================== -->
                 <section id="tab-pecas" class="space-y-6 hidden">
+                    <div id="my-pecas"></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
                         <!-- Coluna 1: Cadastrar Peça e Personagem -->
@@ -342,6 +363,7 @@
                      ABA 5: CONTROLE DE FALTAS (ENSAIOS / REUNIÕES)
                 =========================================== -->
                 <section id="tab-faltas" class="space-y-6 hidden">
+                    <div id="my-faltas"></div>
                     <!-- Barra de Legenda e Criação -->
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div class="space-y-2">
@@ -465,6 +487,48 @@
                 <!-- ==========================================
                      ABA 7: GERENCIAR USUÁRIOS (EXCLUSIVO MASTER)
                 =========================================== -->
+                                <section id="tab-conquistas" class="space-y-6 hidden"><div id="game-body" class="space-y-6"></div></section>
+
+                <section id="tab-avisos" class="space-y-6 hidden">
+                    <form onsubmit="addAviso(event)" class="master-only bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <input id="av-title" required placeholder="Título do aviso" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                        <textarea id="av-text" required rows="3" placeholder="Mensagem" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></textarea>
+                        <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Publicar aviso</button>
+                    </form>
+                    <div id="avisos-list" class="space-y-3"></div>
+                </section>
+
+                <section id="tab-relatorios" class="space-y-6 hidden">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div id="rep-tabs" class="flex flex-wrap gap-2 text-xs font-semibold">
+                                <button data-v="membro" onclick="setRep('membro')">Personagens por membro</button>
+                                <button data-v="pecas" onclick="setRep('pecas')">Peças e personagens</button>
+                                <button data-v="freq" onclick="setRep('freq')">Frequência</button>
+                                <button data-v="fin" onclick="setRep('fin')">Financeiro</button>
+                            </div>
+                            <button onclick="pdfReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-semibold">Baixar PDF deste relatório</button>
+                        </div>
+                        <div id="rep-body" class="overflow-x-auto"></div>
+                    </div>
+                </section>
+
+                <section id="tab-acessos" class="space-y-6 hidden">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <h3 class="text-lg font-bold text-slate-800">Acessos e Permissões</h3>
+                        <p class="text-xs text-slate-500">Escolha o nível de cada usuário por tela: Bloqueado, Consultar, Inserir/Editar ou Total (com excluir). O perfil Membro começa só com Frequência, Peças e Avisos para consulta. Vincule o usuário a um membro para ele ver as próprias faltas e peças. Quem edita Membros precisa também poder ver o Financeiro.</p>
+                        <div class="overflow-x-auto"><table id="acc-table" class="w-full text-left text-sm border-collapse min-w-[900px]"></table></div>
+                    </div>
+                </section>
+
+                <section id="tab-bloqueado" class="hidden">
+                    <div class="bg-white p-10 rounded-2xl border border-slate-200 text-center">
+                        <div class="text-4xl mb-3">🔒</div>
+                        <p class="text-lg font-bold text-slate-800">Seu usuário não tem perfil para visualizar esta tela.</p>
+                        <p class="text-sm text-slate-500 mt-1">Fale com o Master da equipe para solicitar acesso.</p>
+                    </div>
+                </section>
+
                 <section id="tab-usuarios" class="space-y-6 hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Criar Novo Usuário -->
@@ -488,6 +552,7 @@
                                     <select id="mu-role" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
                                         <option value="user">User (Apenas Visualiza)</option>
                                         <option value="master">Master (Edita Tudo)</option>
+                                        <option value="membro">Membro (frequência, peças e avisos)</option>
                                     </select>
                                 </div>
                                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-semibold">Criar Usuário</button>
@@ -623,7 +688,7 @@
         }
 
         // Estado local (os dados reais vêm do servidor)
-        let state = { users: [], members: [], plays: [], characters: [], meetings: [], expenses: [] };
+        let state = { users: [], members: [], plays: [], characters: [], meetings: [], expenses: [], avisos: [], changes: [] };
         let token = null, rev = 0, pending = false, saveTimer = null, pollTimer = null;
         try { token = localStorage.getItem('teatro_token'); } catch (e) {}
         async function api(path, opts = {}) {
@@ -632,9 +697,9 @@
         function applyServer(d) {
             state = d.state; rev = d.rev;
             if (currentUser && d.me) {
-                const roleChanged = d.me.role !== currentUser.role;
+                const roleChanged = JSON.stringify([d.me.role, d.me.perms, d.me.memberId]) !== JSON.stringify([currentUser.role, currentUser.perms, currentUser.memberId]);
                 currentUser = d.me;
-                if (roleChanged) { loginSuccess(d.me); showNotification('Seu perfil foi alterado para ' + d.me.role.toUpperCase() + '.', 'warning'); return; }
+                if (roleChanged) { loginSuccess(d.me); showNotification('Suas permissões foram atualizadas.', 'warning'); return; }
             }
             renderAll();
         }
@@ -646,6 +711,7 @@
             clearInterval(pollTimer);
             pollTimer = setInterval(async () => {
                 if (pending || !token) return;
+                renderBell();
                 try {
                     const r = await api('/api/state');
                     if (r.status === 401) { handleLogout(); showNotification('Sessão expirada. Entre novamente.', 'warning'); return; }
@@ -735,7 +801,7 @@
 
             applyPermissions();
             renderAll();
-            switchTab('dashboard');
+            switchTab(Object.keys(SCREENS).find(k => can(k, 'v')) || 'bloqueado');
         }
 
         function handleLogout() {
@@ -750,24 +816,6 @@
             return currentUser && currentUser.role === 'master';
         }
 
-        function applyPermissions() {
-            const masterElements = document.querySelectorAll('.master-only');
-            masterElements.forEach(el => {
-                if (isMaster()) el.classList.remove('hidden');
-                else el.classList.add('hidden');
-            });
-
-            const navUsers = document.getElementById('nav-usuarios');
-            const notice = document.getElementById('view-only-notice');
-            if (isMaster()) {
-                navUsers.classList.remove('hidden');
-                notice.classList.add('hidden');
-            } else {
-                navUsers.classList.add('hidden');
-                notice.classList.remove('hidden');
-            }
-        }
-
         // ==========================================
         // NAVEGAÇÃO ENTRE ABAS E SIDEBAR MOBILE
         // ==========================================
@@ -779,13 +827,14 @@
         }
 
         function switchTab(tabId) {
-            if (tabId === 'usuarios' && !isMaster()) return;
-            const tabs = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'usuarios'];
+            if ((tabId === 'usuarios' || tabId === 'acessos') && !isMaster()) return;
+            if (SCREENS[tabId] && !can(tabId, 'v')) tabId = 'bloqueado';
+            const tabs = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'relatorios', 'conquistas', 'avisos', 'acessos', 'bloqueado', 'usuarios'];
             tabs.forEach(t => {
                 document.getElementById(`tab-${t}`).classList.add('hidden');
                 const btn = document.getElementById(`nav-${t}`);
                 if (btn) {
-                    btn.className = t === 'usuarios'
+                    btn.className = (t === 'usuarios' || t === 'acessos')
                         ? 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800'
                         : 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white';
                 }
@@ -805,7 +854,12 @@
                 faltas: 'Controle de Faltas e Ensaios',
                 financeiro: 'Dashboard & Controle Financeiro',
                 ranking: 'Ranking de Frequência',
-                usuarios: 'Gerenciamento de Usuários (Master)'
+                usuarios: 'Gerenciamento de Usuários (Master)',
+                acessos: 'Acessos e Permissões (Master)',
+                relatorios: 'Relatórios',
+                conquistas: 'Conquistas e Insígnias',
+                avisos: 'Avisos Importantes',
+                bloqueado: 'Acesso restrito'
             };
             document.getElementById('page-title').innerText = titles[tabId];
 
@@ -827,7 +881,7 @@
         }
 
         function openMemberModal(memberId = null) {
-            if (!isMaster()) return;
+            if (!can('membros', 'i')) return;
             const modal = document.getElementById('member-modal');
             if (memberId) {
                 const m = state.members.find(x => x.id === memberId);
@@ -854,7 +908,7 @@
 
         function saveMember(e) {
             e.preventDefault();
-            if (!isMaster()) return;
+            if (!can('membros', 'i')) return;
             const id = document.getElementById('mem-id').value;
             const name = document.getElementById('mem-name').value.trim();
             const role = document.getElementById('mem-role').value.trim();
@@ -880,7 +934,7 @@
         }
 
         function toggleMemberActive(id) {
-            if (!isMaster()) return;
+            if (!can('membros', 'i')) return;
             const m = state.members.find(x => x.id === id);
             if (!m) return;
             if (m.active !== false) {
@@ -895,7 +949,7 @@
         }
 
         function deleteMember(id) {
-            if (!isMaster()) return;
+            if (!can('membros', 'd')) return;
             state.members = state.members.filter(m => m.id !== id);
             state.characters.forEach(c => { if (c.memberId === id) c.memberId = null; });
             saveState();
@@ -907,7 +961,7 @@
         // ==========================================
         function savePlay(e) {
             e.preventDefault();
-            if (!isMaster()) return;
+            if (!can('pecas', 'i')) return;
             const id = document.getElementById('play-id').value;
             const title = document.getElementById('play-title').value.trim();
             const desc = document.getElementById('play-desc').value.trim();
@@ -949,7 +1003,7 @@
         }
 
         function deletePlay(id) {
-            if (!isMaster()) return;
+            if (!can('pecas', 'd')) return;
             state.plays = state.plays.filter(p => p.id !== id);
             state.characters = state.characters.filter(c => c.playId !== id);
             saveState();
@@ -958,7 +1012,7 @@
 
         function saveCharacter(e) {
             e.preventDefault();
-            if (!isMaster()) return;
+            if (!can('pecas', 'i')) return;
             const playId = Number(document.getElementById('char-play-select').value);
             const name = document.getElementById('char-name').value.trim();
 
@@ -983,23 +1037,32 @@
             }
 
             state.characters.push({ id: Date.now(), playId, name, memberId: null });
+            logChange(`Novo personagem "${name}" na peça "${playName(playId)}".`);
             document.getElementById('char-name').value = '';
             saveState();
             showNotification('Salvo com sucesso! Personagem adicionado.');
         }
 
         function deleteCharacter(charId) {
-            if (!isMaster()) return;
+            if (!can('pecas', 'd')) return;
+            const gone = state.characters.find(c => c.id === charId);
+            if (gone) logChange(`Personagem "${gone.name}" (${playName(gone.playId)}) foi removido.`);
             state.characters = state.characters.filter(c => c.id !== charId);
             saveState();
             showNotification('Salvo com sucesso! Personagem excluído.');
         }
 
         function assignCharacterMember(charId, memberIdVal) {
-            if (!isMaster()) return;
+            if (!can('pecas', 'i') && !can('escalacao', 'i')) return;
             const char = state.characters.find(c => c.id === charId);
             if (!char) return;
-            char.memberId = memberIdVal ? Number(memberIdVal) : null;
+            const mid = memberIdVal ? Number(memberIdVal) : null;
+            if (mid) {
+                const other = state.characters.find(c => c.playId === char.playId && c.id !== char.id && c.memberId === mid);
+                if (other && !confirm(`${memberName(mid)} já está alocado(a) nesta peça como "${other.name}". Deseja alocar também em "${char.name}"?`)) { renderAll(); return; }
+            }
+            char.memberId = mid;
+            logChange(mid ? `Personagem "${char.name}" (${playName(char.playId)}) agora é de ${memberName(mid)}.` : `Personagem "${char.name}" (${playName(char.playId)}) ficou sem intérprete.`);
             saveState();
             showNotification('Salvo com sucesso! Intérprete definido.');
         }
@@ -1009,7 +1072,7 @@
         // ==========================================
         function createMeeting(e) {
             e.preventDefault();
-            if (!isMaster()) return;
+            if (!can('faltas', 'i')) return;
             const title = document.getElementById('meeting-title').value.trim();
             const date = document.getElementById('meeting-date').value;
 
@@ -1035,7 +1098,7 @@
             container.innerHTML = state.members.filter(m => m.active !== false || (meeting.attendance && meeting.attendance[m.id])).map(m => {
                 const inactive = m.active === false;
                 const status = (meeting.attendance && meeting.attendance[m.id]) || 'P';
-                const disabled = (isMaster() && !inactive) ? '' : 'disabled';
+                const disabled = (can('faltas', 'i') && !inactive) ? '' : 'disabled';
                 return `
                     <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
@@ -1071,7 +1134,7 @@
         }
 
         function saveAttendanceChanges() {
-            if (!isMaster() || !activeMeetingId) return;
+            if (!can('faltas', 'i') || !activeMeetingId) return;
             const meeting = state.meetings.find(m => m.id === activeMeetingId);
             if (!meeting) return;
 
@@ -1087,7 +1150,7 @@
         }
 
         function deleteCurrentMeeting() {
-            if (!isMaster() || !activeMeetingId) return;
+            if (!can('faltas', 'd') || !activeMeetingId) return;
             state.meetings = state.meetings.filter(m => m.id !== activeMeetingId);
             saveState();
             closeAttendanceModal();
@@ -1099,7 +1162,7 @@
         // ==========================================
         function addExpense(e) {
             e.preventDefault();
-            if (!isMaster()) return;
+            if (!can('financeiro', 'i')) return;
             const desc = document.getElementById('exp-desc').value.trim();
             const amount = parseFloat(document.getElementById('exp-val').value) || 0;
             state.expenses.unshift({ id: Date.now(), desc, amount });
@@ -1110,7 +1173,7 @@
         }
 
         function deleteExpense(id) {
-            if (!isMaster()) return;
+            if (!can('financeiro', 'd')) return;
             state.expenses = state.expenses.filter(x => x.id !== id);
             saveState();
             showNotification('Salvo com sucesso! Despesa removida.');
@@ -1150,13 +1213,14 @@
         function changeUserRole(userId, newRole) {
             if (!isMaster()) return;
             const u = state.users.find(x => x.id === userId);
-            if (!u || u.role === newRole || !['master', 'user'].includes(newRole)) return;
+            if (!u || u.role === newRole || !['master', 'user', 'membro'].includes(newRole)) return;
             if (u.role === 'master' && newRole === 'user' && state.users.filter(x => x.role === 'master').length <= 1) {
                 showNotification('Precisa existir pelo menos um Master!', 'error');
                 renderAll();
                 return;
             }
             u.role = newRole;
+            delete u.perms;
             const self = currentUser && currentUser.id === userId;
             saveState();
             showNotification(`Salvo com sucesso! @${u.username} agora é ${newRole.toUpperCase()}.`);
@@ -1179,6 +1243,203 @@
         // ==========================================
         function formatBRL(v) {
             return 'R$ ' + (Number(v) || 0).toFixed(2).replace('.', ',');
+        }
+
+        // ==========================================
+        // PERMISSÕES, AVISOS, RELATÓRIOS, SINO
+        // ==========================================
+        const SCREENS = { dashboard: 'Dashboard', avisos: 'Avisos', membros: 'Membros & Taxas', pecas: 'Peças & Personagens', escalacao: 'Quem Interpreta', faltas: 'Controle de Faltas', financeiro: 'Financeiro', ranking: 'Ranking', conquistas: 'Conquistas', relatorios: 'Relatórios' };
+        const LEVELS = ['Bloqueado', 'Consultar', 'Inserir/Editar', 'Total (c/ excluir)'];
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const memberName = id => (state.members.find(m => m.id === id) || {}).name || '—';
+        const playName = id => (state.plays.find(p => p.id === id) || {}).title || '—';
+        function lvl(u, s) {
+            if (!u) return 0;
+            if (u.role === 'master') return 3;
+            if (u.perms && u.perms[s] !== undefined) return u.perms[s];
+            if (u.role === 'membro') return ['faltas', 'pecas', 'avisos', 'conquistas'].includes(s) ? 1 : 0;
+            return 1;
+        }
+        function can(s, a) { const l = lvl(currentUser, s); return a === 'v' ? l >= 1 : a === 'i' ? l >= 2 : l >= 3; }
+        function setPerm(uid, s, v) {
+            if (!isMaster()) return;
+            const u = state.users.find(x => x.id === uid);
+            if (!u || u.role === 'master') return;
+            if (!u.perms) { u.perms = {}; Object.keys(SCREENS).forEach(k => { u.perms[k] = lvl(u, k); }); }
+            u.perms[s] = Number(v);
+            saveState();
+            showNotification('Salvo com sucesso! Permissão atualizada.');
+        }
+        function setUserMember(uid, v) {
+            if (!isMaster()) return;
+            const u = state.users.find(x => x.id === uid);
+            if (!u) return;
+            if (v) u.memberId = Number(v); else delete u.memberId;
+            saveState();
+            showNotification('Salvo com sucesso! Vínculo atualizado.');
+        }
+        function renderAccess() {
+            const el = document.getElementById('acc-table');
+            if (!el || !isMaster()) return;
+            const sc = Object.keys(SCREENS);
+            el.innerHTML = `<thead><tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200"><th class="py-2.5 px-3">Usuário</th><th class="py-2.5 px-3">Membro vinculado</th>${sc.map(s => `<th class="py-2.5 px-3">${SCREENS[s]}</th>`).join('')}</tr></thead><tbody class="divide-y divide-slate-100">${state.users.map(u => u.role === 'master'
+                ? `<tr><td class="py-2.5 px-3 font-semibold">${esc(u.name)} <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">MASTER</span></td><td class="py-2.5 px-3 text-xs text-slate-400" colspan="${sc.length + 1}">Acesso total a todas as telas.</td></tr>`
+                : `<tr><td class="py-2.5 px-3 font-semibold">${esc(u.name)}<span class="block text-[10px] uppercase text-slate-400">${esc(u.role)}</span></td><td class="py-2.5 px-3"><select onchange="setUserMember(${u.id}, this.value)" class="px-2 py-1 border border-slate-300 rounded-lg text-xs"><option value="">— nenhum —</option>${state.members.map(m => `<option value="${m.id}" ${u.memberId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></td>${sc.map(s => `<td class="py-2.5 px-3"><select onchange="setPerm(${u.id}, '${s}', this.value)" class="px-2 py-1 border border-slate-300 rounded-lg text-xs ${lvl(u, s) === 0 ? 'bg-rose-50 text-rose-700' : ''}">${LEVELS.map((n, i) => `<option value="${i}" ${lvl(u, s) === i ? 'selected' : ''}>${n}</option>`).join('')}</select></td>`).join('')}</tr>`).join('')}</tbody>`;
+        }
+        // ---- Avisos
+        function addAviso(e) {
+            e.preventDefault();
+            if (!can('avisos', 'i')) return;
+            const title = document.getElementById('av-title').value.trim(), text = document.getElementById('av-text').value.trim();
+            if (!title || !text) return;
+            state.avisos.unshift({ id: Date.now(), title, text, date: new Date().toISOString().slice(0, 10), active: true, by: currentUser.name });
+            document.getElementById('av-title').value = ''; document.getElementById('av-text').value = '';
+            saveState(); showNotification('Salvo com sucesso! Aviso publicado.');
+        }
+        function toggleAviso(id) {
+            if (!can('avisos', 'i')) return;
+            const a = state.avisos.find(x => x.id === id);
+            if (!a) return;
+            a.active = a.active === false;
+            saveState(); showNotification(a.active ? 'Aviso ativado.' : 'Aviso desativado.');
+        }
+        function deleteAviso(id) {
+            if (!can('avisos', 'd')) return;
+            state.avisos = state.avisos.filter(x => x.id !== id);
+            saveState(); showNotification('Salvo com sucesso! Aviso excluído.');
+        }
+        function renderAvisos() {
+            const el = document.getElementById('avisos-list');
+            if (!el) return;
+            const edit = can('avisos', 'i');
+            const list = (state.avisos || []).filter(a => edit || a.active !== false);
+            el.innerHTML = list.map(a => `<div class="bg-white p-5 rounded-2xl border ${a.active === false ? 'border-slate-200 opacity-60' : 'border-amber-300'}"><div class="flex justify-between gap-2"><h4 class="font-bold text-slate-800">${esc(a.title)}${a.active === false ? ' <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">DESATIVADO</span>' : ''}</h4><span class="text-xs text-slate-400 shrink-0">${esc(String(a.date || '').split('-').reverse().join('/'))}</span></div><p class="text-sm text-slate-600 mt-1" style="white-space:pre-line">${esc(a.text)}</p><div class="flex gap-3 mt-3"><button onclick="toggleAviso(${a.id})" class="master-only text-xs font-semibold text-amber-600 hover:underline">${a.active === false ? 'Ativar' : 'Desativar'}</button><button onclick="deleteAviso(${a.id})" class="master-only text-xs font-semibold text-rose-600 hover:underline">Excluir</button></div></div>`).join('') || '<p class="text-sm text-slate-400 text-center py-8">Nenhum aviso no momento.</p>';
+        }
+        // ---- Sino de notificações (leitura guardada neste aparelho)
+        function logChange(text) {
+            state.changes = state.changes || [];
+            state.changes.unshift({ id: Date.now(), at: Date.now(), text, by: currentUser ? currentUser.name : '' });
+            state.changes = state.changes.slice(0, 60);
+        }
+        const nGet = () => { try { return JSON.parse(localStorage.getItem('teatro_notif_' + currentUser.id)) || { read: {}, later: {} }; } catch (e) { return { read: {}, later: {} }; } };
+        const nSet = o => { try { localStorage.setItem('teatro_notif_' + currentUser.id, JSON.stringify(o)); } catch (e) {} };
+        function nRead(id) { const n = nGet(); n.read[id] = 1; nSet(n); renderBell(); }
+        function nLater(id) { const n = nGet(); n.later[id] = Date.now() + 3600000; nSet(n); renderBell(); }
+        function toggleBell() { document.getElementById('bell-panel').classList.toggle('hidden'); renderBell(); }
+        function renderBell() {
+            const p = document.getElementById('bell-panel'), c = document.getElementById('bell-count');
+            if (!p || !currentUser) return;
+            const n = nGet(), now = Date.now(), all = (state.changes || []).filter(x => !n.read[x.id]);
+            const list = all.filter(x => !(n.later[x.id] > now)), later = all.length - list.length;
+            c.innerText = list.length; c.classList.toggle('hidden', !list.length);
+            p.innerHTML = '<div class="px-4 py-3 border-b border-slate-100 text-sm font-bold text-slate-800">Alterações em personagens</div>' + (list.slice(0, 20).map(x => `<div class="px-4 py-3 border-b border-slate-100 text-sm"><p class="text-slate-700">${esc(x.text)}</p><p class="text-[11px] text-slate-400 mt-0.5">${new Date(x.at).toLocaleString('pt-BR')}</p><div class="flex gap-3 mt-1.5 text-xs font-semibold"><button onclick="nRead(${x.id})" class="text-emerald-600 hover:underline">Marcar como lido</button><button onclick="nLater(${x.id})" class="text-amber-600 hover:underline">Lembrar mais tarde</button></div></div>`).join('') || '<p class="px-4 py-6 text-sm text-slate-400 text-center">Nenhuma notificação nova.</p>') + (later ? `<p class="px-4 py-2 text-[11px] text-slate-400">${later} adiada(s) por 1 hora.</p>` : '');
+        }
+        // ---- Minhas frequências / peças (usuário vinculado a um membro)
+        function renderMine() {
+            const mf = document.getElementById('my-faltas'), mp = document.getElementById('my-pecas');
+            if (!mf || !mp) return;
+            const m = currentUser && currentUser.memberId && state.members.find(x => x.id === currentUser.memberId);
+            if (!m) { mf.innerHTML = ''; mp.innerHTML = ''; return; }
+            const rows = state.meetings.filter(t => t.attendance && t.attendance[m.id]);
+            const c = k => rows.filter(t => t.attendance[m.id] === k).length;
+            const lab = { P: 'Presente', FJ: 'Falta justificada', FSJ: 'Falta sem justificativa' };
+            const box = 'bg-white p-5 rounded-2xl border border-indigo-200 space-y-3';
+            mf.innerHTML = `<div class="${box}"><h3 class="font-bold text-slate-800">Minhas frequências — ${esc(m.name)}</h3><div class="flex gap-2 text-xs font-bold"><span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700">P: ${c('P')}</span><span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700">FJ: ${c('FJ')}</span><span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700">FSJ: ${c('FSJ')}</span></div><div class="divide-y divide-slate-100 text-sm">${rows.map(t => `<div class="flex justify-between py-1.5"><span>${esc(t.title)} <span class="text-xs text-slate-400">${esc(t.date.split('-').reverse().join('/'))}</span></span><span class="font-semibold">${lab[t.attendance[m.id]] || ''}</span></div>`).join('') || '<p class="text-slate-400 py-2">Sem registros ainda.</p>'}</div></div>`;
+            const mine = state.characters.filter(x => x.memberId === m.id);
+            mp.innerHTML = `<div class="${box}"><h3 class="font-bold text-slate-800">Minhas peças — ${esc(m.name)}</h3><div class="divide-y divide-slate-100 text-sm">${mine.map(x => `<div class="py-1.5"><b>${esc(playName(x.playId))}</b> <span class="text-slate-500">como ${esc(x.name)}</span></div>`).join('') || '<p class="text-slate-400 py-2">Você ainda não foi escalado em nenhuma peça.</p>'}</div></div>`;
+        }
+        // ---- Relatórios e PDF
+        let repView = 'membro';
+        const tbl = (head, body) => `<table class="w-full text-left text-sm border-collapse min-w-[480px]"><thead><tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">${head.map(h => `<th class="py-2.5 px-3">${esc(h)}</th>`).join('')}</tr></thead><tbody class="divide-y divide-slate-100">${body.map(r => `<tr>${r.map(c => `<td class="py-2.5 px-3">${esc(c)}</td>`).join('')}</tr>`).join('') || `<tr><td class="py-4 px-3 text-slate-400" colspan="${head.length}">Sem dados.</td></tr>`}</tbody></table>`;
+        function repData(v) {
+            const act = state.members.filter(m => m.active !== false);
+            const st = m => { let p = 0, fj = 0, fsj = 0; state.meetings.forEach(t => { const s = t.attendance && t.attendance[m.id]; if (s === 'P') p++; else if (s === 'FJ') fj++; else if (s === 'FSJ') fsj++; }); return { p, fj, fsj, t: p + fj + fsj }; };
+            if (v === 'membro') return { title: 'Personagens por Membro', sections: [{ h: 'Participação por membro', head: ['Membro', 'Nº de peças', 'Peças (personagem)'], body: act.map(m => { const cs = state.characters.filter(c => c.memberId === m.id); return [m.name, new Set(cs.map(c => c.playId)).size, cs.map(c => playName(c.playId) + ' (' + c.name + ')').join('; ') || '—']; }).sort((a, b) => b[1] - a[1]) }] };
+            if (v === 'pecas') return { title: 'Peças e Personagens', sections: state.plays.map(p => ({ h: p.title, head: ['Personagem', 'Intérprete'], body: state.characters.filter(c => c.playId === p.id).map(c => [c.name, c.memberId ? memberName(c.memberId) : 'Sem intérprete']) })) };
+            if (v === 'freq') return { title: 'Relatório de Frequência', sections: [{ h: 'Frequência por membro (' + state.meetings.length + ' ensaios)', head: ['Membro', 'Ensaios', 'P', 'FJ', 'FSJ', '% Presença'], body: state.members.map(m => [m, st(m)]).filter(([m, s]) => m.active !== false || s.t).map(([m, s]) => [m.name + (m.active === false ? ' (ex)' : ''), s.t, s.p, s.fj, s.fsj, s.t ? Math.round(s.p / s.t * 100) + '%' : '—']) }] };
+            const paid = m => (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
+            const arr = state.members.reduce((a, m) => a + paid(m), 0), usado = state.expenses.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+            return { title: 'Relatório Financeiro', sections: [
+                { h: 'Resumo', head: ['Item', 'Valor'], body: [['Total arrecadado', formatBRL(arr)], ['Total gasto', formatBRL(usado)], ['Saldo disponível', formatBRL(arr - usado)], ['Falta arrecadar (ativos)', formatBRL(act.reduce((a, m) => a + Math.max(0, 120 - paid(m)), 0))]] },
+                { h: 'Taxas por membro', head: ['Membro', 'Situação', 'Tx Encontro', 'Tx Equipe', 'Pago', 'Falta'], body: state.members.map(m => [m.name, m.active === false ? 'Ex-integrante' : 'Ativo', formatBRL(Number(m.txEncontro) || 0), formatBRL(Number(m.txEquipe) || 0), formatBRL(paid(m)), formatBRL(m.active === false ? 0 : Math.max(0, 120 - paid(m)))]) },
+                { h: 'Despesas', head: ['Descrição', 'Valor'], body: state.expenses.map(x => [x.desc, formatBRL(Number(x.amount) || 0)]) }] };
+        }
+        function setRep(v) { repView = v; renderReports(); }
+        function renderReports() {
+            const el = document.getElementById('rep-body');
+            if (!el) return;
+            document.querySelectorAll('#rep-tabs button').forEach(b => { b.className = 'px-3 py-1.5 rounded-lg ' + (b.dataset.v === repView ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'); });
+            if (repView === 'fin' && !can('financeiro', 'v')) { el.innerHTML = '<p class="text-sm text-slate-500 py-6">Seu usuário não tem perfil para visualizar este relatório.</p>'; return; }
+            el.innerHTML = repData(repView).sections.map(s => `<h4 class="font-bold text-slate-800 mt-4 mb-2">${esc(s.h)}</h4>` + tbl(s.head, s.body)).join('') || '<p class="text-sm text-slate-400 py-6">Nenhuma peça cadastrada.</p>';
+        }
+        function pdfReport() {
+            if (!window.jspdf) { showNotification('A biblioteca de PDF não carregou. Recarregue a página.', 'error'); return; }
+            if (repView === 'fin' && !can('financeiro', 'v')) return;
+            const d = repData(repView), doc = new window.jspdf.jsPDF();
+            doc.setFontSize(16); doc.text(d.title, 14, 16);
+            doc.setFontSize(9); doc.text('Gerado em ' + new Date().toLocaleDateString('pt-BR'), 14, 22);
+            let y = 28;
+            d.sections.forEach(s => {
+                if (y > 255) { doc.addPage(); y = 16; }
+                doc.setFontSize(12); doc.text(String(s.h), 14, y + 5);
+                doc.autoTable({ startY: y + 8, head: [s.head], body: s.body.map(r => r.map(String)), styles: { fontSize: 9 }, headStyles: { fillColor: [79, 70, 229] } });
+                y = doc.lastAutoTable.finalY + 8;
+            });
+            doc.save(d.title.replace(/\s+/g, '-').toLowerCase() + '.pdf');
+        }
+        function applyPermissions() {
+            document.querySelectorAll('.master-only').forEach(el => {
+                const sec = el.closest('section[id^="tab-"]');
+                const scr = sec ? sec.id.slice(4) : 'faltas';
+                const del = /delete/i.test(el.getAttribute('onclick') || '');
+                el.classList.toggle('hidden', !can(scr, del ? 'd' : 'i'));
+            });
+            Object.keys(SCREENS).forEach(s => { const b = document.getElementById('nav-' + s); if (b) b.dataset.locked = can(s, 'v') ? '0' : '1'; });
+            ['usuarios', 'acessos'].forEach(t => document.getElementById('nav-' + t).classList.toggle('hidden', !isMaster()));
+            document.getElementById('view-only-notice').classList.toggle('hidden', isMaster() || Object.keys(SCREENS).some(s => can(s, 'i')));
+            document.getElementById('bell-wrap').classList.toggle('hidden', !can('pecas', 'v'));
+        }
+
+        // ==========================================
+        // GAMIFICAÇÃO: INSÍGNIAS E PONTOS
+        // ==========================================
+        const BADGES = [
+            { k: 'fogo', e: '🔥', n: 'Sequência de Fogo', d: '5 presenças seguidas' },
+            { k: 'mes', e: '🎯', n: 'Mês Perfeito', d: '100% de presença em um mês (mín. 3 ensaios)' },
+            { k: 'limpo', e: '⏰', n: 'Ficha Limpa', d: '5 ou mais ensaios sem falta injustificada' },
+            { k: 'volta', e: '🔄', n: 'Voltou com Tudo', d: '3 presenças seguidas depois de uma falta' },
+            { k: 'veterano', e: '🏛️', n: 'Veterano de Ensaios', d: '20 presenças acumuladas' },
+            { k: 'estreante', e: '🎭', n: 'Estreante', d: 'Ser escalado em um personagem' },
+            { k: 'multi', e: '🌟', n: 'Multi-Papéis', d: 'Personagens em 3 peças diferentes' },
+            { k: 'emdia', e: '💰', n: 'Em Dia', d: 'Taxas quitadas (R$ 120)' }
+        ];
+        function gameOf(m) {
+            const ms = state.meetings.filter(t => t.attendance && t.attendance[m.id]).sort((a, b) => (a.date + a.id).localeCompare(b.date + b.id));
+            let p = 0, fj = 0, fsj = 0, run = 0, best = 0, after = 0, bestAfter = 0, seenAbs = false;
+            const byMonth = {};
+            ms.forEach(t => {
+                const s = t.attendance[m.id], mo = t.date.slice(0, 7);
+                byMonth[mo] = byMonth[mo] || { n: 0, p: 0 }; byMonth[mo].n++;
+                if (s === 'P') { p++; byMonth[mo].p++; run++; best = Math.max(best, run); if (seenAbs) { after++; bestAfter = Math.max(bestAfter, after); } }
+                else { if (s === 'FJ') fj++; else fsj++; run = 0; seenAbs = true; after = 0; }
+            });
+            const chars = state.characters.filter(c => c.memberId === m.id);
+            const paid = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
+            const got = { fogo: best >= 5, mes: Object.values(byMonth).some(x => x.n >= 3 && x.p === x.n), limpo: ms.length >= 5 && fsj === 0, volta: bestAfter >= 3, veterano: p >= 20, estreante: chars.length >= 1, multi: new Set(chars.map(c => c.playId)).size >= 3 };
+            if (m.txEncontro !== undefined) got.emdia = paid >= 120;
+            const nb = Object.values(got).filter(Boolean).length;
+            return { got, p, nb, pts: p * 10 + fj * 3 + nb * 20 };
+        }
+        function renderGame() {
+            const el = document.getElementById('game-body');
+            if (!el) return;
+            const rank = state.members.filter(m => m.active !== false).map(m => ({ m, ...gameOf(m) })).sort((a, b) => b.pts - a.pts || b.p - a.p || a.m.name.localeCompare(b.m.name));
+            const me = currentUser && currentUser.memberId && rank.find(x => x.m.id === currentUser.memberId);
+            const showFin = can('financeiro', 'v');
+            const card = (b, on) => `<div class="p-4 rounded-2xl border text-center ${on ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 opacity-50'}"><div class="text-3xl ${on ? '' : 'grayscale'}">${b.e}</div><p class="text-sm font-bold text-slate-800 mt-1">${esc(b.n)}</p><p class="text-[11px] text-slate-500 mt-0.5">${esc(b.d)}</p></div>`;
+            const mine = BADGES.filter(b => !me || me.got[b.k] !== undefined);
+            el.innerHTML = `<div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div class="flex flex-wrap items-baseline justify-between gap-2"><h3 class="text-lg font-bold text-slate-800">${me ? 'Minhas Insígnias — ' + esc(me.m.name) : 'Insígnias disponíveis'}</h3>${me ? `<span class="text-sm font-bold text-indigo-700">${me.pts} pontos · ${rank.indexOf(me) + 1}º lugar · ${me.nb} insígnia(s)</span>` : ''}</div><div class="grid grid-cols-2 sm:grid-cols-4 gap-3">${mine.map(b => card(b, me && me.got[b.k])).join('')}</div>${me ? '' : '<p class="text-xs text-slate-400">Para ver as suas insígnias, peça ao Master para vincular seu usuário ao seu cadastro de membro.</p>'}</div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div><h3 class="text-lg font-bold text-slate-800">Ranking de Pontos</h3><p class="text-xs text-slate-500">Presença vale 10 pontos, falta justificada 3 e cada insígnia 20.</p></div><div class="overflow-x-auto">${tbl(['#', 'Membro', 'Pontos', 'Presenças', 'Insígnias'], rank.map((r, i) => [['🥇', '🥈', '🥉'][i] || i + 1, r.m.name, r.pts, r.p, BADGES.filter(b => r.got[b.k] && (b.k !== 'emdia' || showFin)).map(b => b.e).join(' ') || '—']))}</div></div>`;
         }
 
         function renderAll() {
@@ -1335,7 +1596,7 @@
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs text-slate-500">Intérprete:</span>
-                                            <select onchange="assignCharacterMember(${c.id}, this.value)" ${isMaster() ? '' : 'disabled'} class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-medium bg-white">
+                                            <select onchange="assignCharacterMember(${c.id}, this.value)" ${(can('pecas', 'i') || can('escalacao', 'i')) ? '' : 'disabled'} class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-medium bg-white">
                                                 <option value="">-- Ninguém selecionado --</option>
                                                 ${state.members.filter(m => m.active !== false).map(m => `<option value="${m.id}" ${c.memberId === m.id ? 'selected' : ''}>${m.name} (${m.role})</option>`).join('')}
                                             </select>
@@ -1417,6 +1678,7 @@
                             <select onchange="changeUserRole(${u.id}, this.value)" class="px-2 py-1 border border-slate-300 rounded-lg text-[11px] font-bold uppercase ${u.role === 'master' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-700'}">
                                 <option value="master" ${u.role === 'master' ? 'selected' : ''}>Master</option>
                                 <option value="user" ${u.role === 'user' ? 'selected' : ''}>User</option>
+                                <option value="membro" ${u.role === 'membro' ? 'selected' : ''}>Membro</option>
                             </select>
                         </td>
                         <td class="py-3 px-3">
@@ -1432,6 +1694,7 @@
                 `).join('');
             }
 
+            renderGame(); renderAvisos(); renderReports(); renderAccess(); renderMine(); renderBell();
             applyPermissions();
             lucide.createIcons();
         }
