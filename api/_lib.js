@@ -20,17 +20,36 @@ const check = (pw, h) => {
 const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const clean = (s, n) => String(s || '').replace(/[<>&"'`]/g, '').trim().slice(0, n);
 
+const fix = (st) => { st.avisos = st.avisos || []; st.changes = st.changes || []; return st; };
+const SC = ['dashboard', 'avisos', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'conquistas', 'relatorios'];
+const ROLES = ['master', 'user', 'membro'];
+const lvl = (u, s) => {
+  if (!u) return 0; if (u.role === 'master') return 3;
+  if (u.perms && u.perms[s] !== undefined) return u.perms[s];
+  if (u.role === 'membro') return ['faltas', 'pecas', 'avisos', 'conquistas'].includes(s) ? 1 : 0;
+  return 1;
+};
+const cleanPerms = (p) => {
+  if (!p || typeof p !== 'object') return undefined;
+  const o = {}; SC.forEach((k) => { const v = Number(p[k]); if (v >= 0 && v <= 3) o[k] = Math.floor(v); });
+  return Object.keys(o).length ? o : undefined;
+};
 async function load() {
   const raw = await redis(['GET', KEY]);
-  if (raw) return typeof raw === 'string' ? JSON.parse(raw) : raw;
-  const st = { rev: 1, users: [{ id: 1, name: 'Administrador Master', username: 'admin', role: 'master', passHash: hash(process.env.ADMIN_PASSWORD || 'admin123') }], members: [], plays: [], characters: [], meetings: [], expenses: [] };
+  if (raw) return fix(typeof raw === 'string' ? JSON.parse(raw) : raw);
+  const st = { rev: 1, users: [{ id: 1, name: 'Administrador Master', username: 'admin', role: 'master', passHash: hash(process.env.ADMIN_PASSWORD || 'admin123') }], members: [], plays: [], characters: [], meetings: [], expenses: [], avisos: [], changes: [] };
   await redis(['SET', KEY, JSON.stringify(st), 'NX']);
   const again = await redis(['GET', KEY]);
-  return typeof again === 'string' ? JSON.parse(again) : again;
+  return fix(typeof again === 'string' ? JSON.parse(again) : again);
 }
 const save = (st) => redis(['SET', KEY, JSON.stringify(st)]);
-const pub = (st) => { const { rev, users, ...rest } = st; return { ...rest, users: users.map(({ passHash, ...u }) => u) }; };
-const me = (u) => ({ id: u.id, name: u.name, username: u.username, role: u.role });
+const pub = (st, u) => {
+  const { rev, users, ...rest } = st;
+  const o = { ...rest, users: users.map(({ passHash, ...x }) => x) };
+  if (u && lvl(u, 'financeiro') < 1) { o.expenses = []; o.members = (o.members || []).map(({ txEncontro, txEquipe, ...m }) => m); }
+  return o;
+};
+const me = (u) => ({ id: u.id, name: u.name, username: u.username, role: u.role, perms: u.perms, memberId: u.memberId });
 function sign(uid) {
   const p = Buffer.from(JSON.stringify({ uid, exp: Date.now() + 30 * 864e5 })).toString('base64url');
   return p + '.' + crypto.createHmac('sha256', SECRET).update(p).digest('base64url');
@@ -46,4 +65,4 @@ function verify(req, st) {
   } catch { return null; }
 }
 const send = (res, code, obj) => res.status(code).json(obj);
-module.exports = { load, save, pub, me, sign, verify, hash, check, norm, clean, send, configured: !!(URL_ && TOKEN) };
+module.exports = { SC, ROLES, lvl, cleanPerms, load, save, pub, me, sign, verify, hash, check, norm, clean, send, configured: !!(URL_ && TOKEN) };

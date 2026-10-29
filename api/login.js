@@ -6,5 +6,5 @@ module.exports = async (req, res) => {
   const st = await L.load();
   const u = st.users.find((x) => L.norm(x.username) === L.norm(username));
   if (!u || !L.check(String(password || ''), u.passHash)) return L.send(res, 401, { error: 'Usuário ou senha incorretos!' });
-  L.send(res, 200, { token: L.sign(u.id), me: L.me(u), rev: st.rev, state: L.pub(st) });
+  L.send(res, 200, { token: L.sign(u.id), me: L.me(u), rev: st.rev, state: L.pub(st, u) });
 };
