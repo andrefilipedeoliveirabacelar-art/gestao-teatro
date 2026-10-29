@@ -372,6 +372,7 @@
                                 <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-semibold">P = Presença</span>
                                 <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-semibold">FJ = Falta Justificada</span>
                                 <span class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 font-semibold">FSJ = Falta Sem Justificativa</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-semibold">N/A = Não fazia parte da equipe</span>
                             </div>
                         </div>
 
@@ -640,6 +641,7 @@
                 <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">P = Presença</span>
                 <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold">FJ = Falta Justificada</span>
                 <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-semibold">FSJ = Falta Sem Justificativa</span>
+                <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold">N/A = Não fazia parte da equipe</span>
             </div>
 
             <!-- Lista de Membros para Chamada -->
@@ -1122,6 +1124,10 @@
                                 <input type="radio" name="att-${m.id}" value="FSJ" ${status === 'FSJ' ? 'checked' : ''} ${disabled} class="peer hidden">
                                 <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 peer-checked:bg-rose-600 peer-checked:text-white peer-checked:border-rose-600 inline-block">FSJ</span>
                             </label>
+                            <label class="cursor-pointer" title="Não fazia parte da equipe nesta data">
+                                <input type="radio" name="att-${m.id}" value="NA" ${status === 'NA' ? 'checked' : ''} ${disabled} class="peer hidden">
+                                <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 peer-checked:bg-slate-600 peer-checked:text-white peer-checked:border-slate-600 inline-block">N/A</span>
+                            </label>
                         </div>
                     </div>
                 `;
@@ -1346,7 +1352,7 @@
             if (!m) { mf.innerHTML = ''; mp.innerHTML = ''; return; }
             const rows = state.meetings.filter(t => t.attendance && t.attendance[m.id]);
             const c = k => rows.filter(t => t.attendance[m.id] === k).length;
-            const lab = { P: 'Presente', FJ: 'Falta justificada', FSJ: 'Falta sem justificativa' };
+            const lab = { P: 'Presente', FJ: 'Falta justificada', FSJ: 'Falta sem justificativa', NA: 'Não fazia parte da equipe' };
             const box = 'bg-white p-5 rounded-2xl border border-indigo-200 space-y-3';
             mf.innerHTML = `<div class="${box}"><h3 class="font-bold text-slate-800">Minhas frequências — ${esc(m.name)}</h3><div class="flex gap-2 text-xs font-bold"><span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700">P: ${c('P')}</span><span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700">FJ: ${c('FJ')}</span><span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700">FSJ: ${c('FSJ')}</span></div><div class="divide-y divide-slate-100 text-sm">${rows.map(t => `<div class="flex justify-between py-1.5"><span>${esc(t.title)} <span class="text-xs text-slate-400">${esc(t.date.split('-').reverse().join('/'))}</span></span><span class="font-semibold">${lab[t.attendance[m.id]] || ''}</span></div>`).join('') || '<p class="text-slate-400 py-2">Sem registros ainda.</p>'}</div></div>`;
             const mine = state.characters.filter(x => x.memberId === m.id);
@@ -1407,6 +1413,9 @@
         // ==========================================
         // GAMIFICAÇÃO: INSÍGNIAS E PONTOS
         // ==========================================
+        const PTS = { P: 10, FJ: 3, FSJ: -10, SEQ: -5, BADGE: 20 };
+        const LOSE = { limpo: 'Sim, ao faltar sem justificativa', emdia: 'Sim, se as taxas ficarem pendentes' };
+        const sg = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
         const BADGES = [
             { k: 'fogo', e: '🔥', n: 'Sequência de Fogo', d: '5 presenças seguidas' },
             { k: 'mes', e: '🎯', n: 'Mês Perfeito', d: '100% de presença em um mês (mín. 3 ensaios)' },
@@ -1418,33 +1427,39 @@
             { k: 'emdia', e: '💰', n: 'Em Dia', d: 'Taxas quitadas (R$ 120)' }
         ];
         function gameOf(m) {
-            const ms = state.meetings.filter(t => t.attendance && t.attendance[m.id]).sort((a, b) => (a.date + a.id).localeCompare(b.date + b.id));
-            let p = 0, fj = 0, fsj = 0, run = 0, best = 0, after = 0, bestAfter = 0, seenAbs = false;
+            const ms = state.meetings.filter(t => t.attendance && t.attendance[m.id] && t.attendance[m.id] !== 'NA').sort((a, b) => (a.date + a.id).localeCompare(b.date + b.id));
+            let p = 0, fj = 0, fsj = 0, run = 0, best = 0, after = 0, bestAfter = 0, seenAbs = false, absRun = 0, seqPen = 0;
             const byMonth = {};
             ms.forEach(t => {
                 const s = t.attendance[m.id], mo = t.date.slice(0, 7);
                 byMonth[mo] = byMonth[mo] || { n: 0, p: 0 }; byMonth[mo].n++;
-                if (s === 'P') { p++; byMonth[mo].p++; run++; best = Math.max(best, run); if (seenAbs) { after++; bestAfter = Math.max(bestAfter, after); } }
-                else { if (s === 'FJ') fj++; else fsj++; run = 0; seenAbs = true; after = 0; }
+                if (s === 'P') { p++; byMonth[mo].p++; absRun = 0; run++; best = Math.max(best, run); if (seenAbs) { after++; bestAfter = Math.max(bestAfter, after); } }
+                else { if (s === 'FJ') fj++; else fsj++; absRun++; if (absRun >= 2) seqPen++; run = 0; seenAbs = true; after = 0; }
             });
             const chars = state.characters.filter(c => c.memberId === m.id);
             const paid = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
             const got = { fogo: best >= 5, mes: Object.values(byMonth).some(x => x.n >= 3 && x.p === x.n), limpo: ms.length >= 5 && fsj === 0, volta: bestAfter >= 3, veterano: p >= 20, estreante: chars.length >= 1, multi: new Set(chars.map(c => c.playId)).size >= 3 };
             if (m.txEncontro !== undefined) got.emdia = paid >= 120;
             const nb = Object.values(got).filter(Boolean).length;
-            return { got, p, nb, pts: p * 10 + fj * 3 + nb * 20 };
+            const parts = { pres: p * PTS.P, fj: fj * PTS.FJ, fsj: fsj * PTS.FSJ, seq: seqPen * PTS.SEQ, badges: nb * PTS.BADGE };
+            return { got, p, nb, best, parts, pct: ms.length ? p / ms.length : 0, pts: Math.max(0, Object.values(parts).reduce((a, b) => a + b, 0)) };
         }
         function renderGame() {
             const el = document.getElementById('game-body');
             if (!el) return;
-            const rank = state.members.filter(m => m.active !== false && m.game !== false).map(m => ({ m, ...gameOf(m) })).sort((a, b) => b.pts - a.pts || b.p - a.p || a.m.name.localeCompare(b.m.name));
+            const rank = state.members.filter(m => m.active !== false && m.game !== false).map(m => ({ m, ...gameOf(m) })).sort((a, b) => b.pts - a.pts || b.pct - a.pct || b.p - a.p || b.best - a.best || b.nb - a.nb || a.m.name.localeCompare(b.m.name));
+            rank.forEach((r, i) => { r.k = [r.pts, r.pct.toFixed(4), r.p, r.best, r.nb].join('|'); r.pos = (i && r.k === rank[i - 1].k) ? rank[i - 1].pos : i + 1; });
             const me = currentUser && currentUser.memberId && rank.find(x => x.m.id === currentUser.memberId);
             const showFin = can('financeiro', 'v');
             const linked = currentUser && currentUser.memberId && state.members.find(x => x.id === currentUser.memberId);
             const card = (b, on) => `<div class="p-4 rounded-2xl border text-center ${on ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 opacity-50'}"><div class="text-3xl ${on ? '' : 'grayscale'}">${b.e}</div><p class="text-sm font-bold text-slate-800 mt-1">${esc(b.n)}</p><p class="text-[11px] text-slate-500 mt-0.5">${esc(b.d)}</p></div>`;
+            const rulesCard = `<div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-4"><h3 class="text-lg font-bold text-slate-800">Tabela de Regras e Pontuações</h3>
+                <div class="overflow-x-auto">${tbl(['Regra de pontos', 'Pontos'], [['Presença (P)', sg(PTS.P)], ['Falta justificada (FJ)', sg(PTS.FJ)], ['Falta sem justificativa (FSJ)', sg(PTS.FSJ)], ['2ª falta seguida em diante (FJ ou FSJ)', sg(PTS.SEQ) + ' por falta'], ['N/A (não fazia parte da equipe)', '0, o ensaio não conta'], ['Pontuação mínima', '0 (nunca fica negativa)']])}</div>
+                <div class="overflow-x-auto">${tbl(['Insígnia', 'Como ganhar', 'Pontos', 'Pode ser perdida?'], BADGES.map(b => [b.e + ' ' + b.n, b.d, sg(PTS.BADGE), LOSE[b.k] || 'Não, fica para sempre']))}</div>
+                <div class="overflow-x-auto">${tbl(['Desempate', 'Critério'], [['1º', 'Maior % de presença'], ['2º', 'Mais presenças'], ['3º', 'Maior sequência de presenças'], ['4º', 'Mais insígnias'], ['5º', 'Continua igual: mesma posição']])}</div></div>`;
             const mine = BADGES.filter(b => !me || me.got[b.k] !== undefined);
-            el.innerHTML = `<div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div class="flex flex-wrap items-baseline justify-between gap-2"><h3 class="text-lg font-bold text-slate-800">${me ? 'Minhas Insígnias — ' + esc(me.m.name) : 'Insígnias disponíveis'}</h3>${me ? `<span class="text-sm font-bold text-indigo-700">${me.pts} pontos · ${rank.indexOf(me) + 1}º lugar · ${me.nb} insígnia(s)</span>` : ''}</div><div class="grid grid-cols-2 sm:grid-cols-4 gap-3">${mine.map(b => card(b, me && me.got[b.k])).join('')}</div>${me ? '' : `<p class="text-xs text-slate-400">${linked && linked.game === false ? 'Seu cadastro (diretor/apoio) não participa da gamificação.' : 'Para ver as suas insígnias, peça ao Master para vincular seu usuário ao seu cadastro de membro.'}</p>`}</div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div><h3 class="text-lg font-bold text-slate-800">Ranking de Pontos</h3><p class="text-xs text-slate-500">Presença vale 10 pontos, falta justificada 3 e cada insígnia 20.</p></div><div class="overflow-x-auto">${tbl(['#', 'Membro', 'Pontos', 'Presenças', 'Insígnias'], rank.map((r, i) => [['🥇', '🥈', '🥉'][i] || i + 1, r.m.name, r.pts, r.p, BADGES.filter(b => r.got[b.k] && (b.k !== 'emdia' || showFin)).map(b => b.e).join(' ') || '—']))}</div></div>`;
+            el.innerHTML = `<div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div class="flex flex-wrap items-baseline justify-between gap-2"><h3 class="text-lg font-bold text-slate-800">${me ? 'Minhas Insígnias — ' + esc(me.m.name) : 'Insígnias disponíveis'}</h3>${me ? `<span class="text-sm font-bold text-indigo-700">${me.pts} pontos · ${me.pos}º lugar · ${me.nb} insígnia(s)</span>` : ''}</div>${me ? `<p class="text-xs text-slate-500">Presenças ${sg(me.parts.pres)} · Justificadas ${sg(me.parts.fj)} · Sem justificativa ${sg(me.parts.fsj)} · Faltas seguidas ${sg(me.parts.seq)} · Insígnias ${sg(me.parts.badges)}</p>` : ''}<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">${mine.map(b => card(b, me && me.got[b.k])).join('')}</div>${me ? '' : `<p class="text-xs text-slate-400">${linked && linked.game === false ? 'Seu cadastro (diretor/apoio) não participa da gamificação.' : 'Para ver as suas insígnias, peça ao Master para vincular seu usuário ao seu cadastro de membro.'}</p>`}</div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div><h3 class="text-lg font-bold text-slate-800">Ranking de Pontos</h3><p class="text-xs text-slate-500">Os pontos seguem a tabela de regras mais abaixo. Ensaios marcados como N/A (não fazia parte da equipe) não contam.</p><p class="text-xs text-slate-500"><b>Desempate</b>, nesta ordem: 1º maior % de presença (justo com quem entrou depois), 2º mais presenças, 3º maior sequência de presenças, 4º mais insígnias. Se continuar igual, os membros dividem a mesma posição.</p></div><div class="overflow-x-auto">${tbl(['#', 'Membro', 'Pontos', '% Presença', 'Presenças', 'Insígnias'], rank.map(r => [['🥇', '🥈', '🥉'][r.pos - 1] || r.pos, r.m.name, r.pts, Math.round(r.pct * 100) + '%', r.p, BADGES.filter(b => r.got[b.k] && (b.k !== 'emdia' || showFin)).map(b => b.e).join(' ') || '—']))}</div></div>${rulesCard}`;
         }
 
         function renderAll() {
@@ -1620,6 +1635,7 @@
                 const pCount = values.filter(v => v === 'P').length;
                 const fjCount = values.filter(v => v === 'FJ').length;
                 const fsjCount = values.filter(v => v === 'FSJ').length;
+                const naCount = values.filter(v => v === 'NA').length;
                 return `
                     <div onclick="openAttendanceModal(${m.id})" class="cursor-pointer bg-white p-5 rounded-2xl border border-slate-200 hover:border-indigo-500 hover:shadow-md transition space-y-3">
                         <div class="flex justify-between items-start">
@@ -1633,6 +1649,7 @@
                             <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700">P: ${pCount}</span>
                             <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700">FJ: ${fjCount}</span>
                             <span class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700">FSJ: ${fsjCount}</span>
+                            ${naCount ? `<span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">N/A: ${naCount}</span>` : ''}
                         </div>
                     </div>
                 `;
