@@ -3,6 +3,7 @@ const SCR = { members: ['membros'], plays: ['pecas'], characters: ['pecas', 'esc
 const COLS = Object.keys(SCR);
 const canon = (v) => Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v;
 const J = (x) => JSON.stringify(canon(x));
+const strip = (x) => { const { atualizadoPor, atualizadoEm, ...r } = x; return r; };
 module.exports = async (req, res) => {
   if (!L.configured) return L.send(res, 500, { error: 'Banco de dados não configurado na Vercel.' });
   const st = await L.load();
@@ -21,7 +22,7 @@ module.exports = async (req, res) => {
     }
     for (const k of COLS) {
       const a = st[k] || [], b = Array.isArray(inc[k]) ? inc[k] : a;
-      const oa = new Map(a.map((x) => [x.id, J(x)])), ob = new Map(b.map((x) => [x.id, J(x)]));
+      const oa = new Map(a.map((x) => [x.id, J(strip(x))])), ob = new Map(b.map((x) => [x.id, J(strip(x))]));
       let ins = false, del = false;
       for (const [id, j] of ob) if (oa.get(id) !== j) ins = true;
       for (const id of oa.keys()) if (!ob.has(id)) del = true;
@@ -31,6 +32,20 @@ module.exports = async (req, res) => {
   }
   const next = { rev: st.rev + 1 };
   COLS.forEach((k) => { next[k] = Array.isArray(inc[k]) ? inc[k] : st[k]; });
+  next.config = master && inc.config ? L.cleanConfig(inc.config, st.config) : st.config;
+  const when = new Date().toISOString();
+  const stampCol = (k, same) => {
+    const oa = new Map((st[k] || []).map((x) => [x.id, x]));
+    next[k] = next[k].map((x) => {
+      const o = oa.get(x.id);
+      if (!o || !same(strip(o), strip(x))) return { ...x, atualizadoPor: u.username, atualizadoEm: when };
+      const { atualizadoPor, atualizadoEm, ...r } = x;
+      return { ...r, ...(o.atualizadoPor ? { atualizadoPor: o.atualizadoPor, atualizadoEm: o.atualizadoEm } : {}) };
+    });
+  };
+  stampCol('meetings', (a, b) => J(a) === J(b));
+  stampCol('expenses', (a, b) => J(a) === J(b));
+  stampCol('members', (a, b) => J([a.txEncontro, a.txEquipe]) === J([b.txEncontro, b.txEquipe]));
   if (!master) next.users = st.users;
   else {
     const old = new Map(st.users.map((x) => [x.id, x]));

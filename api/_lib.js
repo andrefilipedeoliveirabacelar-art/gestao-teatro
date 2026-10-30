@@ -20,7 +20,12 @@ const check = (pw, h) => {
 const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const clean = (s, n) => String(s || '').replace(/[<>&"'`]/g, '').trim().slice(0, n);
 
-const fix = (st) => { st.avisos = st.avisos || []; st.changes = st.changes || []; return st; };
+const DEF_CFG = { valorTaxaEncontro: 60, valorTaxaEquipe: 60, abaterFaltaJustificada: true };
+const fix = (st) => { st.avisos = st.avisos || []; st.changes = st.changes || []; st.config = { ...DEF_CFG, ...(st.config || {}) }; return st; };
+const cleanConfig = (c, prev) => {
+  const p = { ...DEF_CFG, ...(prev || {}) }, n = (v, d) => { v = Number(v); return v >= 0 && v <= 100000 ? Math.round(v * 100) / 100 : d; };
+  return { valorTaxaEncontro: n(c && c.valorTaxaEncontro, p.valorTaxaEncontro), valorTaxaEquipe: n(c && c.valorTaxaEquipe, p.valorTaxaEquipe), abaterFaltaJustificada: c && typeof c.abaterFaltaJustificada === 'boolean' ? c.abaterFaltaJustificada : p.abaterFaltaJustificada };
+};
 const SC = ['dashboard', 'avisos', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'conquistas', 'relatorios'];
 const ROLES = ['master', 'user', 'membro'];
 const lvl = (u, s) => {
@@ -65,4 +70,4 @@ function verify(req, st) {
   } catch { return null; }
 }
 const send = (res, code, obj) => res.status(code).json(obj);
-module.exports = { SC, ROLES, lvl, cleanPerms, load, save, pub, me, sign, verify, hash, check, norm, clean, send, configured: !!(URL_ && TOKEN) };
+module.exports = { SC, ROLES, lvl, cleanPerms, cleanConfig, load, save, pub, me, sign, verify, hash, check, norm, clean, send, configured: !!(URL_ && TOKEN) };
