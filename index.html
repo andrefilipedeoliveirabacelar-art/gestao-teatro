@@ -151,6 +151,10 @@
                         <i data-lucide="award" class="w-4 h-4"></i>
                         <span>Conquistas</span>
                     </button>
+                    <button onclick="switchTab('feedback')" id="nav-feedback" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
+                        <i data-lucide="messages-square" class="w-4 h-4"></i>
+                        <span>Feedback & Relatório</span>
+                    </button>
                     <button onclick="switchTab('relatorios')" id="nav-relatorios" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                         <i data-lucide="file-text" class="w-4 h-4"></i>
                         <span>Relatórios</span>
@@ -159,6 +163,10 @@
                     <button onclick="switchTab('acessos')" id="nav-acessos" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hidden">
                         <i data-lucide="key-round" class="w-4 h-4"></i>
                         <span>Acessos e Permissões</span>
+                    </button>
+                    <button onclick="switchTab('seguranca')" id="nav-seguranca" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hidden">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                        <span>Segurança e Backup</span>
                     </button>
                     <button onclick="switchTab('usuarios')" id="nav-usuarios" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hidden">
                         <i data-lucide="shield-alert" class="w-4 h-4"></i>
@@ -506,6 +514,74 @@
                 =========================================== -->
                                 <section id="tab-conquistas" class="space-y-6 hidden"><div id="game-body" class="space-y-6"></div></section>
 
+                                <section id="tab-feedback" class="space-y-6 hidden">
+                    <form onsubmit="addFeedback(event)" class="master-only bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-slate-800">Novo feedback</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <select id="fb-type" onchange="renderFeedback()" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm">
+                                <option value="membro">Sobre um membro</option>
+                                <option value="reuniao">Dinâmica de uma reunião</option>
+                                <option value="financeiro">Financeiro (uso do dinheiro)</option>
+                                <option value="geral">Geral da equipe</option>
+                            </select>
+                            <select id="fb-target" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm"></select>
+                        </div>
+                        <textarea id="fb-text" required rows="4" placeholder="Descreva com detalhes: o que funcionou, o que precisa melhorar, o que foi utilizado..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></textarea>
+                        <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Salvar feedback</button>
+                    </form>
+                    <div id="fb-list" class="space-y-3"></div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Relatório para a Equipe Dirigente</h3>
+                            <p class="text-xs text-slate-500">Documento gerado automaticamente com os dados do sistema: resumo, dinâmica das reuniões, frequência, elenco, financeiro detalhado, feedbacks e destaques.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-600 mb-1">Dados que entram no relatório:</p>
+                            <div id="dr-opts" class="grid grid-cols-1 sm:grid-cols-2 text-xs text-slate-700">
+                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-resumo" checked onchange="renderDirPreview()"> Resumo executivo</label>
+                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-reunioes" checked onchange="renderDirPreview()"> Dinâmica das reuniões e ensaios</label>
+                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-frequencia" checked onchange="renderDirPreview()"> Frequência por membro</label>
+                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-elenco" checked onchange="renderDirPreview()"> Elenco: peças e personagens</label>
+                                <label class="flex items-center gap-2 py-1 dr-fin"><input type="checkbox" id="dr-sel-pagamentos" checked onchange="renderDirPreview()"> Financeiro: pagamentos por membro</label>
+                                <label class="flex items-center gap-2 py-1 dr-fin"><input type="checkbox" id="dr-sel-despesas" checked onchange="renderDirPreview()"> Financeiro: despesas detalhadas</label>
+                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-fbgeral" checked onchange="renderDirPreview()"> Feedback geral e financeiro</label>
+                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-fbmembro" checked onchange="renderDirPreview()"> Feedback por membro</label>
+                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-destaques" checked onchange="renderDirPreview()"> Destaques da gamificação</label>
+                            </div>
+                            <div class="flex gap-4 text-xs mt-1"><button type="button" onclick="drSelectAll(true)" class="text-indigo-600 font-semibold hover:underline">Marcar todos</button><button type="button" onclick="drSelectAll(false)" class="text-indigo-600 font-semibold hover:underline">Desmarcar todos</button></div>
+                        </div>
+                        <div class="flex flex-wrap items-end gap-3">
+                            <div><label class="block text-xs font-bold text-slate-600 mb-1">De</label><input id="dr-from" type="date" onchange="renderDirPreview()" class="px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+                            <div><label class="block text-xs font-bold text-slate-600 mb-1">Até</label><input id="dr-to" type="date" onchange="renderDirPreview()" class="px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
+                            <button onclick="pdfDir()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Baixar PDF para a Direção</button>
+                        </div>
+                        <div id="dr-body" class="overflow-x-auto"></div>
+                    </div>
+                </section>
+
+                <section id="tab-seguranca" class="space-y-6 hidden">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <h3 class="text-lg font-bold text-slate-800">Backup e Restauração</h3>
+                        <p class="text-xs text-slate-500">O backup guarda uma cópia dos dados no servidor (últimos 10) e baixa um arquivo no seu computador. O arquivo não contém senhas. Ao restaurar, usuários e senhas atuais não mudam.</p>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button onclick="doBackup()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Fazer backup agora</button>
+                            <label class="text-xs font-semibold text-slate-600">Restaurar de um arquivo: <input type="file" accept=".json,application/json" onchange="restoreFile(this)" class="text-xs"></label>
+                        </div>
+                        <div id="snap-list" class="space-y-2"></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-rose-300 space-y-3">
+                        <h3 class="text-lg font-bold text-rose-700">Zona de perigo: zerar dados do sistema</h3>
+                        <p class="text-xs text-slate-600">Apaga membros, peças, personagens, ensaios, despesas, avisos e feedbacks. Antes de apagar, o sistema faz um backup automático (guardado no servidor e baixado no seu computador), e você pode restaurá-lo depois.</p>
+                        <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" id="rs-users" checked> Manter usuários e permissões</label>
+                        <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" id="rs-cfg" checked> Manter configurações financeiras</label>
+                        <div class="flex flex-wrap gap-3">
+                            <input id="rs-confirm" placeholder="Digite ZERAR" autocomplete="off" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm">
+                            <input id="rs-pass" type="password" placeholder="Sua senha de Master" autocomplete="current-password" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm">
+                            <button onclick="doReset()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Fazer backup e zerar dados</button>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="tab-avisos" class="space-y-6 hidden">
                     <form onsubmit="addAviso(event)" class="master-only bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <input id="av-title" required placeholder="Título do aviso" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
@@ -840,17 +916,18 @@
         }
 
         function switchTab(tabId) {
-            if ((tabId === 'usuarios' || tabId === 'acessos') && !isMaster()) return;
+            if ((tabId === 'usuarios' || tabId === 'acessos' || tabId === 'seguranca') && !isMaster()) return;
             activeTab = tabId;
+            if (tabId === 'seguranca') loadSnaps();
             const hh = ROUTE_OUT[tabId] || tabId;
             if (location.hash !== '#' + hh) location.hash = hh;
             if (SCREENS[tabId] && !can(tabId, 'v')) tabId = 'bloqueado';
-            const tabs = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'relatorios', 'conquistas', 'avisos', 'acessos', 'bloqueado', 'usuarios'];
+            const tabs = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'relatorios', 'conquistas', 'feedback', 'avisos', 'acessos', 'seguranca', 'bloqueado', 'usuarios'];
             tabs.forEach(t => {
                 document.getElementById(`tab-${t}`).classList.add('hidden');
                 const btn = document.getElementById(`nav-${t}`);
                 if (btn) {
-                    btn.className = (t === 'usuarios' || t === 'acessos')
+                    btn.className = (t === 'usuarios' || t === 'acessos' || t === 'seguranca')
                         ? 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800'
                         : 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white';
                 }
@@ -874,6 +951,8 @@
                 acessos: 'Acessos e Permissões (Master)',
                 relatorios: 'Relatórios',
                 conquistas: 'Conquistas e Insígnias',
+                feedback: 'Feedback e Relatório para a Direção',
+                seguranca: 'Segurança e Backup (Master)',
                 avisos: 'Avisos Importantes',
                 bloqueado: 'Acesso restrito'
             };
@@ -1297,11 +1376,11 @@
         // ---- Rotas por #hash
         const ROUTE_OUT = { faltas: 'frequencia', acessos: 'permissoes' };
         const ROUTE_IN = { frequencia: 'faltas', permissoes: 'acessos' };
-        const ALL_TABS = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'relatorios', 'conquistas', 'avisos', 'acessos', 'usuarios'];
+        const ALL_TABS = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'relatorios', 'conquistas', 'feedback', 'avisos', 'acessos', 'seguranca', 'usuarios'];
         let activeTab = null;
         function tabFromHash() {
             const h = String(location.hash || '').replace('#', ''), t = ROUTE_IN[h] || h;
-            if (!ALL_TABS.includes(t) || ((t === 'usuarios' || t === 'acessos') && !isMaster())) return null;
+            if (!ALL_TABS.includes(t) || ((t === 'usuarios' || t === 'acessos' || t === 'seguranca') && !isMaster())) return null;
             return t;
         }
         window.addEventListener('hashchange', () => { if (!currentUser) return; const t = tabFromHash(); if (t && t !== activeTab) switchTab(t); });
@@ -1333,9 +1412,183 @@
         }
 
         // ==========================================
+        // FEEDBACK, RELATÓRIO PARA A DIREÇÃO E SEGURANÇA
+        // ==========================================
+        const FB_TYPES = { membro: 'Membro', reuniao: 'Reunião', financeiro: 'Financeiro', geral: 'Geral' };
+        const fbTarget = f => f.type === 'membro' ? memberName(f.targetId) : f.type === 'reuniao' ? ((state.meetings.find(t => t.id === f.targetId) || {}).title || '—') : '';
+        function addFeedback(e) {
+            e.preventDefault();
+            if (!can('feedback', 'i')) return;
+            const type = document.getElementById('fb-type').value, text = document.getElementById('fb-text').value.trim();
+            const tv = document.getElementById('fb-target').value;
+            if (!text || ((type === 'membro' || type === 'reuniao') && !tv)) { showNotification('Escolha a quem ou a qual reunião se refere e escreva o feedback.', 'warning'); return; }
+            state.feedbacks = state.feedbacks || [];
+            state.feedbacks.unshift({ id: Date.now(), date: new Date().toISOString().slice(0, 10), type, targetId: (type === 'membro' || type === 'reuniao') ? Number(tv) : null, text, by: currentUser.name });
+            document.getElementById('fb-text').value = '';
+            saveState(); showNotification('Salvo com sucesso! Feedback registrado.');
+        }
+        function deleteFeedback(id) {
+            if (!can('feedback', 'd')) return;
+            state.feedbacks = (state.feedbacks || []).filter(f => f.id !== id);
+            saveState(); showNotification('Salvo com sucesso! Feedback excluído.');
+        }
+        function renderFeedback() {
+            const sel = document.getElementById('fb-target'), typ = document.getElementById('fb-type');
+            if (!sel || !typ) return;
+            if (document.activeElement !== sel) {
+                const cur = sel.value, t = typ.value;
+                sel.innerHTML = t === 'membro' ? state.members.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('')
+                    : t === 'reuniao' ? state.meetings.map(x => `<option value="${x.id}">${esc(x.date.split('-').reverse().join('/'))} — ${esc(x.title)}</option>`).join('') : '';
+                sel.value = cur;
+                sel.classList.toggle('hidden', t === 'financeiro' || t === 'geral');
+            }
+            const el = document.getElementById('fb-list');
+            el.innerHTML = (state.feedbacks || []).map(f => `<div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex flex-wrap items-center gap-2 text-xs"><span class="px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-800">${FB_TYPES[f.type] || esc(f.type)}</span>${fbTarget(f) ? `<b class="text-slate-800">${esc(fbTarget(f))}</b>` : ''}<span class="text-slate-400">${esc(f.date.split('-').reverse().join('/'))} · ${esc(f.by || '')}</span></div><button onclick="deleteFeedback(${f.id})" class="master-only text-xs font-semibold text-rose-600 hover:underline">Excluir</button></div><p class="text-sm text-slate-600 mt-2" style="white-space:pre-line">${esc(f.text)}</p></div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">Nenhum feedback registrado.</p>';
+            renderDirPreview();
+        }
+        // ---- Relatório para a Equipe Dirigente (gerado com os dados do sistema)
+        function dirData() {
+            const from = document.getElementById('dr-from').value, to = document.getElementById('dr-to').value;
+            const inR = d => (!from || d >= from) && (!to || d <= to);
+            const ms = state.meetings.filter(t => inR(t.date)).sort((a, b) => a.date.localeCompare(b.date));
+            const fbs = (state.feedbacks || []).filter(f => inR(f.date));
+            const fdate = d => String(d || '').split('-').reverse().join('/');
+            const st = m => { let p = 0, fj = 0, fsj = 0; ms.forEach(t => { const s = t.attendance && t.attendance[m.id]; if (s === 'P') p++; else if (s === 'FJ') fj++; else if (s === 'FSJ') fsj++; }); return { p, fj, fsj, t: p + fj + fsj }; };
+            const actors = state.members.filter(isActor), act = state.members.filter(m => m.active !== false);
+            const rows = actors.map(m => [m, st(m)]).filter(([m, s]) => m.active !== false || s.t);
+            const tot = rows.reduce((a, [, s]) => ({ p: a.p + s.p, fj: a.fj + s.fj, fsj: a.fsj + s.fsj }), { p: 0, fj: 0, fsj: 0 });
+            const chars = state.characters;
+            const fin = can('financeiro', 'v');
+            const paid = m => (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
+            const arr = state.members.reduce((a, m) => a + paid(m), 0), usado = state.expenses.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+            const sections = [
+                { id: 'resumo', h: 'Resumo executivo', head: ['Indicador', 'Valor'], body: [
+                    ['Período analisado', (from || to) ? `${from ? fdate(from) : 'início'} a ${to ? fdate(to) : 'hoje'}` : 'Todo o histórico'],
+                    ['Membros ativos', act.length], ['Atores/atrizes ativos', act.filter(isActor).length], ['Ensaios/reuniões no período', ms.length],
+                    ['Presença média do elenco', pctTxt(pctOf(tot.p, tot.fj, tot.fsj))], ['Peças cadastradas', state.plays.length],
+                    ['Personagens (com intérprete / total)', `${chars.filter(c => c.memberId).length} / ${chars.length}`],
+                    ...(fin ? [['Total arrecadado', formatBRL(arr)], ['Total gasto', formatBRL(usado)], ['Saldo disponível', formatBRL(arr - usado)]] : [])] },
+                { id: 'reunioes', h: 'Dinâmica das reuniões e ensaios', head: ['Data', 'Reunião', 'Presentes', 'FJ', 'FSJ', 'N/A', 'Observações (feedback)'], body: ms.map(t => {
+                    const v = actors.map(m => (t.attendance || {})[m.id]).filter(Boolean), c = k => v.filter(x => x === k).length;
+                    return [fdate(t.date), t.title, c('P'), c('FJ'), c('FSJ'), c('NA'), fbs.filter(f => f.type === 'reuniao' && f.targetId === t.id).map(f => f.text).join(' | ') || '—'];
+                }) },
+                { id: 'frequencia', h: 'Frequência por membro', head: ['Membro', 'Ensaios válidos', 'P', 'FJ', 'FSJ', '% Presença'], body: rows.map(([m, s]) => [m.name + (m.active === false ? ' (ex)' : ''), s.t, s.p, s.fj, s.fsj, pctTxt(pctOf(s.p, s.fj, s.fsj))]) },
+                { id: 'elenco', h: 'Elenco: peças e personagens', head: ['Peça', 'Personagem', 'Intérprete'], body: chars.map(c => [playName(c.playId), c.name, c.memberId ? memberName(c.memberId) : 'Sem intérprete']) }
+            ];
+            if (fin) sections.push(
+                { id: 'pagamentos', h: 'Financeiro: pagamentos por membro', head: ['Membro', 'Situação', 'Tx. Encontro', 'Tx. Equipe', 'Pago', 'Falta'], body: state.members.map(m => [m.name, m.active === false ? 'Ex-integrante' : 'Ativo', formatBRL(Number(m.txEncontro) || 0), formatBRL(Number(m.txEquipe) || 0), formatBRL(paid(m)), formatBRL(m.active === false ? 0 : Math.max(0, metaMembro() - paid(m)))]) },
+                { id: 'despesas', h: 'Financeiro: despesas detalhadas (o que foi utilizado)', head: ['Data', 'Descrição', 'Valor', 'Registrado por'], body: state.expenses.filter(x => inR(new Date(x.id).toISOString().slice(0, 10))).map(x => [new Date(x.id).toLocaleDateString('pt-BR'), x.desc, formatBRL(Number(x.amount) || 0), x.atualizadoPor || '—']) });
+            sections.push(
+                { id: 'fbgeral', h: 'Feedback geral e financeiro', head: ['Data', 'Tipo', 'Feedback', 'Autor'], body: fbs.filter(f => f.type === 'geral' || f.type === 'financeiro').map(f => [fdate(f.date), FB_TYPES[f.type], f.text, f.by || '']) },
+                { id: 'fbmembro', h: 'Feedback por membro', head: ['Data', 'Membro', 'Feedback', 'Autor'], body: fbs.filter(f => f.type === 'membro').map(f => [fdate(f.date), fbTarget(f), f.text, f.by || '']) });
+            const top = state.members.filter(m => m.active !== false && isActor(m)).map(m => ({ m, ...gameOf(m) })).sort((a, b) => b.pts - a.pts || b.pct - a.pct).slice(0, 5);
+            sections.push({ id: 'destaques', h: 'Destaques da gamificação (acumulado)', head: ['Posição', 'Membro', 'Pontos', 'Insígnias'], body: top.map((r, i) => [i + 1, r.m.name, r.pts, r.nb]) });
+            const sel = id => { const el = document.getElementById('dr-sel-' + id); return !el || el.checked; };
+            const chosen = sections.filter(x => sel(x.id)).map((x, i) => ({ ...x, h: (i + 1) + '. ' + x.h }));
+            const coord = state.members.filter(m => m.active !== false && !isActor(m)).map(m => ({ name: m.name, role: m.role || 'Direção/Apoio' }));
+            return { title: 'Relatório para a Equipe Dirigente', sections: chosen, coord };
+        }
+        function drSelectAll(v) { document.querySelectorAll('#dr-opts input').forEach(i => { i.checked = v; }); renderDirPreview(); }
+        function renderDirPreview() {
+            const el = document.getElementById('dr-body');
+            if (!el || !can('feedback', 'v')) return;
+            document.querySelectorAll('.dr-fin').forEach(x => x.classList.toggle('hidden', !can('financeiro', 'v')));
+            const d = dirData();
+            el.innerHTML = (d.sections.map(s => `<h4 class="font-bold text-slate-800 mt-4 mb-2">${esc(s.h)}</h4>` + tbl(s.head, s.body)).join('') || '<p class="text-sm text-slate-400 py-4">Selecione ao menos um item para o relatório.</p>')
+                + `<div class="mt-8 pt-5 border-t border-slate-200"><p class="font-bold text-slate-800">Ass: A Coordenação</p><p class="text-xs text-slate-500 mb-2">composta por diretores e apoio</p>${d.coord.map(c => `<p class="text-sm text-slate-700">${esc(c.name)} <span class="text-xs text-slate-400">— ${esc(c.role)}</span></p>`).join('') || '<p class="text-xs text-slate-400">Nenhum diretor ou apoio cadastrado (desmarque "É ator/atriz" no cadastro do membro).</p>'}</div>`;
+        }
+        function pdfDir() {
+            if (!window.jspdf) { showNotification('A biblioteca de PDF não carregou. Recarregue a página.', 'error'); return; }
+            const d = dirData(), doc = new window.jspdf.jsPDF();
+            if (!d.sections.length) { showNotification('Selecione ao menos um item para o relatório.', 'warning'); return; }
+            doc.setFontSize(18); doc.text('EncenaPro - ' + d.title, 14, 18);
+            doc.setFontSize(9); doc.text('Gerado automaticamente em ' + new Date().toLocaleString('pt-BR') + ' por ' + (currentUser ? currentUser.name : ''), 14, 25);
+            let y = 32;
+            d.sections.forEach(s => {
+                if (y > 250) { doc.addPage(); y = 18; }
+                doc.setFontSize(12); doc.text(String(s.h), 14, y + 5);
+                doc.autoTable({ startY: y + 8, head: [s.head], body: s.body.length ? s.body.map(r => r.map(String)) : [['Sem registros no período'].concat(Array(s.head.length - 1).fill(''))], styles: { fontSize: 8.5, cellPadding: 2, overflow: 'linebreak' }, headStyles: { fillColor: [79, 70, 229] } });
+                y = doc.lastAutoTable.finalY + 9;
+            });
+            if (y > 215) { doc.addPage(); y = 20; }
+            y += 8; doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Ass: A Coordenação', 14, y);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.text('composta por diretores e apoio', 14, y + 5); y += 22;
+            if (!d.coord.length) doc.text('(nenhum diretor ou apoio cadastrado)', 14, y);
+            d.coord.forEach((c, i) => {
+                const x = 14 + (i % 2) * 95;
+                if (i % 2 === 0 && i > 0) y += 22;
+                if (y > 270) { doc.addPage(); y = 25; }
+                doc.line(x, y, x + 80, y); doc.setFontSize(10); doc.text(String(c.name), x, y + 5); doc.setFontSize(8); doc.text(String(c.role), x, y + 10);
+            });
+            const n = doc.getNumberOfPages();
+            for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFontSize(8); doc.text('Página ' + i + ' de ' + n, 190, 290, { align: 'right' }); }
+            doc.save('relatorio-direcao-' + new Date().toISOString().slice(0, 10) + '.pdf');
+        }
+        // ---- Segurança: backup, restauração e zerar dados (só Master)
+        let snaps = [];
+        async function adminCall(body) {
+            const r = await api('/api/admin', { method: 'POST', body });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(j.error || 'Falha na operação.');
+            return j;
+        }
+        function downloadJson(obj, name) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' }));
+            a.download = name; document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        }
+        const bkName = p => p + '-' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-') + '.json';
+        function applyAdmin(j) { state = j.state || state; rev = j.rev || rev; if (j.snaps) snaps = j.snaps; renderAll(); renderSnaps(); }
+        async function loadSnaps() {
+            if (!isMaster()) return;
+            try { const r = await api('/api/admin'); if (r.ok) { snaps = (await r.json()).snaps || []; renderSnaps(); } } catch (e) {}
+        }
+        function renderSnaps() {
+            const el = document.getElementById('snap-list');
+            if (!el) return;
+            el.innerHTML = snaps.map(s => `<div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm"><div><b class="text-slate-800">${new Date(s.at).toLocaleString('pt-BR')}</b> <span class="text-xs text-slate-500">· ${esc(s.kind)} · por ${esc(s.by)} · ${s.membros} membros, ${s.ensaios} ensaios</span></div><button onclick="restoreSnap('${esc(s.id)}')" class="px-3 py-2 bg-amber-100 text-amber-800 rounded-lg text-xs font-semibold">Restaurar</button></div>`).join('') || '<p class="text-xs text-slate-400">Nenhum backup guardado no servidor ainda.</p>';
+        }
+        async function doBackup() {
+            if (!isMaster()) return;
+            lockBtn();
+            try { const j = await adminCall({ action: 'backup' }); downloadJson(j.file, bkName('backup-encenapro')); snaps = j.snaps; renderSnaps(); showNotification('Backup criado no servidor e baixado no seu computador.'); }
+            catch (e) { showNotification(e.message, 'error'); }
+            unlockBtns();
+        }
+        async function restoreSnap(id) {
+            if (!isMaster() || !confirm('Restaurar este backup? Os dados atuais serão substituídos (um backup deles é feito antes). Usuários e senhas não mudam.')) return;
+            try { applyAdmin(await adminCall({ action: 'restore', id })); showNotification('Backup restaurado com sucesso!'); }
+            catch (e) { showNotification(e.message, 'error'); }
+        }
+        async function restoreFile(input) {
+            const f = input.files && input.files[0];
+            input.value = '';
+            if (!f || !isMaster()) return;
+            try {
+                const data = JSON.parse(await f.text());
+                if (!confirm('Restaurar os dados deste arquivo? Os dados atuais serão substituídos (um backup deles é feito antes). Usuários e senhas não mudam.')) return;
+                applyAdmin(await adminCall({ action: 'restore', data })); showNotification('Backup restaurado com sucesso!');
+            } catch (e) { showNotification(e.message || 'Arquivo inválido.', 'error'); }
+        }
+        async function doReset() {
+            if (!isMaster()) return;
+            const confirmTxt = document.getElementById('rs-confirm').value.trim(), password = document.getElementById('rs-pass').value;
+            if (confirmTxt !== 'ZERAR' || !password) { showNotification('Digite ZERAR e a sua senha de Master para continuar.', 'warning'); return; }
+            lockBtn();
+            try {
+                const j = await adminCall({ action: 'reset', confirm: confirmTxt, password, keepUsers: document.getElementById('rs-users').checked, keepConfig: document.getElementById('rs-cfg').checked });
+                downloadJson(j.file, bkName('backup-antes-de-zerar'));
+                document.getElementById('rs-confirm').value = ''; document.getElementById('rs-pass').value = '';
+                applyAdmin(j); showNotification('Backup feito e dados zerados. O arquivo de backup foi baixado.');
+            } catch (e) { showNotification(e.message, 'error'); }
+            unlockBtns();
+        }
+
+        // ==========================================
         // PERMISSÕES, AVISOS, RELATÓRIOS, SINO
         // ==========================================
-        const SCREENS = { dashboard: 'Dashboard', avisos: 'Avisos', membros: 'Membros & Taxas', pecas: 'Peças & Personagens', escalacao: 'Quem Interpreta', faltas: 'Controle de Faltas', financeiro: 'Financeiro', ranking: 'Ranking', conquistas: 'Conquistas', relatorios: 'Relatórios' };
+        const SCREENS = { dashboard: 'Dashboard', avisos: 'Avisos', membros: 'Membros & Taxas', pecas: 'Peças & Personagens', escalacao: 'Quem Interpreta', faltas: 'Controle de Faltas', financeiro: 'Financeiro', ranking: 'Ranking', conquistas: 'Conquistas', relatorios: 'Relatórios', feedback: 'Feedback & Relatório' };
         const LEVELS = ['Bloqueado', 'Consultar', 'Inserir/Editar', 'Total (c/ excluir)'];
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const memberName = id => (state.members.find(m => m.id === id) || {}).name || '—';
@@ -1344,6 +1597,7 @@
             if (!u) return 0;
             if (u.role === 'master') return 3;
             if (u.perms && u.perms[s] !== undefined) return u.perms[s];
+            if (s === 'feedback') return 0;
             if (u.role === 'membro') return ['faltas', 'pecas', 'avisos', 'conquistas'].includes(s) ? 1 : 0;
             return 1;
         }
@@ -1482,7 +1736,7 @@
                 el.classList.toggle('hidden', !can(scr, del ? 'd' : 'i'));
             });
             Object.keys(SCREENS).forEach(s => { const b = document.getElementById('nav-' + s); if (b) b.dataset.locked = can(s, 'v') ? '0' : '1'; });
-            ['usuarios', 'acessos'].forEach(t => document.getElementById('nav-' + t).classList.toggle('hidden', !isMaster()));
+            ['usuarios', 'acessos', 'seguranca'].forEach(t => document.getElementById('nav-' + t).classList.toggle('hidden', !isMaster()));
             document.getElementById('view-only-notice').classList.toggle('hidden', isMaster() || Object.keys(SCREENS).some(s => can(s, 'i')));
             document.getElementById('bell-wrap').classList.toggle('hidden', !can('pecas', 'v'));
             document.getElementById('btn-whats').classList.toggle('hidden', !(can('dashboard', 'v') && can('financeiro', 'v')));
@@ -1793,7 +2047,7 @@
 
             document.querySelectorAll('[data-fee]').forEach(el => { const f = el.dataset.fee; el.textContent = formatBRL(f === 'enc' ? cfg().valorTaxaEncontro : f === 'eq' ? cfg().valorTaxaEquipe : metaMembro()); });
             fillConfig();
-            renderGame(); renderAvisos(); renderReports(); renderAccess(); renderMine(); renderBell();
+            renderFeedback(); renderGame(); renderAvisos(); renderReports(); renderAccess(); renderMine(); renderBell();
             applyPermissions();
             lucide.createIcons();
         }
