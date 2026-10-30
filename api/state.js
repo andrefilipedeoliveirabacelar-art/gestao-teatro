@@ -1,5 +1,5 @@
 const L = require('./_lib');
-const SCR = { members: ['membros'], plays: ['pecas'], characters: ['pecas', 'escalacao'], meetings: ['faltas'], expenses: ['financeiro'], avisos: ['avisos'], changes: ['pecas', 'escalacao'] };
+const SCR = { members: ['membros'], plays: ['pecas'], characters: ['pecas', 'escalacao'], meetings: ['faltas'], expenses: ['financeiro'], avisos: ['avisos'], feedbacks: ['feedback'], changes: ['pecas', 'escalacao'] };
 const COLS = Object.keys(SCR);
 const canon = (v) => Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v;
 const J = (x) => JSON.stringify(canon(x));
