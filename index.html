@@ -18,6 +18,8 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .nav-btn[data-locked="1"]{opacity:.45}
     .overflow-x-auto{-webkit-overflow-scrolling:touch;overflow-x:auto}
+    .sticky-first th:first-child,.sticky-first td:first-child{position:sticky;left:0;z-index:10;background:#fff;box-shadow:1px 0 0 #e2e8f0}
+    .sticky-first thead th:first-child{background:#f8fafc;z-index:20}
     table td,table th{white-space:nowrap}
     #rep-body td{white-space:normal}
     @media (max-width:768px){
@@ -35,6 +37,8 @@
     <!-- ==========================================
          TELA DE LOGIN E CADASTRO
     =========================================== -->
+    <div id="boot-loader" role="status" aria-live="polite" class="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center text-slate-300"><div class="w-10 h-10 border-4 border-slate-600 border-t-indigo-400 rounded-full animate-spin"></div><p class="mt-3 text-sm">Carregando EncenaPro...</p></div>
+
     <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div class="bg-indigo-600 p-6 text-white text-center">
@@ -412,15 +416,17 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                             <div>
                                 <h3 class="text-lg font-bold text-slate-800">Ranking de Frequência</h3>
-                                <p class="text-xs text-slate-500">% de presença = P ÷ (P + FSJ) quando a falta justificada é abatida (o Master configura no Financeiro); senão P ÷ (P + FJ + FSJ). Ensaios N/A e membros de direção/apoio não entram.</p>
+                                <p id="rank-formula" class="text-xs text-slate-500"></p>
                             </div>
-                            <label class="flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" id="rank-show-ex" onchange="renderAll()"> Mostrar ex-integrantes</label>
+                            <div class="flex flex-col gap-2">
+                                <label id="rank-abater-wrap" class="hidden flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" id="rank-abater" onchange="setAbater(this.checked)"> Abater falta justificada (somente Master)</label>
+                                <label class="flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" id="rank-show-ex" onchange="renderAll()"> Mostrar ex-integrantes</label>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse min-w-[560px]">
+                            <table class="sticky-first w-full text-left border-collapse min-w-[560px]">
                                 <thead>
                                     <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
-                                        <th class="py-3 px-3">#</th>
                                         <th class="py-3 px-3">Membro</th>
                                         <th class="py-3 px-3">P</th>
                                         <th class="py-3 px-3">FJ</th>
@@ -462,10 +468,9 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div id="cfg-panel" class="hidden lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-3">Configurações Financeiras (Master)</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro (R$)</label><input id="cfg-enc" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
                                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe (R$)</label><input id="cfg-eq" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
-                                <label class="flex items-start gap-2 text-xs text-slate-700"><input type="checkbox" id="cfg-abater" class="mt-0.5"><span>Abater falta justificada do cálculo de % de presença</span></label>
                             </div>
                             <button onclick="saveConfig()" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Salvar configurações</button>
                         </div>
@@ -474,7 +479,7 @@
                         <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-4">Controle de Pagamentos por Membro (Meta: <span data-fee="meta"></span>/membro)</h3>
                             <div class="overflow-x-auto -mx-4 md:mx-0">
-                                <table class="w-full text-left border-collapse min-w-[780px]">
+                                <table class="sticky-first w-full text-left border-collapse min-w-[780px]">
                                     <thead>
                                         <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
                                             <th class="py-3 px-3">Membro</th>
@@ -569,6 +574,11 @@
                         </div>
                         <div id="snap-list" class="space-y-2"></div>
                     </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <h3 class="text-lg font-bold text-slate-800">Histórico de alterações críticas</h3>
+                        <p class="text-xs text-slate-500">Registro automático das últimas alterações: exclusão de membros, pagamentos e despesas, chamadas, permissões, senhas e backups. Visível só para o Master.</p>
+                        <div id="audit-body" class="overflow-x-auto"></div>
+                    </div>
                     <div class="bg-white p-5 rounded-2xl border border-rose-300 space-y-3">
                         <h3 class="text-lg font-bold text-rose-700">Zona de perigo: zerar dados do sistema</h3>
                         <p class="text-xs text-slate-600">Apaga membros, peças, personagens, ensaios, despesas, avisos e feedbacks. Antes de apagar, o sistema faz um backup automático (guardado no servidor e baixado no seu computador), e você pode restaurá-lo depois.</p>
@@ -609,8 +619,8 @@
                 <section id="tab-acessos" class="space-y-6 hidden">
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <h3 class="text-lg font-bold text-slate-800">Acessos e Permissões</h3>
-                        <p class="text-xs text-slate-500">Escolha o nível de cada usuário por tela: Bloqueado, Consultar, Inserir/Editar ou Total (com excluir). O perfil Membro começa só com Frequência, Peças e Avisos para consulta. Vincule o usuário a um membro para ele ver as próprias faltas e peças. Quem edita Membros precisa também poder ver o Financeiro.</p>
-                        <div class="overflow-x-auto"><table id="acc-table" class="w-full text-left text-sm border-collapse min-w-[900px]"></table></div>
+                        <p class="text-xs text-slate-500">Escolha o nível de cada usuário por tela: Bloqueado, Consultar, Inserir/Editar ou Total (com excluir). O perfil Membro começa só com Frequência, Peças e Avisos para consulta. Vincule o usuário a um membro para ele ver as próprias faltas e peças. As taxas (Tx. Encontro e Tx. Equipe) só podem ser lançadas por quem tem Inserir/Editar no Financeiro; quem edita Membros não precisa ver o Financeiro.</p>
+                        <div class="overflow-x-auto"><table id="acc-table" class="sticky-first w-full text-left text-sm border-collapse min-w-[900px]"></table></div>
                     </div>
                 </section>
 
@@ -680,6 +690,16 @@
     <!-- ==========================================
          MODAL: CRIAR / EDITAR MEMBRO & TAXAS
     =========================================== -->
+    <div id="pw-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4">
+            <h3 id="pw-title" class="font-bold text-slate-800">Redefinir senha</h3>
+            <form onsubmit="submitPw(event)" class="space-y-3">
+                <input type="password" id="pw-new" required minlength="4" autocomplete="new-password" placeholder="Nova senha (mín. 4 caracteres)" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm">
+                <div class="flex justify-end gap-2"><button type="button" onclick="closePwModal()" class="px-4 py-2.5 text-sm text-slate-600">Cancelar</button><button class="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold">Redefinir</button></div>
+            </form>
+        </div>
+    </div>
+
     <div id="member-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
@@ -814,7 +834,7 @@
                 const j = await r.json().catch(() => ({}));
                 if (r.status === 409) { applyServer(j); showNotification('Os dados foram alterados por outra pessoa. Refaça a alteração.', 'warning'); }
                 else if (!r.ok) showNotification(j.error || 'Não foi possível salvar no servidor.', 'error');
-                else { rev = j.rev; state.users.forEach(u => { delete u.password; }); }
+                else { rev = j.rev; state.users.forEach(u => { delete u.password; }); if (isMaster() && activeTab === 'seguranca') refreshAudit(); }
             } catch (e) { showNotification('Sem conexão com o servidor. Alteração não salva.', 'error'); }
             pending = false;
             unlockBtns();
@@ -918,8 +938,8 @@
         function switchTab(tabId) {
             if ((tabId === 'usuarios' || tabId === 'acessos' || tabId === 'seguranca') && !isMaster()) return;
             activeTab = tabId;
-            if (tabId === 'seguranca') loadSnaps();
-            const hh = ROUTE_OUT[tabId] || tabId;
+            if (tabId === 'seguranca') { loadSnaps(); refreshAudit(); }
+            const hh = '/' + (ROUTE_OUT[tabId] || tabId);
             if (location.hash !== '#' + hh) location.hash = hh;
             if (SCREENS[tabId] && !can(tabId, 'v')) tabId = 'bloqueado';
             const tabs = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'relatorios', 'conquistas', 'feedback', 'avisos', 'acessos', 'seguranca', 'bloqueado', 'usuarios'];
@@ -1342,6 +1362,77 @@
         }
 
         // ==========================================
+        // SENHA, BACKUP (VALIDAÇÃO), AUDITORIA, ACESSIBILIDADE
+        // ==========================================
+        let pwUser = null;
+        function openPwModal(id) {
+            const u = state.users.find(x => x.id === id);
+            if (!isMaster() || !u) return;
+            pwUser = id;
+            document.getElementById('pw-title').textContent = 'Redefinir senha de @' + u.username;
+            document.getElementById('pw-new').value = '';
+            document.getElementById('pw-modal').classList.remove('hidden');
+        }
+        function closePwModal() { pwUser = null; document.getElementById('pw-modal').classList.add('hidden'); }
+        function submitPw(e) {
+            e.preventDefault();
+            const v = document.getElementById('pw-new').value;
+            if (v.trim().length < 4) { showNotification('A senha deve ter pelo menos 4 caracteres.', 'warning'); return; }
+            updateUserPassword(pwUser, v);
+            closePwModal();
+        }
+        function setAbater(v) {
+            if (!isMaster()) return;
+            state.config = { ...cfg(), abaterFaltaJustificada: !!v };
+            saveState();
+            showNotification('Salvo com sucesso! Regra de presença atualizada.');
+        }
+        function validateBackupData(d) {
+            if (!d || typeof d !== 'object' || Array.isArray(d)) return 'O arquivo não é um backup válido do EncenaPro.';
+            if (d.schemaVersion !== undefined && d.schemaVersion !== 1) return 'Versão de backup não suportada (schemaVersion ' + d.schemaVersion + ').';
+            const cols = ['members', 'plays', 'characters', 'meetings', 'expenses', 'avisos', 'changes', 'feedbacks'];
+            if (!cols.some(k => Array.isArray(d[k]))) return 'O arquivo não contém dados do sistema (membros, peças, ensaios...).';
+            const need = { members: ['name'], plays: ['title'], characters: ['name', 'playId'], meetings: ['date', 'title'], expenses: ['amount'], avisos: ['title'], feedbacks: ['text'] };
+            for (const k of cols) {
+                if (d[k] === undefined) continue;
+                if (!Array.isArray(d[k])) return 'Campo "' + k + '" corrompido (esperava uma lista).';
+                for (const it of d[k]) {
+                    if (!it || typeof it !== 'object' || it.id === undefined) return 'Campo "' + k + '" contém um registro inválido (sem identificador).';
+                    for (const f of need[k] || []) if (it[f] === undefined) return 'Campo "' + k + '" contém um registro sem "' + f + '".';
+                }
+            }
+            return null;
+        }
+        function renderAudit() {
+            const el = document.getElementById('audit-body');
+            if (!el || !isMaster()) return;
+            el.innerHTML = tbl(['Data/hora', 'Usuário', 'Ação', 'Detalhe'], (state.auditLog || []).slice(0, 100).map(x => [new Date(x.dataHora).toLocaleString('pt-BR'), '@' + x.usuario, x.acao, x.detalhe]));
+        }
+        async function refreshAudit() {
+            try { const r = await api('/api/state'); if (r.ok) { const j = await r.json(); state.auditLog = j.state.auditLog || []; renderAudit(); } } catch (e) {}
+        }
+        // ---- Modais: role dialog, Escape e foco automático
+        const MODAL_CLOSE = { 'member-modal': () => closeMemberModal(), 'attendance-modal': () => closeAttendanceModal(), 'pw-modal': () => closePwModal() };
+        document.querySelectorAll('[id$="-modal"]').forEach(m => {
+            m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+            const h = m.querySelector('h3');
+            if (h) { if (!h.id) h.id = m.id + '-title'; m.setAttribute('aria-labelledby', h.id); }
+            if (typeof MutationObserver === 'undefined') return;
+            let was = false, opener = null;
+            new MutationObserver(() => {
+                const now = !m.classList.contains('hidden');
+                if (now && !was) { opener = document.activeElement; const f = m.querySelector('input:not([type=hidden]):not([disabled]),select:not([disabled]),textarea,button:not([disabled])'); setTimeout(() => { if (f) f.focus(); }, 30); }
+                else if (!now && was && opener && opener.focus) { opener.focus(); opener = null; }
+                was = now;
+            }).observe(m, { attributes: true, attributeFilter: ['class'] });
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            const open = [...document.querySelectorAll('[id$="-modal"]')].find(m => !m.classList.contains('hidden'));
+            if (open && MODAL_CLOSE[open.id]) { e.preventDefault(); MODAL_CLOSE[open.id](); }
+        });
+
+        // ==========================================
         // CONFIGURAÇÕES, ROTAS, ANTI CLIQUE DUPLO, WHATSAPP
         // ==========================================
         const isActor = m => m.game !== false;
@@ -1354,12 +1445,11 @@
             if (!pn || (pn.contains && pn.contains(document.activeElement))) return;
             document.getElementById('cfg-enc').value = cfg().valorTaxaEncontro;
             document.getElementById('cfg-eq').value = cfg().valorTaxaEquipe;
-            document.getElementById('cfg-abater').checked = cfg().abaterFaltaJustificada;
         }
         function saveConfig() {
             if (!isMaster()) return;
             const n = (id, d) => { const v = parseFloat(document.getElementById(id).value); return v >= 0 ? v : d; };
-            state.config = { valorTaxaEncontro: n('cfg-enc', 60), valorTaxaEquipe: n('cfg-eq', 60), abaterFaltaJustificada: document.getElementById('cfg-abater').checked };
+            state.config = { valorTaxaEncontro: n('cfg-enc', 60), valorTaxaEquipe: n('cfg-eq', 60), abaterFaltaJustificada: cfg().abaterFaltaJustificada };
             saveState();
             showNotification('Salvo com sucesso! Configurações financeiras atualizadas.');
         }
@@ -1374,16 +1464,18 @@
             showNotification('Salvo com sucesso! Pagamento de ' + m.name + ' atualizado.');
         }
         // ---- Rotas por #hash
-        const ROUTE_OUT = { faltas: 'frequencia', acessos: 'permissoes' };
-        const ROUTE_IN = { frequencia: 'faltas', permissoes: 'acessos' };
+        const ROUTE_OUT = { escalacao: 'papeis', faltas: 'ensaios', relatorios: 'relatorio', seguranca: 'backup', acessos: 'permissoes' };
+        const ROUTE_IN = { papeis: 'escalacao', ensaios: 'faltas', relatorio: 'relatorios', backup: 'seguranca', permissoes: 'acessos', frequencia: 'faltas' };
         const ALL_TABS = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'relatorios', 'conquistas', 'feedback', 'avisos', 'acessos', 'seguranca', 'usuarios'];
         let activeTab = null;
         function tabFromHash() {
-            const h = String(location.hash || '').replace('#', ''), t = ROUTE_IN[h] || h;
+            const h = String(location.hash || '').replace(/^#\/?/, ''), t = ROUTE_IN[h] || h;
             if (!ALL_TABS.includes(t) || ((t === 'usuarios' || t === 'acessos' || t === 'seguranca') && !isMaster())) return null;
             return t;
         }
-        window.addEventListener('hashchange', () => { if (!currentUser) return; const t = tabFromHash(); if (t && t !== activeTab) switchTab(t); });
+        const onRoute = () => { if (!currentUser) return; const t = tabFromHash(); if (t && t !== activeTab) switchTab(t); };
+        window.addEventListener('hashchange', onRoute);
+        window.addEventListener('popstate', onRoute);
         // ---- Proteção contra clique duplo
         let lastBtn = null, busyBtns = [];
         const markBtn = b => { if (b) { lastBtn = b; setTimeout(() => { lastBtn = null; }, 0); } };
@@ -1566,7 +1658,10 @@
             input.value = '';
             if (!f || !isMaster()) return;
             try {
-                const data = JSON.parse(await f.text());
+                let data;
+                try { data = JSON.parse(await f.text()); } catch (e) { showNotification('Arquivo corrompido: não é um JSON válido.', 'error'); return; }
+                const bad = validateBackupData(data);
+                if (bad) { showNotification(bad, 'error'); return; }
                 if (!confirm('Restaurar os dados deste arquivo? Os dados atuais serão substituídos (um backup deles é feito antes). Usuários e senhas não mudam.')) return;
                 applyAdmin(await adminCall({ action: 'restore', data })); showNotification('Backup restaurado com sucesso!');
             } catch (e) { showNotification(e.message || 'Arquivo inválido.', 'error'); }
@@ -1737,7 +1832,9 @@
             });
             Object.keys(SCREENS).forEach(s => { const b = document.getElementById('nav-' + s); if (b) b.dataset.locked = can(s, 'v') ? '0' : '1'; });
             ['usuarios', 'acessos', 'seguranca'].forEach(t => document.getElementById('nav-' + t).classList.toggle('hidden', !isMaster()));
-            document.getElementById('view-only-notice').classList.toggle('hidden', isMaster() || Object.keys(SCREENS).some(s => can(s, 'i')));
+            const ro = !(isMaster() || Object.keys(SCREENS).some(s => can(s, 'i'))), vo = document.getElementById('view-only-notice');
+            vo.classList.toggle('hidden', !ro);
+            vo.setAttribute('role', 'switch'); vo.setAttribute('aria-checked', String(ro)); vo.setAttribute('aria-readonly', 'true'); vo.setAttribute('aria-label', 'Modo leitura');
             document.getElementById('bell-wrap').classList.toggle('hidden', !can('pecas', 'v'));
             document.getElementById('btn-whats').classList.toggle('hidden', !(can('dashboard', 'v') && can('financeiro', 'v')));
             document.getElementById('cfg-panel').classList.toggle('hidden', !isMaster());
@@ -1872,8 +1969,7 @@
                 const medal = ['🥇', '🥈', '🥉'][i] || (i + 1);
                 const color = r.pct === null ? 'bg-slate-100 text-slate-500' : (r.pct >= 75 ? 'bg-emerald-100 text-emerald-800' : (r.pct >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'));
                 return `<tr class="hover:bg-slate-50 ${r.m.active === false ? 'opacity-60' : ''}">
-                    <td class="py-3 px-3 font-bold text-slate-700">${medal}</td>
-                    <td class="py-3 px-3"><span class="font-semibold text-slate-800">${r.m.name}</span>${r.m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}<span class="block text-xs text-slate-400">${r.m.role}</span></td>
+                    <td class="py-3 px-3"><span class="font-bold text-slate-700 mr-2">${medal}</span><span class="font-semibold text-slate-800">${r.m.name}</span>${r.m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}<span class="block text-xs text-slate-400">${r.m.role}</span></td>
                     <td class="py-3 px-3 font-semibold text-emerald-700">${r.p}</td>
                     <td class="py-3 px-3 font-semibold text-amber-600">${r.fj}</td>
                     <td class="py-3 px-3 font-semibold text-rose-600">${r.fsj}</td>
@@ -2031,14 +2127,9 @@
                                 <option value="membro" ${u.role === 'membro' ? 'selected' : ''}>Membro</option>
                             </select>
                         </td>
-                        <td class="py-3 px-3">
-                            <div class="flex items-center gap-1.5">
-                                <span class="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">🔒 Protegida (Hash)</span>
-                                <input type="password" autocomplete="new-password" id="pass-inp-${u.id}" value="" placeholder="nova senha" class="px-2 py-1 border border-slate-300 rounded-lg text-xs w-28">
-                                <button onclick="updateUserPassword(${u.id}, document.getElementById('pass-inp-${u.id}').value)" class="px-2 py-1 bg-emerald-600 text-white rounded-lg text-[11px] font-semibold">Redefinir Senha</button>
-                            </div>
-                        </td>
+                        <td class="py-3 px-3 font-mono tracking-widest text-slate-500" title="Senha protegida (hash)">••••••••</td>
                         <td class="py-3 px-3 text-right">
+                            <button onclick="openPwModal(${u.id})" class="text-emerald-700 hover:underline text-xs font-semibold mr-3">Redefinir Senha</button>
                             <button onclick="deleteUser(${u.id})" class="text-rose-600 hover:underline text-xs font-semibold">Remover</button>
                         </td>
                     </tr>
@@ -2047,6 +2138,11 @@
 
             document.querySelectorAll('[data-fee]').forEach(el => { const f = el.dataset.fee; el.textContent = formatBRL(f === 'enc' ? cfg().valorTaxaEncontro : f === 'eq' ? cfg().valorTaxaEquipe : metaMembro()); });
             fillConfig();
+            const ab = document.getElementById('rank-abater');
+            if (ab && document.activeElement !== ab) ab.checked = cfg().abaterFaltaJustificada;
+            document.getElementById('rank-abater-wrap').classList.toggle('hidden', !isMaster());
+            document.getElementById('rank-formula').textContent = (cfg().abaterFaltaJustificada ? 'Fórmula atual: % de presença = P ÷ (P + FSJ). A falta justificada (FJ) não pesa contra o membro.' : 'Fórmula atual: % de presença = P ÷ (P + FJ + FSJ). A falta justificada (FJ) conta como falta.') + ' Ensaios N/A e membros de direção/apoio não entram. O Master altera esta regra aqui.';
+            renderAudit();
             renderFeedback(); renderGame(); renderAvisos(); renderReports(); renderAccess(); renderMine(); renderBell();
             applyPermissions();
             lucide.createIcons();
@@ -2054,11 +2150,13 @@
 
         lucide.createIcons();
         (async () => {
-            if (!token) return;
+            const hideBoot = () => document.getElementById('boot-loader').classList.add('hidden');
+            if (!token) { hideBoot(); return; }
             try {
                 const r = await api('/api/state');
-                if (r.ok) startSession(await r.json());
+                if (r.ok) await startSession(await r.json());
             } catch (e) {}
+            hideBoot();
         })();
     </script>
 </body>
