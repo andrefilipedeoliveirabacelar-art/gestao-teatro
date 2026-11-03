@@ -9,6 +9,7 @@ module.exports = async (req, res) => {
   if (st.users.some((u) => L.norm(u.username) === L.norm(username))) return L.send(res, 409, { error: 'Este login já existe! Escolha outro.' });
   const u = { id: Date.now(), name, username, role: 'membro', passHash: L.hash(password) };
   st.users.push(u); st.rev++;
+  L.addLog(st, u.username, 'Usuário cadastrado', 'autocadastro');
   await L.save(st);
   L.send(res, 200, { token: L.sign(u.id), me: L.me(u), rev: st.rev, state: L.pub(st, u) });
 };

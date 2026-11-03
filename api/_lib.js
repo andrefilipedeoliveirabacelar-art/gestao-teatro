@@ -21,7 +21,7 @@ const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,
 const clean = (s, n) => String(s || '').replace(/[<>&"'`]/g, '').trim().slice(0, n);
 
 const DEF_CFG = { valorTaxaEncontro: 60, valorTaxaEquipe: 60, abaterFaltaJustificada: true };
-const fix = (st) => { st.avisos = st.avisos || []; st.changes = st.changes || []; st.feedbacks = st.feedbacks || []; st.config = { ...DEF_CFG, ...(st.config || {}) }; return st; };
+const fix = (st) => { st.avisos = st.avisos || []; st.changes = st.changes || []; st.feedbacks = st.feedbacks || []; st.auditLog = st.auditLog || []; st.config = { ...DEF_CFG, ...(st.config || {}) }; return st; };
 const cleanConfig = (c, prev) => {
   const p = { ...DEF_CFG, ...(prev || {}) }, n = (v, d) => { v = Number(v); return v >= 0 && v <= 100000 ? Math.round(v * 100) / 100 : d; };
   return { valorTaxaEncontro: n(c && c.valorTaxaEncontro, p.valorTaxaEncontro), valorTaxaEquipe: n(c && c.valorTaxaEquipe, p.valorTaxaEquipe), abaterFaltaJustificada: c && typeof c.abaterFaltaJustificada === 'boolean' ? c.abaterFaltaJustificada : p.abaterFaltaJustificada };
@@ -40,6 +40,24 @@ const cleanPerms = (p) => {
   const o = {}; SC.forEach((k) => { const v = Number(p[k]); if (v >= 0 && v <= 3) o[k] = Math.floor(v); });
   return Object.keys(o).length ? o : undefined;
 };
+const COLS_B = ['members', 'plays', 'characters', 'meetings', 'expenses', 'avisos', 'changes', 'feedbacks'];
+const validateBackup = (src) => {
+  if (!src || typeof src !== 'object' || Array.isArray(src)) return 'O arquivo não é um backup válido do EncenaPro.';
+  if (src.schemaVersion !== undefined && src.schemaVersion !== 1) return 'Versão de backup não suportada (schemaVersion ' + src.schemaVersion + ').';
+  if (!COLS_B.some((k) => Array.isArray(src[k]))) return 'O arquivo não contém dados do sistema (membros, peças, ensaios...).';
+  const need = { members: ['name'], plays: ['title'], characters: ['name', 'playId'], meetings: ['date', 'title'], expenses: ['amount'], avisos: ['title'], feedbacks: ['text'] };
+  for (const k of COLS_B) {
+    if (src[k] === undefined) continue;
+    if (!Array.isArray(src[k])) return 'Campo "' + k + '" corrompido (esperava uma lista).';
+    for (const it of src[k]) {
+      if (!it || typeof it !== 'object' || it.id === undefined) return 'Campo "' + k + '" contém um registro inválido (sem identificador).';
+      for (const f of need[k] || []) if (it[f] === undefined) return 'Campo "' + k + '" contém um registro sem "' + f + '".';
+    }
+  }
+  if (src.config !== undefined && (typeof src.config !== 'object' || src.config === null)) return 'Configurações do backup corrompidas.';
+  return null;
+};
+const addLog = (st, user, acao, detalhe) => { st.auditLog = [{ dataHora: new Date().toISOString(), usuario: user, acao, detalhe }, ...(st.auditLog || [])].slice(0, 300); };
 async function load() {
   const raw = await redis(['GET', KEY]);
   if (raw) return fix(typeof raw === 'string' ? JSON.parse(raw) : raw);
@@ -53,6 +71,7 @@ const pub = (st, u) => {
   const { rev, users, ...rest } = st;
   const o = { ...rest, users: users.map(({ passHash, ...x }) => x) };
   if (u && lvl(u, 'financeiro') < 1) { o.expenses = []; o.members = (o.members || []).map(({ txEncontro, txEquipe, ...m }) => m); }
+  if (!u || u.role !== 'master') delete o.auditLog;
   return o;
 };
 const me = (u) => ({ id: u.id, name: u.name, username: u.username, role: u.role, perms: u.perms, memberId: u.memberId });
@@ -71,4 +90,4 @@ function verify(req, st) {
   } catch { return null; }
 }
 const send = (res, code, obj) => res.status(code).json(obj);
-module.exports = { redis, fix, SC, ROLES, lvl, cleanPerms, cleanConfig, load, save, pub, me, sign, verify, hash, check, norm, clean, send, configured: !!(URL_ && TOKEN) };
+module.exports = { validateBackup, addLog, redis, fix, SC, ROLES, lvl, cleanPerms, cleanConfig, load, save, pub, me, sign, verify, hash, check, norm, clean, send, configured: !!(URL_ && TOKEN) };

@@ -1,6 +1,7 @@
 const L = require('./_lib');
 const IDX = 'teatro:snaps';
 const COLS = ['members', 'plays', 'characters', 'meetings', 'expenses', 'avisos', 'changes', 'feedbacks'];
+const fileOf = (st, u) => { const { auditLog, ...rest } = L.pub(st, u); return { schemaVersion: 1, exportedAt: new Date().toISOString(), ...rest }; };
 const idx = async () => { const r = await L.redis(['GET', IDX]); return r ? JSON.parse(r) : []; };
 async function snapshot(st, by, kind) {
   const id = Date.now().toString(36), at = new Date().toISOString();
@@ -20,7 +21,9 @@ module.exports = async (req, res) => {
   const b = req.body || {};
   if (b.action === 'backup') {
     await snapshot(st, u.username, 'manual');
-    return L.send(res, 200, { snaps: await idx(), file: L.pub(st, u) });
+    L.addLog(st, u.username, 'Backup manual', 'Cópia criada no servidor e baixada');
+    await L.save(st);
+    return L.send(res, 200, { snaps: await idx(), file: fileOf(st, u) });
   }
   if (b.action === 'reset') {
     if (b.confirm !== 'ZERAR' || !L.check(String(b.password || ''), u.passHash)) return L.send(res, 400, { error: 'Confirmação ou senha incorreta.' });
@@ -29,8 +32,9 @@ module.exports = async (req, res) => {
     COLS.forEach((k) => { next[k] = []; });
     if (!b.keepUsers) next.users = [u];
     if (!b.keepConfig) delete next.config;
+    L.addLog(next, u.username, 'Dados zerados', 'Backup automático feito antes');
     await L.save(L.fix(next));
-    return L.send(res, 200, { rev: next.rev, state: L.pub(next, u), snaps: await idx(), file: L.pub(st, u) });
+    return L.send(res, 200, { rev: next.rev, state: L.pub(next, u), snaps: await idx(), file: fileOf(st, u) });
   }
   if (b.action === 'restore') {
     let src = b.data;
@@ -39,11 +43,13 @@ module.exports = async (req, res) => {
       if (!raw) return L.send(res, 404, { error: 'Backup não encontrado.' });
       src = JSON.parse(raw);
     }
-    if (!src || typeof src !== 'object' || !COLS.some((k) => Array.isArray(src[k]))) return L.send(res, 400, { error: 'Arquivo de backup inválido.' });
+    const bad = b.id ? null : L.validateBackup(src);
+    if (bad) return L.send(res, 400, { error: bad });
     await snapshot(st, u.username, 'antes de restaurar');
     const next = { ...st, rev: st.rev + 1 };
     COLS.forEach((k) => { next[k] = Array.isArray(src[k]) ? src[k] : []; });
     if (src.config) next.config = L.cleanConfig(src.config, st.config);
+    L.addLog(next, u.username, 'Backup restaurado', b.id ? 'Cópia do servidor' : 'Arquivo enviado');
     await L.save(next);
     return L.send(res, 200, { rev: next.rev, state: L.pub(next, u), snaps: await idx() });
   }

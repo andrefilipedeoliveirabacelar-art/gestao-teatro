@@ -15,10 +15,12 @@ module.exports = async (req, res) => {
   if (!inc || rev !== st.rev) return L.send(res, 409, { rev: st.rev, state: L.pub(st, u) });
   const master = u.role === 'master';
   if (!master) {
-    if (L.lvl(u, 'financeiro') < 1) {
+    if (L.lvl(u, 'financeiro') < 2) {
       inc.expenses = st.expenses;
       const om = new Map(st.members.map((m) => [m.id, m]));
       inc.members = (inc.members || []).map((m) => { const o = om.get(m.id); return o ? { ...m, txEncontro: o.txEncontro, txEquipe: o.txEquipe } : m; });
+      const gone = st.members.filter((m) => !(inc.members || []).some((x) => x.id === m.id) && ((Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0)) > 0);
+      if (gone.length && L.lvl(u, 'financeiro') < 3) return L.send(res, 403, { error: 'Este membro tem pagamentos registrados. Desative-o em vez de excluir.' });
     }
     for (const k of COLS) {
       const a = st[k] || [], b = Array.isArray(inc[k]) ? inc[k] : a;
@@ -27,7 +29,7 @@ module.exports = async (req, res) => {
       for (const [id, j] of ob) if (oa.get(id) !== j) ins = true;
       for (const id of oa.keys()) if (!ob.has(id)) del = true;
       const lv = Math.max(...SCR[k].map((s) => L.lvl(u, s)));
-      if ((ins && lv < 2) || (del && lv < 3) || (k === 'members' && (ins || del) && L.lvl(u, 'financeiro') < 1)) return L.send(res, 403, { error: 'Seu usuário não tem permissão para esta alteração.' });
+      if ((ins && lv < 2) || (del && lv < 3)) return L.send(res, 403, { error: 'Seu usuário não tem permissão para esta alteração.' });
     }
   }
   const next = { rev: st.rev + 1 };
@@ -60,6 +62,41 @@ module.exports = async (req, res) => {
     }
     if (!next.users.some((x) => x.role === 'master')) return L.send(res, 400, { error: 'Precisa existir pelo menos um Master.' });
   }
+  const out = [], add = (acao, detalhe) => out.push({ dataHora: when, usuario: u.username, acao, detalhe });
+  const idm = (a) => new Map((a || []).map((x) => [x.id, x]));
+  const om2 = idm(st.members), nm = idm(next.members);
+  for (const [id, m] of om2) if (!nm.has(id)) add('Membro excluído', m.name);
+  for (const [id, m] of nm) {
+    const o = om2.get(id);
+    if (!o) add('Membro cadastrado', m.name);
+    else {
+      if ((o.active === false) !== (m.active === false)) add(m.active === false ? 'Membro desativado' : 'Membro reativado', m.name);
+      if (J([o.txEncontro, o.txEquipe]) !== J([m.txEncontro, m.txEquipe])) add('Pagamento alterado', `${m.name}: Encontro ${o.txEncontro || 0} → ${m.txEncontro || 0}; Equipe ${o.txEquipe || 0} → ${m.txEquipe || 0}`);
+    }
+  }
+  const oe = idm(st.expenses), ne = idm(next.expenses);
+  for (const [id, x] of oe) if (!ne.has(id)) add('Despesa excluída', `${x.desc} (R$ ${x.amount})`);
+  for (const [id, x] of ne) { const o = oe.get(id); if (!o) add('Despesa lançada', `${x.desc} (R$ ${x.amount})`); else if (J(strip(o)) !== J(strip(x))) add('Despesa alterada', `${x.desc}: R$ ${o.amount} → R$ ${x.amount}`); }
+  const omt = idm(st.meetings), nmt = idm(next.meetings);
+  for (const [id, t] of omt) if (!nmt.has(id)) add('Ensaio excluído', `${t.title} (${t.date})`);
+  for (const [id, t] of nmt) {
+    const o = omt.get(id);
+    if (!o) add('Ensaio criado', `${t.title} (${t.date})`);
+    else if (J(o.attendance) !== J(t.attendance)) { const a = o.attendance || {}, b = t.attendance || {}; add('Chamada alterada', `${t.title} (${t.date}): ${Object.keys({ ...a, ...b }).filter((k) => a[k] !== b[k]).length} registro(s)`); }
+  }
+  const ou = idm(st.users), nu = idm(next.users);
+  for (const [id, x] of ou) if (!nu.has(id)) add('Usuário excluído', '@' + x.username);
+  for (const [id, x] of nu) {
+    const o = ou.get(id);
+    if (!o) add('Usuário criado', `@${x.username} (${x.role})`);
+    else {
+      if (o.role !== x.role) add('Perfil alterado', `@${x.username}: ${o.role} → ${x.role}`);
+      if (J(o.perms) !== J(x.perms) || o.memberId !== x.memberId) add('Permissões alteradas', '@' + x.username);
+      if (o.passHash !== x.passHash) add('Senha redefinida', '@' + x.username);
+    }
+  }
+  if (J(st.config) !== J(next.config)) add('Configuração alterada', J(next.config));
+  next.auditLog = [...out, ...(st.auditLog || [])].slice(0, 300);
   await L.save(next);
   L.send(res, 200, { rev: next.rev });
 };
