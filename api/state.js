@@ -4,6 +4,7 @@ const COLS = Object.keys(SCR);
 const canon = (v) => Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v;
 const J = (x) => JSON.stringify(canon(x));
 const strip = (x) => { const { atualizadoPor, atualizadoEm, ...r } = x; return r; };
+const stripM = (x) => { const { badges, ...r } = strip(x); return r; };
 module.exports = async (req, res) => {
   if (!L.configured) return L.send(res, 500, { error: 'Banco de dados não configurado na Vercel.' });
   const st = await L.load();
@@ -24,11 +25,16 @@ module.exports = async (req, res) => {
     }
     for (const k of COLS) {
       const a = st[k] || [], b = Array.isArray(inc[k]) ? inc[k] : a;
-      const oa = new Map(a.map((x) => [x.id, J(strip(x))])), ob = new Map(b.map((x) => [x.id, J(strip(x))]));
+      const fn = k === 'members' ? stripM : strip;
+      const oa = new Map(a.map((x) => [x.id, J(fn(x))])), ob = new Map(b.map((x) => [x.id, J(fn(x))]));
       let ins = false, del = false;
       for (const [id, j] of ob) if (oa.get(id) !== j) ins = true;
       for (const id of oa.keys()) if (!ob.has(id)) del = true;
       const lv = Math.max(...SCR[k].map((s) => L.lvl(u, s)));
+      if (k === 'members') {
+        const bo = new Map(a.map((x) => [x.id, J(x.badges || [])]));
+        if (b.some((x) => bo.has(x.id) && bo.get(x.id) !== J(x.badges || [])) && Math.max(lv, L.lvl(u, 'faltas')) < 2) return L.send(res, 403, { error: 'Seu usuário não tem permissão para conceder insígnias.' });
+      }
       if ((ins && lv < 2) || (del && lv < 3)) return L.send(res, 403, { error: 'Seu usuário não tem permissão para esta alteração.' });
     }
   }
@@ -71,6 +77,7 @@ module.exports = async (req, res) => {
     if (!o) add('Membro cadastrado', m.name);
     else {
       if ((o.active === false) !== (m.active === false)) add(m.active === false ? 'Membro desativado' : 'Membro reativado', m.name);
+      if (J(o.badges || []) !== J(m.badges || [])) add('Insígnia manual alterada', `${m.name}: ${(m.badges || []).join(', ') || 'nenhuma'}`);
       if (J([o.txEncontro, o.txEquipe]) !== J([m.txEncontro, m.txEquipe])) add('Pagamento alterado', `${m.name}: Encontro ${o.txEncontro || 0} → ${m.txEncontro || 0}; Equipe ${o.txEquipe || 0} → ${m.txEquipe || 0}`);
     }
   }

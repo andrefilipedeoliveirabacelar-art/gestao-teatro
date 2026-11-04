@@ -6,7 +6,7 @@ const idx = async () => { const r = await L.redis(['GET', IDX]); return r ? JSON
 async function snapshot(st, by, kind) {
   const id = Date.now().toString(36), at = new Date().toISOString();
   await L.redis(['SET', 'teatro:snap:' + id, JSON.stringify(st)]);
-  const list = [{ id, at, by, kind, membros: (st.members || []).length, ensaios: (st.meetings || []).length }, ...(await idx())];
+  const list = [{ id, at, by, kind, membros: (st.members || []).length, pecas: (st.plays || []).length, ensaios: (st.meetings || []).length }, ...(await idx())];
   for (const o of list.slice(10)) await L.redis(['DEL', 'teatro:snap:' + o.id]);
   await L.redis(['SET', IDX, JSON.stringify(list.slice(0, 10))]);
   return { id, at };
