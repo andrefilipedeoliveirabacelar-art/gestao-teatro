@@ -20,11 +20,11 @@ const check = (pw, h) => {
 const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const clean = (s, n) => String(s || '').replace(/[<>&"'`]/g, '').trim().slice(0, n);
 
-const DEF_CFG = { valorTaxaEncontro: 60, valorTaxaEquipe: 60, abaterFaltaJustificada: true };
+const DEF_CFG = { valorTaxaEncontro: 60, valorTaxaEquipe: 60, valorTaxaCasal: 100, abaterFaltaJustificada: true };
 const fix = (st) => { st.avisos = st.avisos || []; st.changes = st.changes || []; st.feedbacks = st.feedbacks || []; st.auditLog = st.auditLog || []; st.config = { ...DEF_CFG, ...(st.config || {}) }; return st; };
 const cleanConfig = (c, prev) => {
   const p = { ...DEF_CFG, ...(prev || {}) }, n = (v, d) => { v = Number(v); return v >= 0 && v <= 100000 ? Math.round(v * 100) / 100 : d; };
-  return { valorTaxaEncontro: n(c && c.valorTaxaEncontro, p.valorTaxaEncontro), valorTaxaEquipe: n(c && c.valorTaxaEquipe, p.valorTaxaEquipe), abaterFaltaJustificada: c && typeof c.abaterFaltaJustificada === 'boolean' ? c.abaterFaltaJustificada : p.abaterFaltaJustificada };
+  return { valorTaxaEncontro: n(c && c.valorTaxaEncontro, p.valorTaxaEncontro), valorTaxaEquipe: n(c && c.valorTaxaEquipe, p.valorTaxaEquipe), valorTaxaCasal: n(c && c.valorTaxaCasal, p.valorTaxaCasal), abaterFaltaJustificada: c && typeof c.abaterFaltaJustificada === 'boolean' ? c.abaterFaltaJustificada : p.abaterFaltaJustificada };
 };
 const SC = ['dashboard', 'avisos', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'conquistas', 'relatorios', 'feedback'];
 const ROLES = ['master', 'user', 'membro'];
