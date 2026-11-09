@@ -204,9 +204,6 @@
                         <p id="current-user-name" class="text-xs font-semibold text-white truncate">Administrador</p>
                         <p id="current-user-login" class="text-[11px] text-slate-400 truncate">@admin</p>
                     </div>
-                    <button onclick="handleLogout()" title="Sair" aria-label="Sair do sistema" class="flex items-center gap-1.5 px-3 py-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition text-xs font-semibold">
-                        <i data-lucide="log-out" class="w-4 h-4"></i> Sair
-                    </button>
                 </div>
             </div>
         </aside>
@@ -245,8 +242,8 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
                             <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
-                                <span>Total Arrecadado</span>
-                                <i data-lucide="trending-up" class="w-5 h-5 text-emerald-600"></i>
+                                <span>Tx. do Encontro (Total)</span>
+                                <i data-lucide="ticket" class="w-5 h-5 text-emerald-600"></i>
                             </div>
                             <p id="dash-arrecadado" class="text-2xl font-bold text-emerald-600 mt-2">R$ 0,00</p>
                             <p id="dash-arrec-split" class="text-xs text-slate-400 mt-1">Soma das taxas pagas</p>
@@ -254,11 +251,11 @@
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
                             <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
-                                <span>Total Usado (Gastos)</span>
+                                <span>Tx. da Equipe − Gastos</span>
                                 <i data-lucide="trending-down" class="w-5 h-5 text-rose-600"></i>
                             </div>
                             <p id="dash-usado" class="text-2xl font-bold text-rose-600 mt-2">R$ 0,00</p>
-                            <p class="text-xs text-slate-400 mt-1">Despesas registradas</p>
+                            <p id="dash-equipe-sub" class="text-xs text-slate-400 mt-1">Despesas registradas</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -471,19 +468,19 @@
                     <!-- Cards Financeiros -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-xs">
-                            <span class="text-xs uppercase font-bold opacity-80">Total Arrecadado</span>
+                            <span class="text-xs uppercase font-bold opacity-80">Tx. do Encontro (Total)</span>
                             <h4 id="fin-arrecadado" class="text-2xl font-extrabold mt-2">R$ 0,00</h4>
-                            <p class="text-[11px] opacity-80 mt-1">Recebido dos membros</p>
+                            <p id="fin-enc-sub" class="text-[11px] opacity-80 mt-1">Recebido dos membros</p>
+                        </div>
+                        <div class="bg-indigo-600 text-white p-5 rounded-2xl shadow-xs">
+                            <span class="text-xs uppercase font-bold opacity-80">Tx. da Equipe − Gastos</span>
+                            <h4 id="fin-saldo" class="text-2xl font-extrabold mt-2">R$ 0,00</h4>
+                            <p id="fin-eq-sub" class="text-[11px] opacity-80 mt-1">Arrecadado - Usado</p>
                         </div>
                         <div class="bg-rose-600 text-white p-5 rounded-2xl shadow-xs">
                             <span class="text-xs uppercase font-bold opacity-80">Total Usado (Despesas)</span>
                             <h4 id="fin-usado" class="text-2xl font-extrabold mt-2">R$ 0,00</h4>
                             <p class="text-[11px] opacity-80 mt-1">Gastos da equipe</p>
-                        </div>
-                        <div class="bg-indigo-600 text-white p-5 rounded-2xl shadow-xs">
-                            <span class="text-xs uppercase font-bold opacity-80">Saldo Disponível</span>
-                            <h4 id="fin-saldo" class="text-2xl font-extrabold mt-2">R$ 0,00</h4>
-                            <p class="text-[11px] opacity-80 mt-1">Arrecadado - Usado</p>
                         </div>
                         <div class="bg-amber-500 text-white p-5 rounded-2xl shadow-xs">
                             <span class="text-xs uppercase font-bold opacity-80">Falta Arrecadar</span>
@@ -496,9 +493,10 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div id="cfg-panel" class="hidden lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-3">Configurações Financeiras (Master)</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
                                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro (R$)</label><input id="cfg-enc" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
                                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro do casal (R$, total)</label><input id="cfg-casal" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe do casal (R$, total)</label><input id="cfg-casal-eq" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
                                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe (R$)</label><input id="cfg-eq" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
                             </div>
                             <button onclick="saveConfig()" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Salvar configurações</button>
@@ -643,9 +641,12 @@
                                 <button data-v="pecas" onclick="setRep('pecas')">Peças e personagens</button>
                                 <button data-v="freq" onclick="setRep('freq')">Frequência</button>
                                 <button data-v="fin" onclick="setRep('fin')">Financeiro</button>
+                                <button data-v="pago-enc" onclick="setRep('pago-enc')">Quem pagou Tx. Encontro</button>
+                                <button data-v="pago-eq" onclick="setRep('pago-eq')">Quem pagou Tx. Equipe</button>
                             </div>
                             <button onclick="pdfReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-semibold">Baixar PDF deste relatório</button>
                         </div>
+                        <label id="rep-parcial-wrap" class="hidden flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" id="rep-parcial" onchange="renderReports()"> Incluir também quem pagou parcialmente</label>
                         <div id="rep-body" class="overflow-x-auto"></div>
                     </div>
                 </section>
@@ -753,7 +754,7 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">Casal com (opcional)</label>
                     <select id="mem-casal" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></select>
-                    <p class="text-[11px] text-slate-400 mt-1">Casal paga a Tx. do Encontro conjunta, dividida entre os dois, e a Tx. da Equipe de cada um.</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Casal paga a Tx. do Encontro e a Tx. da Equipe em valores conjuntos, divididos entre os dois.</p>
                 </div>
                 <label class="flex items-start gap-2 text-xs text-slate-700 bg-indigo-50 p-3 rounded-xl"><input type="checkbox" id="mem-game" class="mt-0.5"><span><b>É ator/atriz (entra na frequência e na gamificação)</b><br>Desmarque para diretores e apoio: eles não entram na chamada, no ranking e relatórios de frequência, nem no game.</span></label>
                 <div class="flex justify-end gap-2 pt-3">
@@ -1524,12 +1525,17 @@
         // CONFIGURAÇÕES, ROTAS, ANTI CLIQUE DUPLO, WHATSAPP
         // ==========================================
         const isActor = m => m.game !== false;
-        const cfg = () => ({ valorTaxaEncontro: 60, valorTaxaEquipe: 60, valorTaxaCasal: 100, abaterFaltaJustificada: true, ...(state.config || {}) });
+        const cfg = () => ({ valorTaxaEncontro: 60, valorTaxaEquipe: 60, valorTaxaCasal: 100, valorTaxaEquipeCasal: 60, abaterFaltaJustificada: true, ...(state.config || {}) });
         const metaMembro = () => (Number(cfg().valorTaxaEncontro) || 0) + (Number(cfg().valorTaxaEquipe) || 0);
         // ---- Regras financeiras: casal e isenção da Tx. da Equipe
         const parceiro = m => m.casalCom ? (state.members.find(x => x.id === m.casalCom && x.casalCom === m.id) || null) : null;
         const encDe = m => parceiro(m) ? (Number(cfg().valorTaxaCasal) || 0) / 2 : (Number(cfg().valorTaxaEncontro) || 0);
-        const eqDe = m => isActor(m) ? (Number(cfg().valorTaxaEquipe) || 0) : 0;
+        const eqDe = m => {
+            if (!isActor(m)) return 0;
+            const p = parceiro(m);
+            if (!p) return Number(cfg().valorTaxaEquipe) || 0;
+            return (Number(cfg().valorTaxaEquipeCasal) || 0) / (1 + (isActor(p) ? 1 : 0));
+        };
         const metaDe = m => encDe(m) + eqDe(m);
         function setCouple(aId, bId) {
             const a = state.members.find(x => x.id === aId);
@@ -1563,7 +1569,7 @@
             const nomes = (a, f) => a.length ? a.map(e => esc(e.m.name) + (e.ex ? ' (ex)' : '') + (f ? f(e) : '')).join(', ') : '—';
             const bloco = (cor, tit, a, f) => `<div class="text-xs"><b class="${cor}">${tit} (${a.length})</b><p class="text-slate-600 mt-0.5">${nomes(a, f)}</p></div>`;
             const card = (tit, g, ico) => `<div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div class="flex flex-wrap items-baseline justify-between gap-2"><h3 class="font-bold text-slate-800">${ico} ${tit}</h3><span class="text-xs text-slate-500">Esperado: ${formatBRL(g.esperado)}</span></div><p class="text-2xl font-extrabold text-emerald-700">${formatBRL(g.arrec)}</p><div class="h-2 bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="h-2 bg-emerald-500 rounded-full" style="width:${g.esperado > 0 ? Math.min(100, Math.round(g.arrec / g.esperado * 100)) : 0}%"></div></div>${bloco('text-emerald-700', '✅ Pagaram', g.pagaram)}${bloco('text-amber-700', '🟡 Pagamento parcial', g.parcial, e => ` (${formatBRL(e.p)} de ${formatBRL(e.d)})`)}${bloco('text-rose-700', '🔴 Ainda não pagaram', g.pendentes)}${g.isentos.length ? bloco('text-sky-700', '⚪ Isentos', g.isentos) : ''}</div>`;
-            el.innerHTML = `<p class="text-xs text-slate-500">Regras: Tx. do Encontro ${formatBRL(c.valorTaxaEncontro)} por membro; casal paga ${formatBRL(c.valorTaxaCasal)} no total (${formatBRL(c.valorTaxaCasal / 2)} cada). Tx. da Equipe ${formatBRL(c.valorTaxaEquipe)} por pessoa (os dois do casal pagam); direção e apoio não pagam a Tx. da Equipe.</p><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${card('Arrecadado: Tx. do Encontro', r.enc, '🎟️')}${card('Arrecadado: Tx. da Equipe', r.eq, '🤝')}</div>`;
+            el.innerHTML = `<p class="text-xs text-slate-500">Regras: Tx. do Encontro ${formatBRL(c.valorTaxaEncontro)} por membro; casal paga ${formatBRL(c.valorTaxaCasal)} no total (${formatBRL(c.valorTaxaCasal / 2)} cada). Tx. da Equipe ${formatBRL(c.valorTaxaEquipe)} por pessoa; casal paga ${formatBRL(c.valorTaxaEquipeCasal)} no total (${formatBRL(c.valorTaxaEquipeCasal / 2)} cada); direção e apoio não pagam a Tx. da Equipe.</p><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${card('Arrecadado: Tx. do Encontro', r.enc, '🎟️')}${card('Arrecadado: Tx. da Equipe', r.eq, '🤝')}</div>`;
         }
         const pctOf = (p, fj, fsj) => { const d = cfg().abaterFaltaJustificada ? p + fsj : p + fj + fsj; return d > 0 ? (p / d) * 100 : null; };
         const pctTxt = v => v === null ? 'Sem registro (N/A)' : Math.round(v) + '%';
@@ -1573,11 +1579,12 @@
             document.getElementById('cfg-enc').value = cfg().valorTaxaEncontro;
             document.getElementById('cfg-eq').value = cfg().valorTaxaEquipe;
             document.getElementById('cfg-casal').value = cfg().valorTaxaCasal;
+            document.getElementById('cfg-casal-eq').value = cfg().valorTaxaEquipeCasal;
         }
         function saveConfig() {
             if (!isMaster()) return;
             const n = (id, d) => { const v = parseFloat(document.getElementById(id).value); return v >= 0 ? v : d; };
-            state.config = { valorTaxaEncontro: n('cfg-enc', 60), valorTaxaEquipe: n('cfg-eq', 60), valorTaxaCasal: n('cfg-casal', 100), abaterFaltaJustificada: cfg().abaterFaltaJustificada };
+            state.config = { valorTaxaEncontro: n('cfg-enc', 60), valorTaxaEquipe: n('cfg-eq', 60), valorTaxaCasal: n('cfg-casal', 100), valorTaxaEquipeCasal: n('cfg-casal-eq', 60), abaterFaltaJustificada: cfg().abaterFaltaJustificada };
             saveState();
             showNotification('Salvo com sucesso! Configurações financeiras atualizadas.');
         }
@@ -1687,7 +1694,7 @@
                     ['Membros ativos', act.length], ['Atores/atrizes ativos', act.filter(isActor).length], ['Ensaios/reuniões no período', ms.length],
                     ['Presença média do elenco', pctTxt(pctOf(tot.p, tot.fj, tot.fsj))], ['Peças cadastradas', state.plays.length],
                     ['Personagens (com intérprete / total)', `${chars.filter(c => c.memberId).length} / ${chars.length}`],
-                    ...(fin ? [['Total arrecadado', formatBRL(arr)], ['Arrecadado: Tx. do Encontro', formatBRL(taxasResumo().enc.arrec)], ['Arrecadado: Tx. da Equipe', formatBRL(taxasResumo().eq.arrec)], ['Total gasto', formatBRL(usado)], ['Saldo disponível', formatBRL(arr - usado)]] : [])] },
+                    ...(fin ? [['Total arrecadado', formatBRL(arr)], ['Arrecadado: Tx. do Encontro', formatBRL(taxasResumo().enc.arrec)], ['Arrecadado: Tx. da Equipe', formatBRL(taxasResumo().eq.arrec)], ['Total gasto', formatBRL(usado)], ['Tx. da Equipe − Gastos', formatBRL(taxasResumo().eq.arrec - usado)], ['Saldo disponível', formatBRL(arr - usado)]] : [])] },
                 { id: 'reunioes', h: 'Dinâmica das reuniões e ensaios', head: ['Data', 'Reunião', 'Presentes', 'FJ', 'FSJ', 'N/A', 'Observações (feedback)'], body: ms.map(t => {
                     const v = actors.map(m => (t.attendance || {})[m.id]).filter(Boolean), c = k => v.filter(x => x === k).length;
                     return [fdate(t.date), t.title, c('P'), c('FJ'), c('FSJ'), c('NA'), fbs.filter(f => f.type === 'reuniao' && f.targetId === t.id).map(f => f.text).join(' | ') || '—'];
@@ -1928,10 +1935,19 @@
             if (v === 'membro') return { title: 'Personagens por Membro', sections: [{ h: 'Participação por membro', head: ['Membro', 'Nº de peças', 'Peças (personagem)'], body: act.map(m => { const cs = state.characters.filter(c => c.memberId === m.id); return [m.name, new Set(cs.map(c => c.playId)).size, cs.map(c => playName(c.playId) + ' (' + c.name + ')').join('; ') || '—']; }).sort((a, b) => b[1] - a[1]) }] };
             if (v === 'pecas') return { title: 'Peças e Personagens', sections: state.plays.map(p => ({ h: p.title, head: ['Personagem', 'Intérprete'], body: state.characters.filter(c => c.playId === p.id).map(c => [c.name, c.memberId ? memberName(c.memberId) : 'Sem intérprete']) })) };
             if (v === 'freq') return { title: 'Relatório de Frequência', sections: [{ h: 'Frequência por membro (' + state.meetings.length + ' ensaios)', head: ['Membro', 'Ensaios', 'P', 'FJ', 'FSJ', '% Presença'], body: state.members.map(m => [m, st(m)]).filter(([m, s]) => isActor(m) && (m.active !== false || s.t)).map(([m, s]) => [m.name + (m.active === false ? ' (ex)' : ''), s.t, s.p, s.fj, s.fsj, pctTxt(pctOf(s.p, s.fj, s.fsj))]) }] };
+            if (v === 'pago-enc' || v === 'pago-eq') {
+                const enc = v === 'pago-enc', g = enc ? taxasResumo().enc : taxasResumo().eq;
+                const incl = document.getElementById('rep-parcial') && document.getElementById('rep-parcial').checked;
+                const lista = [...g.pagaram, ...(incl ? g.parcial : [])].sort((a, b) => a.m.name.localeCompare(b.m.name));
+                const total = lista.reduce((a, e) => a + e.p, 0);
+                const secs = [{ h: (enc ? 'Pagaram a Tx. do Encontro' : 'Pagaram a Tx. da Equipe') + ' (' + lista.length + ')', head: ['Membro', 'Situação', 'Casal', 'Valor devido', 'Valor pago'], body: [...lista.map(e => [e.m.name, e.ex ? 'Ex-integrante' : 'Ativo', parceiro(e.m) ? 'Casal com ' + parceiro(e.m).name : '-', formatBRL(e.d), formatBRL(e.p)]), ['TOTAL ARRECADADO', '', '', '', formatBRL(total)]] }];
+                if (!enc && g.isentos.length) secs.push({ h: 'Isentos da Tx. da Equipe (direção/apoio)', head: ['Membro', 'Função'], body: g.isentos.map(e => [e.m.name, e.m.role || 'Direção/Apoio']) });
+                return { title: enc ? 'Quem pagou a Tx. do Encontro' : 'Quem pagou a Tx. da Equipe', sections: secs };
+            }
             const paid = m => (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
             const arr = state.members.reduce((a, m) => a + paid(m), 0), usado = state.expenses.reduce((a, x) => a + (Number(x.amount) || 0), 0);
             return { title: 'Relatório Financeiro', sections: [
-                { h: 'Resumo', head: ['Item', 'Valor'], body: [['Total arrecadado', formatBRL(arr)], ['Arrecadado: Tx. do Encontro', formatBRL(taxasResumo().enc.arrec)], ['Arrecadado: Tx. da Equipe', formatBRL(taxasResumo().eq.arrec)], ['Total gasto', formatBRL(usado)], ['Saldo disponível', formatBRL(arr - usado)], ['Falta arrecadar (ativos)', formatBRL(act.reduce((a, m) => a + Math.max(0, metaDe(m) - paid(m)), 0))]] },
+                { h: 'Resumo', head: ['Item', 'Valor'], body: [['Total arrecadado', formatBRL(arr)], ['Arrecadado: Tx. do Encontro', formatBRL(taxasResumo().enc.arrec)], ['Arrecadado: Tx. da Equipe', formatBRL(taxasResumo().eq.arrec)], ['Total gasto', formatBRL(usado)], ['Tx. da Equipe − Gastos', formatBRL(taxasResumo().eq.arrec - usado)], ['Saldo disponível', formatBRL(arr - usado)], ['Falta arrecadar (ativos)', formatBRL(act.reduce((a, m) => a + Math.max(0, metaDe(m) - paid(m)), 0))]] },
                 { h: 'Taxas por membro', head: ['Membro', 'Situação', 'Tx Encontro', 'Tx Equipe', 'Pago', 'Falta'], body: state.members.map(m => [m.name, m.active === false ? 'Ex-integrante' : 'Ativo', formatBRL(Number(m.txEncontro) || 0), formatBRL(Number(m.txEquipe) || 0), formatBRL(paid(m)), formatBRL(m.active === false ? 0 : Math.max(0, metaDe(m) - paid(m)))]) },
                 { h: 'Despesas', head: ['Descrição', 'Valor'], body: state.expenses.map(x => [x.desc, formatBRL(Number(x.amount) || 0)]) }] };
         }
@@ -1939,13 +1955,14 @@
         function renderReports() {
             const el = document.getElementById('rep-body');
             if (!el) return;
+            document.getElementById('rep-parcial-wrap').classList.toggle('hidden', !['pago-enc', 'pago-eq'].includes(repView));
             document.querySelectorAll('#rep-tabs button').forEach(b => { b.className = 'px-3 py-1.5 rounded-lg ' + (b.dataset.v === repView ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'); });
-            if (repView === 'fin' && !can('financeiro', 'v')) { el.innerHTML = '<p class="text-sm text-slate-500 py-6">Seu usuário não tem perfil para visualizar este relatório.</p>'; return; }
+            if (['fin', 'pago-enc', 'pago-eq'].includes(repView) && !can('financeiro', 'v')) { el.innerHTML = '<p class="text-sm text-slate-500 py-6">Seu usuário não tem perfil para visualizar este relatório.</p>'; return; }
             el.innerHTML = repData(repView).sections.map(s => `<h4 class="font-bold text-slate-800 mt-4 mb-2">${esc(s.h)}</h4>` + tbl(s.head, s.body)).join('') || '<p class="text-sm text-slate-400 py-6">Nenhuma peça cadastrada.</p>';
         }
         function pdfReport() {
             if (!window.jspdf) { showNotification('A biblioteca de PDF não carregou. Recarregue a página.', 'error'); return; }
-            if (repView === 'fin' && !can('financeiro', 'v')) return;
+            if (['fin', 'pago-enc', 'pago-eq'].includes(repView) && !can('financeiro', 'v')) return;
             const d = repData(repView), doc = new window.jspdf.jsPDF();
             doc.setFontSize(16); doc.text(d.title, 14, 16);
             doc.setFontSize(9); doc.text('Gerado em ' + new Date().toLocaleDateString('pt-BR'), 14, 22);
@@ -2096,8 +2113,11 @@
             const saldoDisponivel = totalArrecadado - totalUsado;
 
             // 1. Dashboard Cards
-            document.getElementById('dash-arrecadado').innerText = formatBRL(totalArrecadado);
-            document.getElementById('dash-usado').innerText = formatBRL(totalUsado);
+            const txs = taxasResumo(), eqMenosGasto = txs.eq.arrec - totalUsado;
+            document.getElementById('dash-arrecadado').innerText = formatBRL(txs.enc.arrec);
+            document.getElementById('dash-usado').innerText = formatBRL(eqMenosGasto);
+            document.getElementById('dash-usado').className = 'text-2xl font-bold mt-2 ' + (eqMenosGasto >= 0 ? 'text-emerald-600' : 'text-rose-600');
+            document.getElementById('dash-equipe-sub').textContent = 'Tx. Equipe ' + formatBRL(txs.eq.arrec) + ' − gasto ' + formatBRL(totalUsado);
             document.getElementById('dash-falta').innerText = formatBRL(faltaArrecadar);
             const pctMeta = totalEsperado > 0 ? Math.min(100, Math.round(activeMembers.reduce((a, m) => a + Math.min(metaDe(m), (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0)), 0) / totalEsperado * 100)) : 0;
             setProg('fin-prog', pctMeta); setProg('fin2-prog', pctMeta);
@@ -2268,9 +2288,11 @@
             }).join('') || '<p class="text-sm text-slate-400 col-span-full text-center py-8">Nenhuma reunião criada ainda.</p>';
 
             // 6. Aba Financeiro
-            document.getElementById('fin-arrecadado').innerText = formatBRL(totalArrecadado);
+            document.getElementById('fin-arrecadado').innerText = formatBRL(txs.enc.arrec);
+            document.getElementById('fin-enc-sub').textContent = 'Esperado: ' + formatBRL(txs.enc.esperado);
+            document.getElementById('fin-eq-sub').textContent = 'Tx. Equipe ' + formatBRL(txs.eq.arrec) + ' − gasto ' + formatBRL(totalUsado);
             document.getElementById('fin-usado').innerText = formatBRL(totalUsado);
-            document.getElementById('fin-saldo').innerText = formatBRL(saldoDisponivel);
+            document.getElementById('fin-saldo').innerText = formatBRL(eqMenosGasto);
             document.getElementById('fin-falta').innerText = formatBRL(faltaArrecadar);
             document.getElementById('fin-esperado').innerText = `Meta Total: ${formatBRL(totalEsperado)}`;
 
@@ -2333,7 +2355,7 @@
             document.getElementById('rank-formula').textContent = (cfg().abaterFaltaJustificada ? 'Fórmula atual: % de presença = P ÷ (P + FSJ). A falta justificada (FJ) não pesa contra o membro.' : 'Fórmula atual: % de presença = P ÷ (P + FJ + FSJ). A falta justificada (FJ) conta como falta.') + ' Ensaios N/A e membros de direção/apoio não entram. O Master altera esta regra aqui. Ranking ordenado por XP (Score de Engajamento).';
             renderAudit();
             renderFinTaxas();
-            { const tx = taxasResumo(); document.getElementById('dash-arrec-split').textContent = 'Encontro ' + formatBRL(tx.enc.arrec) + ' · Equipe ' + formatBRL(tx.eq.arrec); }
+            document.getElementById('dash-arrec-split').textContent = 'Esperado: ' + formatBRL(txs.enc.esperado) + ' · Total geral (Encontro + Equipe): ' + formatBRL(totalArrecadado);
             renderFeedback(); renderProntidao(); renderCamarimDash(); renderGame(); renderAvisos(); renderReports(); renderAccess(); renderMine(); renderBell();
             applyPermissions();
             lucide.createIcons();
