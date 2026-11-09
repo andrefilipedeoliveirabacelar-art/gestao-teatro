@@ -19,6 +19,7 @@
     .nav-btn[data-locked="1"]{opacity:.45}
     .overflow-x-auto{-webkit-overflow-scrolling:touch;overflow-x:auto}
     .print-only{display:none}
+    @supports (height:100dvh){body{height:100dvh!important}#sidebar{height:100dvh!important}}
     @media print{
       @page{size:A4;margin:14mm}
       aside,header,button,.no-print,[role=dialog],#bell-wrap,#boot-loader,#auth-screen,#toast-container{display:none!important}
@@ -117,7 +118,7 @@
 
         <!-- SIDEBAR / MENU LATERAL -->
         <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-100 flex flex-col justify-between transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out h-full shrink-0">
-            <div>
+            <div class="flex-1 min-h-0 overflow-y-auto">
                 <!-- Logo Header -->
                 <div class="p-5 flex items-center justify-between border-b border-slate-800">
                     <div class="flex items-center space-x-3">
@@ -197,14 +198,14 @@
             </div>
 
             <!-- Rodapé Usuário Logado -->
-            <div class="p-3 border-t border-slate-800 bg-slate-950/50">
+            <div class="p-3 border-t border-slate-800 bg-slate-950/50 shrink-0" style="padding-bottom:calc(.75rem + env(safe-area-inset-bottom,0px))">
                 <div class="flex items-center justify-between px-2 py-1.5">
                     <div class="truncate pr-2">
                         <p id="current-user-name" class="text-xs font-semibold text-white truncate">Administrador</p>
                         <p id="current-user-login" class="text-[11px] text-slate-400 truncate">@admin</p>
                     </div>
-                    <button onclick="handleLogout()" title="Sair" class="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <button onclick="handleLogout()" title="Sair" aria-label="Sair do sistema" class="flex items-center gap-1.5 px-3 py-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition text-xs font-semibold">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> Sair
                     </button>
                 </div>
             </div>
@@ -215,18 +216,19 @@
             
             <!-- HEADER TOPO -->
             <header class="bg-white border-b border-slate-200 px-4 md:px-6 py-3.5 flex items-center justify-between shrink-0">
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 min-w-0">
                     <button onclick="toggleSidebar()" class="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100">
                         <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
                     <h2 id="page-title" class="text-lg md:text-xl font-bold text-slate-800 truncate">Dashboard Geral</h2>
                 </div>
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2 shrink-0">
                     <button id="btn-whats" onclick="copyWhats()" title="Copiar resumo para o WhatsApp" class="hidden px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold whitespace-nowrap">📲 <span class="hidden sm:inline">Copiar Resumo (WhatsApp)</span></button>
                     <div id="bell-wrap" class="hidden relative"><button onclick="toggleBell()" class="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100"><i data-lucide="bell" class="w-5 h-5"></i><span id="bell-count" class="hidden absolute -top-0.5 -right-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">0</span></button><div id="bell-panel" class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto"></div></div>
-                    <span id="view-only-notice" class="hidden text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium">
-                        Modo Leitura (Usuário)
+                    <span id="view-only-notice" class="hidden text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">
+                        Modo Leitura<span class="hidden sm:inline"> (Usuário)</span>
                     </span>
+                    <button onclick="handleLogout()" title="Sair" aria-label="Sair do sistema" class="flex items-center gap-1 p-2.5 rounded-lg text-rose-600 hover:bg-rose-50 text-xs font-semibold"><i data-lucide="log-out" class="w-5 h-5"></i><span class="hidden sm:inline">Sair</span></button>
                 </div>
             </header>
 
@@ -247,7 +249,7 @@
                                 <i data-lucide="trending-up" class="w-5 h-5 text-emerald-600"></i>
                             </div>
                             <p id="dash-arrecadado" class="text-2xl font-bold text-emerald-600 mt-2">R$ 0,00</p>
-                            <p class="text-xs text-slate-400 mt-1">Soma das taxas pagas</p>
+                            <p id="dash-arrec-split" class="text-xs text-slate-400 mt-1">Soma das taxas pagas</p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -494,12 +496,15 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div id="cfg-panel" class="hidden lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-3">Configurações Financeiras (Master)</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro (R$)</label><input id="cfg-enc" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro do casal (R$, total)</label><input id="cfg-casal" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
                                 <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe (R$)</label><input id="cfg-eq" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
                             </div>
                             <button onclick="saveConfig()" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Salvar configurações</button>
                         </div>
+
+                        <div id="fin-taxas" class="lg:col-span-2 space-y-4"></div>
 
                         <!-- Pagamentos por Membro -->
                         <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
@@ -575,6 +580,7 @@
                                 <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-frequencia" checked onchange="renderDirPreview()"> Frequência por membro</label>
                                 <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-elenco" checked onchange="renderDirPreview()"> Elenco: peças e personagens</label>
                                 <label class="flex items-center gap-2 py-1 dr-fin"><input type="checkbox" id="dr-sel-pagamentos" checked onchange="renderDirPreview()"> Financeiro: pagamentos por membro</label>
+                                <label class="flex items-center gap-2 py-1 dr-fin"><input type="checkbox" id="dr-sel-taxas" checked onchange="renderDirPreview()"> Financeiro: arrecadação por taxa</label>
                                 <label class="flex items-center gap-2 py-1 dr-fin"><input type="checkbox" id="dr-sel-despesas" checked onchange="renderDirPreview()"> Financeiro: despesas detalhadas</label>
                                 <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-fbgeral" checked onchange="renderDirPreview()"> Feedback geral e financeiro</label>
                                 <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-fbmembro" checked onchange="renderDirPreview()"> Feedback por membro</label>
@@ -647,8 +653,8 @@
                 <section id="tab-acessos" class="space-y-6 hidden">
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <h3 class="text-lg font-bold text-slate-800">Acessos e Permissões</h3>
-                        <p class="text-xs text-slate-500">Escolha o nível de cada usuário por tela: Bloqueado, Consultar, Inserir/Editar ou Total (com excluir). O perfil Membro começa só com Frequência, Peças e Avisos para consulta. Vincule o usuário a um membro para ele ver as próprias faltas e peças. As taxas (Tx. Encontro e Tx. Equipe) só podem ser lançadas por quem tem Inserir/Editar no Financeiro; quem edita Membros não precisa ver o Financeiro.</p>
-                        <div class="overflow-x-auto"><table id="acc-table" class="sticky-first w-full text-left text-sm border-collapse min-w-[900px]"></table></div>
+                        <p class="text-xs text-slate-500">Escolha o nível de cada usuário por tela: Bloqueado, Consultar, Inserir/Editar ou Total (com excluir). O perfil Membro começa só com Frequência, Peças e Avisos para consulta. Vincule o usuário a um membro para ele ver as próprias faltas e peças. As taxas (Tx. Encontro e Tx. Equipe) só podem ser lançadas por quem tem Inserir/Editar no Financeiro; quem edita Membros não precisa ver o Financeiro. Cores: vermelho = bloqueado, branco = consultar, âmbar = inserir/editar, verde = total.</p>
+                        <div id="acc-list" class="space-y-3"></div>
                     </div>
                 </section>
 
@@ -743,6 +749,11 @@
                 <div>
                     <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Função na Equipe</label>
                     <input type="text" id="mem-role" required placeholder="Ex: Ator, Diretor, Som, Apoio" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Casal com (opcional)</label>
+                    <select id="mem-casal" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></select>
+                    <p class="text-[11px] text-slate-400 mt-1">Casal paga a Tx. do Encontro conjunta, dividida entre os dois, e a Tx. da Equipe de cada um.</p>
                 </div>
                 <label class="flex items-start gap-2 text-xs text-slate-700 bg-indigo-50 p-3 rounded-xl"><input type="checkbox" id="mem-game" class="mt-0.5"><span><b>É ator/atriz (entra na frequência e na gamificação)</b><br>Desmarque para diretores e apoio: eles não entram na chamada, no ranking e relatórios de frequência, nem no game.</span></label>
                 <div class="flex justify-end gap-2 pt-3">
@@ -1021,9 +1032,9 @@
         // ==========================================
         // MEMBROS & TAXAS (TX ENCONTRO 60 / TX EQUIPE 60)
         // ==========================================
-        function getFinancialStatus(txEncontro, txEquipe) {
-            const total = (Number(txEncontro) || 0) + (Number(txEquipe) || 0);
-            if (metaMembro() > 0 && total >= metaMembro()) return { label: 'QUITADO', classes: 'bg-emerald-100 text-emerald-800' };
+        function getFinancialStatus(txEncontro, txEquipe, meta) {
+            const total = (Number(txEncontro) || 0) + (Number(txEquipe) || 0), alvo = meta ?? metaMembro();
+            if (alvo > 0 && total >= alvo) return { label: 'QUITADO', classes: 'bg-emerald-100 text-emerald-800' };
             if (total > 0) return { label: 'PAGAMENTO PARCIAL', classes: 'bg-amber-100 text-amber-800' };
             return { label: 'PENDENTE', classes: 'bg-rose-100 text-rose-800' };
         }
@@ -1045,6 +1056,9 @@
                 document.getElementById('mem-role').value = '';
                 document.getElementById('mem-game').checked = true;
             }
+            const sel = document.getElementById('mem-casal');
+            sel.innerHTML = '<option value="">— não é casal —</option>' + state.members.filter(x => x.id !== memberId).map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+            sel.value = memberId ? String((state.members.find(x => x.id === memberId) || {}).casalCom || '') : '';
             modal.classList.remove('hidden');
         }
 
@@ -1066,14 +1080,18 @@
                 return;
             }
 
+            let mid;
             if (id) {
                 const index = state.members.findIndex(m => String(m.id) === String(id));
+                mid = state.members[index].id;
                 state.members[index] = { ...state.members[index], name, role, game };
                 showNotification('Salvo com sucesso! Membro atualizado.');
             } else {
-                state.members.push({ id: Date.now(), name, role, txEncontro: 0, txEquipe: 0, game });
+                mid = Date.now();
+                state.members.push({ id: mid, name, role, txEncontro: 0, txEquipe: 0, game });
                 showNotification('Salvo com sucesso! Novo membro incluído.');
             }
+            setCouple(mid, document.getElementById('mem-casal').value ? Number(document.getElementById('mem-casal').value) : null);
             closeMemberModal();
             saveState();
         }
@@ -1506,8 +1524,47 @@
         // CONFIGURAÇÕES, ROTAS, ANTI CLIQUE DUPLO, WHATSAPP
         // ==========================================
         const isActor = m => m.game !== false;
-        const cfg = () => ({ valorTaxaEncontro: 60, valorTaxaEquipe: 60, abaterFaltaJustificada: true, ...(state.config || {}) });
+        const cfg = () => ({ valorTaxaEncontro: 60, valorTaxaEquipe: 60, valorTaxaCasal: 100, abaterFaltaJustificada: true, ...(state.config || {}) });
         const metaMembro = () => (Number(cfg().valorTaxaEncontro) || 0) + (Number(cfg().valorTaxaEquipe) || 0);
+        // ---- Regras financeiras: casal e isenção da Tx. da Equipe
+        const parceiro = m => m.casalCom ? (state.members.find(x => x.id === m.casalCom && x.casalCom === m.id) || null) : null;
+        const encDe = m => parceiro(m) ? (Number(cfg().valorTaxaCasal) || 0) / 2 : (Number(cfg().valorTaxaEncontro) || 0);
+        const eqDe = m => isActor(m) ? (Number(cfg().valorTaxaEquipe) || 0) : 0;
+        const metaDe = m => encDe(m) + eqDe(m);
+        function setCouple(aId, bId) {
+            const a = state.members.find(x => x.id === aId);
+            if (!a || (a.casalCom || null) === (bId || null)) return;
+            const unlink = m => { if (m.casalCom) { const o = state.members.find(x => x.id === m.casalCom); if (o && o.casalCom === m.id) delete o.casalCom; delete m.casalCom; } };
+            unlink(a);
+            const b = bId && state.members.find(x => x.id === bId);
+            if (b) { unlink(b); a.casalCom = b.id; b.casalCom = a.id; }
+        }
+        function taxasResumo() {
+            const mk = (due, paid) => {
+                const g = { arrec: 0, esperado: 0, pagaram: [], parcial: [], pendentes: [], isentos: [] };
+                state.members.forEach(m => {
+                    const d = due(m), p = paid(m), ex = m.active === false, e = { m, d, p, ex };
+                    g.arrec += p;
+                    if (!ex) g.esperado += d;
+                    if (ex) { if (p > 0) g.pagaram.push(e); }
+                    else if (d <= 0) (p > 0 ? g.pagaram : g.isentos).push(e);
+                    else if (p >= d) g.pagaram.push(e);
+                    else if (p > 0) g.parcial.push(e);
+                    else g.pendentes.push(e);
+                });
+                return g;
+            };
+            return { enc: mk(encDe, m => Number(m.txEncontro) || 0), eq: mk(eqDe, m => Number(m.txEquipe) || 0) };
+        }
+        function renderFinTaxas() {
+            const el = document.getElementById('fin-taxas');
+            if (!el) return;
+            const r = taxasResumo(), c = cfg();
+            const nomes = (a, f) => a.length ? a.map(e => esc(e.m.name) + (e.ex ? ' (ex)' : '') + (f ? f(e) : '')).join(', ') : '—';
+            const bloco = (cor, tit, a, f) => `<div class="text-xs"><b class="${cor}">${tit} (${a.length})</b><p class="text-slate-600 mt-0.5">${nomes(a, f)}</p></div>`;
+            const card = (tit, g, ico) => `<div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div class="flex flex-wrap items-baseline justify-between gap-2"><h3 class="font-bold text-slate-800">${ico} ${tit}</h3><span class="text-xs text-slate-500">Esperado: ${formatBRL(g.esperado)}</span></div><p class="text-2xl font-extrabold text-emerald-700">${formatBRL(g.arrec)}</p><div class="h-2 bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="h-2 bg-emerald-500 rounded-full" style="width:${g.esperado > 0 ? Math.min(100, Math.round(g.arrec / g.esperado * 100)) : 0}%"></div></div>${bloco('text-emerald-700', '✅ Pagaram', g.pagaram)}${bloco('text-amber-700', '🟡 Pagamento parcial', g.parcial, e => ` (${formatBRL(e.p)} de ${formatBRL(e.d)})`)}${bloco('text-rose-700', '🔴 Ainda não pagaram', g.pendentes)}${g.isentos.length ? bloco('text-sky-700', '⚪ Isentos', g.isentos) : ''}</div>`;
+            el.innerHTML = `<p class="text-xs text-slate-500">Regras: Tx. do Encontro ${formatBRL(c.valorTaxaEncontro)} por membro; casal paga ${formatBRL(c.valorTaxaCasal)} no total (${formatBRL(c.valorTaxaCasal / 2)} cada). Tx. da Equipe ${formatBRL(c.valorTaxaEquipe)} por pessoa (os dois do casal pagam); direção e apoio não pagam a Tx. da Equipe.</p><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${card('Arrecadado: Tx. do Encontro', r.enc, '🎟️')}${card('Arrecadado: Tx. da Equipe', r.eq, '🤝')}</div>`;
+        }
         const pctOf = (p, fj, fsj) => { const d = cfg().abaterFaltaJustificada ? p + fsj : p + fj + fsj; return d > 0 ? (p / d) * 100 : null; };
         const pctTxt = v => v === null ? 'Sem registro (N/A)' : Math.round(v) + '%';
         function fillConfig() {
@@ -1515,11 +1572,12 @@
             if (!pn || (pn.contains && pn.contains(document.activeElement))) return;
             document.getElementById('cfg-enc').value = cfg().valorTaxaEncontro;
             document.getElementById('cfg-eq').value = cfg().valorTaxaEquipe;
+            document.getElementById('cfg-casal').value = cfg().valorTaxaCasal;
         }
         function saveConfig() {
             if (!isMaster()) return;
             const n = (id, d) => { const v = parseFloat(document.getElementById(id).value); return v >= 0 ? v : d; };
-            state.config = { valorTaxaEncontro: n('cfg-enc', 60), valorTaxaEquipe: n('cfg-eq', 60), abaterFaltaJustificada: cfg().abaterFaltaJustificada };
+            state.config = { valorTaxaEncontro: n('cfg-enc', 60), valorTaxaEquipe: n('cfg-eq', 60), valorTaxaCasal: n('cfg-casal', 100), abaterFaltaJustificada: cfg().abaterFaltaJustificada };
             saveState();
             showNotification('Salvo com sucesso! Configurações financeiras atualizadas.');
         }
@@ -1527,9 +1585,9 @@
             if (!can('financeiro', 'i')) return;
             const m = state.members.find(x => x.id === id);
             if (!m) return;
-            const v = (el, max) => Math.min(max, Math.max(0, parseFloat(document.getElementById(el + id).value) || 0));
-            m.txEncontro = v('pg-enc-', cfg().valorTaxaEncontro);
-            m.txEquipe = v('pg-eq-', cfg().valorTaxaEquipe);
+            const v = (el, max, cur) => { const t = parseFloat(document.getElementById(el + id).value) || 0; return t === (Number(cur) || 0) ? (Number(cur) || 0) : Math.min(max, Math.max(0, t)); };
+            m.txEncontro = v('pg-enc-', encDe(m), m.txEncontro);
+            m.txEquipe = eqDe(m) === 0 ? (Number(m.txEquipe) || 0) : v('pg-eq-', eqDe(m), m.txEquipe);
             saveState();
             showNotification('Salvo com sucesso! Pagamento de ' + m.name + ' atualizado.');
         }
@@ -1566,7 +1624,7 @@
             const act = state.members.filter(m => m.active !== false);
             const paid = m => (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
             const arr = state.members.reduce((a, m) => a + paid(m), 0), usado = state.expenses.reduce((a, x) => a + (Number(x.amount) || 0), 0);
-            const falta = act.reduce((a, m) => a + Math.max(0, metaMembro() - paid(m)), 0);
+            const falta = act.reduce((a, m) => a + Math.max(0, metaDe(m) - paid(m)), 0);
             const txt = `*📊 Resumo EncenaPro* (${new Date().toLocaleDateString('pt-BR')})\n\n💰 Total arrecadado: ${formatBRL(arr)}\n💸 Total gasto: ${formatBRL(usado)}\n🎯 Falta p/ meta: ${formatBRL(falta)}\n\n👥 Membros ativos: ${act.length}\n🎬 Ensaios: ${state.meetings.length}\n🎭 Peças: ${state.plays.length}`;
             try { await navigator.clipboard.writeText(txt); }
             catch (e) { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e2) {} t.remove(); }
@@ -1629,7 +1687,7 @@
                     ['Membros ativos', act.length], ['Atores/atrizes ativos', act.filter(isActor).length], ['Ensaios/reuniões no período', ms.length],
                     ['Presença média do elenco', pctTxt(pctOf(tot.p, tot.fj, tot.fsj))], ['Peças cadastradas', state.plays.length],
                     ['Personagens (com intérprete / total)', `${chars.filter(c => c.memberId).length} / ${chars.length}`],
-                    ...(fin ? [['Total arrecadado', formatBRL(arr)], ['Total gasto', formatBRL(usado)], ['Saldo disponível', formatBRL(arr - usado)]] : [])] },
+                    ...(fin ? [['Total arrecadado', formatBRL(arr)], ['Arrecadado: Tx. do Encontro', formatBRL(taxasResumo().enc.arrec)], ['Arrecadado: Tx. da Equipe', formatBRL(taxasResumo().eq.arrec)], ['Total gasto', formatBRL(usado)], ['Saldo disponível', formatBRL(arr - usado)]] : [])] },
                 { id: 'reunioes', h: 'Dinâmica das reuniões e ensaios', head: ['Data', 'Reunião', 'Presentes', 'FJ', 'FSJ', 'N/A', 'Observações (feedback)'], body: ms.map(t => {
                     const v = actors.map(m => (t.attendance || {})[m.id]).filter(Boolean), c = k => v.filter(x => x === k).length;
                     return [fdate(t.date), t.title, c('P'), c('FJ'), c('FSJ'), c('NA'), fbs.filter(f => f.type === 'reuniao' && f.targetId === t.id).map(f => f.text).join(' | ') || '—'];
@@ -1638,7 +1696,8 @@
                 { id: 'elenco', h: 'Elenco: peças e personagens', head: ['Peça', 'Personagem', 'Intérprete'], body: chars.map(c => [playName(c.playId), c.name, c.memberId ? memberName(c.memberId) : 'Sem intérprete']) }
             ];
             if (fin) sections.push(
-                { id: 'pagamentos', h: 'Financeiro: pagamentos por membro', head: ['Membro', 'Situação', 'Tx. Encontro', 'Tx. Equipe', 'Pago', 'Falta'], body: state.members.map(m => [m.name, m.active === false ? 'Ex-integrante' : 'Ativo', formatBRL(Number(m.txEncontro) || 0), formatBRL(Number(m.txEquipe) || 0), formatBRL(paid(m)), formatBRL(m.active === false ? 0 : Math.max(0, metaMembro() - paid(m)))]) },
+                { id: 'pagamentos', h: 'Financeiro: pagamentos por membro', head: ['Membro', 'Situação', 'Tx. Encontro', 'Tx. Equipe', 'Pago', 'Falta'], body: state.members.map(m => [m.name, m.active === false ? 'Ex-integrante' : 'Ativo', formatBRL(Number(m.txEncontro) || 0), formatBRL(Number(m.txEquipe) || 0), formatBRL(paid(m)), formatBRL(m.active === false ? 0 : Math.max(0, metaDe(m) - paid(m)))]) },
+                { id: 'taxas', h: 'Financeiro: arrecadação por taxa', head: ['Taxa', 'Arrecadado', 'Esperado', 'Quem pagou', 'Quem ainda não pagou'], body: (() => { const t = taxasResumo(), nm = a => a.map(e => e.m.name + (e.ex ? ' (ex)' : '')).join(', ') || '-'; return [['Tx. do Encontro', formatBRL(t.enc.arrec), formatBRL(t.enc.esperado), nm(t.enc.pagaram), nm([...t.enc.parcial, ...t.enc.pendentes])], ['Tx. da Equipe', formatBRL(t.eq.arrec), formatBRL(t.eq.esperado), nm(t.eq.pagaram), nm([...t.eq.parcial, ...t.eq.pendentes])], ['Tx. da Equipe: isentos (direção/apoio)', '-', '-', nm(t.eq.isentos), '-']]; })() },
                 { id: 'despesas', h: 'Financeiro: despesas detalhadas (o que foi utilizado)', head: ['Data', 'Descrição', 'Valor', 'Registrado por'], body: state.expenses.filter(x => inR(new Date(x.id).toISOString().slice(0, 10))).map(x => [new Date(x.id).toLocaleDateString('pt-BR'), x.desc, formatBRL(Number(x.amount) || 0), x.atualizadoPor || '—']) });
             sections.push(
                 { id: 'fbgeral', h: 'Feedback geral e financeiro', head: ['Data', 'Tipo', 'Feedback', 'Autor'], body: fbs.filter(f => f.type === 'geral' || f.type === 'financeiro').map(f => [fdate(f.date), FB_TYPES[f.type], f.text, f.by || '']) },
@@ -1790,12 +1849,13 @@
             showNotification('Salvo com sucesso! Vínculo atualizado.');
         }
         function renderAccess() {
-            const el = document.getElementById('acc-table');
+            const el = document.getElementById('acc-list');
             if (!el || !isMaster()) return;
             const sc = Object.keys(SCREENS);
-            el.innerHTML = `<thead><tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200"><th class="py-2.5 px-3">Usuário</th><th class="py-2.5 px-3">Membro vinculado</th>${sc.map(s => `<th class="py-2.5 px-3">${SCREENS[s]}</th>`).join('')}</tr></thead><tbody class="divide-y divide-slate-100">${state.users.map(u => u.role === 'master'
-                ? `<tr><td class="py-2.5 px-3 font-semibold">${esc(u.name)} <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">MASTER</span></td><td class="py-2.5 px-3 text-xs text-slate-400" colspan="${sc.length + 1}">Acesso total a todas as telas.</td></tr>`
-                : `<tr><td class="py-2.5 px-3 font-semibold">${esc(u.name)}<span class="block text-[10px] uppercase text-slate-400">${esc(u.role)}</span></td><td class="py-2.5 px-3"><select onchange="setUserMember(${u.id}, this.value)" class="px-2 py-1 border border-slate-300 rounded-lg text-xs"><option value="">— nenhum —</option>${state.members.map(m => `<option value="${m.id}" ${u.memberId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></td>${sc.map(s => `<td class="py-2.5 px-3"><select onchange="setPerm(${u.id}, '${s}', this.value)" class="px-2 py-1 border border-slate-300 rounded-lg text-xs ${lvl(u, s) === 0 ? 'bg-rose-50 text-rose-700' : ''}">${LEVELS.map((n, i) => `<option value="${i}" ${lvl(u, s) === i ? 'selected' : ''}>${n}</option>`).join('')}</select></td>`).join('')}</tr>`).join('')}</tbody>`;
+            const cor = l => l === 0 ? 'bg-rose-50 text-rose-700 border-rose-300' : l === 3 ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : l === 2 ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-white text-slate-700 border-slate-300';
+            el.innerHTML = state.users.map(u => u.role === 'master'
+                ? `<div class="border border-slate-200 rounded-2xl p-4 flex flex-wrap items-center gap-2"><p class="font-bold text-slate-800">${esc(u.name)}</p><span class="text-[10px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">MASTER</span><span class="text-xs text-slate-400">Acesso total a todas as telas.</span></div>`
+                : `<div class="border border-slate-200 rounded-2xl p-4 space-y-3"><div class="flex flex-wrap items-end justify-between gap-3"><div><p class="font-bold text-slate-800">${esc(u.name)}</p><p class="text-[11px] uppercase text-slate-400">${esc(u.role)} · @${esc(u.username)}</p></div><label class="text-xs font-semibold text-slate-600">Membro vinculado<select onchange="setUserMember(${u.id}, this.value)" class="mt-1 block px-2 py-2.5 border border-slate-300 rounded-lg text-xs min-w-[10rem]"><option value="">— nenhum —</option>${state.members.map(m => `<option value="${m.id}" ${u.memberId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label></div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">${sc.map(s => `<label class="block text-[11px] font-semibold text-slate-600">${SCREENS[s]}<select onchange="setPerm(${u.id}, '${s}', this.value)" class="mt-1 w-full px-2 py-2.5 border rounded-lg text-xs ${cor(lvl(u, s))}">${LEVELS.map((n, i) => `<option value="${i}" ${lvl(u, s) === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`).join('')}</div></div>`).join('');
         }
         // ---- Avisos
         function addAviso(e) {
@@ -1871,8 +1931,8 @@
             const paid = m => (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
             const arr = state.members.reduce((a, m) => a + paid(m), 0), usado = state.expenses.reduce((a, x) => a + (Number(x.amount) || 0), 0);
             return { title: 'Relatório Financeiro', sections: [
-                { h: 'Resumo', head: ['Item', 'Valor'], body: [['Total arrecadado', formatBRL(arr)], ['Total gasto', formatBRL(usado)], ['Saldo disponível', formatBRL(arr - usado)], ['Falta arrecadar (ativos)', formatBRL(act.reduce((a, m) => a + Math.max(0, metaMembro() - paid(m)), 0))]] },
-                { h: 'Taxas por membro', head: ['Membro', 'Situação', 'Tx Encontro', 'Tx Equipe', 'Pago', 'Falta'], body: state.members.map(m => [m.name, m.active === false ? 'Ex-integrante' : 'Ativo', formatBRL(Number(m.txEncontro) || 0), formatBRL(Number(m.txEquipe) || 0), formatBRL(paid(m)), formatBRL(m.active === false ? 0 : Math.max(0, metaMembro() - paid(m)))]) },
+                { h: 'Resumo', head: ['Item', 'Valor'], body: [['Total arrecadado', formatBRL(arr)], ['Arrecadado: Tx. do Encontro', formatBRL(taxasResumo().enc.arrec)], ['Arrecadado: Tx. da Equipe', formatBRL(taxasResumo().eq.arrec)], ['Total gasto', formatBRL(usado)], ['Saldo disponível', formatBRL(arr - usado)], ['Falta arrecadar (ativos)', formatBRL(act.reduce((a, m) => a + Math.max(0, metaDe(m) - paid(m)), 0))]] },
+                { h: 'Taxas por membro', head: ['Membro', 'Situação', 'Tx Encontro', 'Tx Equipe', 'Pago', 'Falta'], body: state.members.map(m => [m.name, m.active === false ? 'Ex-integrante' : 'Ativo', formatBRL(Number(m.txEncontro) || 0), formatBRL(Number(m.txEquipe) || 0), formatBRL(paid(m)), formatBRL(m.active === false ? 0 : Math.max(0, metaDe(m) - paid(m)))]) },
                 { h: 'Despesas', head: ['Descrição', 'Valor'], body: state.expenses.map(x => [x.desc, formatBRL(Number(x.amount) || 0)]) }] };
         }
         function setRep(v) { repView = v; renderReports(); }
@@ -1946,7 +2006,7 @@
             });
             const chars = state.characters.filter(c => c.memberId === m.id);
             const pago = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
-            const quitado = m.txEncontro !== undefined && metaMembro() > 0 && pago >= metaMembro();
+            const quitado = m.txEncontro !== undefined && metaDe(m) > 0 && pago >= metaDe(m);
             const manuais = (m.badges || []).filter(k => BADGES_MANUAL.some(b => b.k === k));
             xp = Math.max(0, xp + chars.length * XP.CHAR + (quitado ? XP.QUITADO : 0) + manuais.length * XP.MANUAL);
             const validos = p + fj + fsj;
@@ -1966,9 +2026,9 @@
             const pcts = state.members.filter(m => m.active !== false && isActor(m)).map(m => calcularGamificacaoMembro(m.id).pct).filter(v => v !== null);
             const assid = pcts.length ? pcts.reduce((a, b) => a + b, 0) / pcts.length : 0;
             const escal = state.characters.length ? (state.characters.filter(c => c.memberId).length / state.characters.length) * 100 : 0;
-            const ativos = state.members.filter(m => m.active !== false), meta = metaMembro(), esperado = ativos.length * meta;
+            const ativos = state.members.filter(m => m.active !== false), esperado = ativos.reduce((a, m) => a + metaDe(m), 0);
             const temFin = ativos.every(m => m.txEncontro !== undefined) && esperado > 0;
-            const fin = temFin ? Math.min(100, (ativos.reduce((a, m) => a + Math.min(meta, (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0)), 0) / esperado) * 100) : null;
+            const fin = temFin ? Math.min(100, (ativos.reduce((a, m) => a + Math.min(metaDe(m), (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0)), 0) / esperado) * 100) : null;
             const pct = Math.max(0, Math.min(100, Math.round(fin === null ? assid * 0.55 + escal * 0.45 : assid * 0.40 + escal * 0.35 + fin * 0.25)));
             const fase = pct >= 100 ? '🚀 Prontos para o Palco!' : pct >= 80 ? '🔥 Fase 4: Ensaio Geral' : pct >= 51 ? '🔧 Fase 3: Ajuste Fino & Bastidores' : pct >= 26 ? '🎬 Fase 2: Marcação de Cena' : '📖 Fase 1: Leitura de Mesa';
             return { pct, fase, assid, escal, fin, pesos: fin === null ? [55, 45, 0] : [40, 35, 25] };
@@ -2029,17 +2089,17 @@
             // Cálculos Financeiros
             const activeMembers = state.members.filter(m => m.active !== false);
             const exCount = state.members.length - activeMembers.length;
-            const totalEsperado = activeMembers.length * metaMembro();
+            const totalEsperado = activeMembers.reduce((a, m) => a + metaDe(m), 0);
             const totalArrecadado = state.members.reduce((acc, m) => acc + (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0), 0);
             const totalUsado = state.expenses.reduce((acc, x) => acc + (Number(x.amount) || 0), 0);
-            const faltaArrecadar = activeMembers.reduce((a, m) => a + Math.max(0, metaMembro() - ((Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0))), 0);
+            const faltaArrecadar = activeMembers.reduce((a, m) => a + Math.max(0, metaDe(m) - ((Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0))), 0);
             const saldoDisponivel = totalArrecadado - totalUsado;
 
             // 1. Dashboard Cards
             document.getElementById('dash-arrecadado').innerText = formatBRL(totalArrecadado);
             document.getElementById('dash-usado').innerText = formatBRL(totalUsado);
             document.getElementById('dash-falta').innerText = formatBRL(faltaArrecadar);
-            const pctMeta = totalEsperado > 0 ? Math.min(100, Math.round(activeMembers.reduce((a, m) => a + Math.min(metaMembro(), (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0)), 0) / totalEsperado * 100)) : 0;
+            const pctMeta = totalEsperado > 0 ? Math.min(100, Math.round(activeMembers.reduce((a, m) => a + Math.min(metaDe(m), (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0)), 0) / totalEsperado * 100)) : 0;
             setProg('fin-prog', pctMeta); setProg('fin2-prog', pctMeta);
             document.getElementById('dash-meta-desc').innerText = `Meta total (${activeMembers.length} membros ativos): ${formatBRL(totalEsperado)}` + (exCount ? ` · ${exCount} ex-integrante(s) com pagamentos contabilizados` : '');
             document.getElementById('dash-membros-count').innerText = `${activeMembers.length} Membros`;
@@ -2072,14 +2132,14 @@
             // 2. Tabela Membros & Taxas
             document.getElementById('members-table-body').innerHTML = state.members.map(m => {
                 const totalPago = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
-                const st = getFinancialStatus(m.txEncontro, m.txEquipe);
+                const st = getFinancialStatus(m.txEncontro, m.txEquipe, metaDe(m));
                 return `
                     <tr class="hover:bg-slate-50">
                         <td class="py-3 px-4">
                             <p class="font-semibold text-slate-800">${m.name}${m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}</p>
                             <p class="text-xs text-slate-400">${m.role}${m.game === false ? ' · fora do game' : ''}</p>
                         </td>
-                        <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${m.active === false ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-800'}">${m.active === false ? 'Ex-integrante' : 'Ativo'}</span> <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${isActor(m) ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'}">${isActor(m) ? 'Ator/Atriz' : 'Direção/Apoio'}</span></td>
+                        <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${m.active === false ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-800'}">${m.active === false ? 'Ex-integrante' : 'Ativo'}</span> <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${isActor(m) ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'}">${isActor(m) ? 'Ator/Atriz' : 'Direção/Apoio'}</span>${parceiro(m) ? ` <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-pink-100 text-pink-700">💑 Casal com ${esc(parceiro(m).name)}</span>` : ''}</td>
                         <td class="py-3 px-4 text-right master-only space-x-2">
                             <button onclick="openMemberModal(${m.id})" class="text-indigo-600 hover:underline text-xs font-semibold">Editar</button>
                             <button onclick="toggleMemberActive(${m.id})" class="text-amber-600 hover:underline text-xs font-semibold">${m.active === false ? 'Reativar' : 'Desativar'}</button>
@@ -2216,14 +2276,14 @@
 
             document.getElementById('fin-members-tbody').innerHTML = state.members.map(m => {
                 const pago = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
-                const faltaMembro = m.active === false ? 0 : Math.max(0, metaMembro() - pago);
-                const st = getFinancialStatus(m.txEncontro, m.txEquipe);
-                const quitado = m.active !== false && metaMembro() > 0 && faltaMembro === 0;
+                const faltaMembro = m.active === false ? 0 : Math.max(0, metaDe(m) - pago);
+                const st = getFinancialStatus(m.txEncontro, m.txEquipe, metaDe(m));
+                const quitado = m.active !== false && metaDe(m) > 0 && faltaMembro === 0;
                 return `
                     <tr class="hover:bg-slate-50 ${quitado ? 'bg-emerald-50' : ''}">
-                        <td class="py-3 px-3 font-semibold text-slate-800">${m.name}${m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}</td>
-                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${cfg().valorTaxaEncontro}" id="pg-enc-${m.id}" value="${Number(m.txEncontro) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm">` : formatBRL(m.txEncontro)}</td>
-                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${cfg().valorTaxaEquipe}" id="pg-eq-${m.id}" value="${Number(m.txEquipe) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm">` : formatBRL(m.txEquipe)}</td>
+                        <td class="py-3 px-3 font-semibold text-slate-800">${m.name}${m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}${parceiro(m) ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 text-pink-700">💑 Casal</span>' : ''}${eqDe(m) === 0 ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">Isento Tx. Equipe</span>' : ''}<span class="block text-[11px] font-normal text-slate-400">Encontro ${formatBRL(encDe(m))} · Equipe ${formatBRL(eqDe(m))}</span></td>
+                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${encDe(m)}" id="pg-enc-${m.id}" value="${Number(m.txEncontro) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm">` : formatBRL(m.txEncontro)}</td>
+                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${eqDe(m)}" ${eqDe(m) === 0 ? 'disabled title="Isento da Tx. da Equipe"' : ''} id="pg-eq-${m.id}" value="${Number(m.txEquipe) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm">` : formatBRL(m.txEquipe)}</td>
                         <td class="py-3 px-3 font-bold text-rose-600">${formatBRL(faltaMembro)}</td>
                         <td class="py-3 px-3">${quitado ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white">✅ Quitado</span>' : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${st.classes}">${st.label}</span>`}</td>
                         <td class="py-3 px-3 text-right master-only">
@@ -2272,6 +2332,8 @@
             document.getElementById('rank-abater-wrap').classList.toggle('hidden', !isMaster());
             document.getElementById('rank-formula').textContent = (cfg().abaterFaltaJustificada ? 'Fórmula atual: % de presença = P ÷ (P + FSJ). A falta justificada (FJ) não pesa contra o membro.' : 'Fórmula atual: % de presença = P ÷ (P + FJ + FSJ). A falta justificada (FJ) conta como falta.') + ' Ensaios N/A e membros de direção/apoio não entram. O Master altera esta regra aqui. Ranking ordenado por XP (Score de Engajamento).';
             renderAudit();
+            renderFinTaxas();
+            { const tx = taxasResumo(); document.getElementById('dash-arrec-split').textContent = 'Encontro ' + formatBRL(tx.enc.arrec) + ' · Equipe ' + formatBRL(tx.eq.arrec); }
             renderFeedback(); renderProntidao(); renderCamarimDash(); renderGame(); renderAvisos(); renderReports(); renderAccess(); renderMine(); renderBell();
             applyPermissions();
             lucide.createIcons();
