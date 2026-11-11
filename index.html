@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
@@ -19,6 +20,33 @@
     .nav-btn[data-locked="1"]{opacity:.45}
     .overflow-x-auto{-webkit-overflow-scrolling:touch;overflow-x:auto}
     .print-only{display:none}
+    .chip{padding:.4rem .85rem;border-radius:9999px;border:1px solid #cbd5e1;font-size:.75rem;font-weight:600;background:#fff;color:#475569;cursor:pointer}
+    .chip.on{background:#4f46e5;border-color:#4f46e5;color:#fff}
+    main .text-slate-400{color:#64748b}
+    main .text-slate-500{color:#475569}
+    main section>div.bg-white{box-shadow:0 1px 3px rgba(15,23,42,.06)}
+    main section{padding-bottom:4.5rem}
+    @media (max-width:640px){
+      table.table-cards{min-width:0!important;width:100%}
+      table.table-cards thead{display:none}
+      table.table-cards,table.table-cards tbody{display:block;width:100%}
+      table.table-cards tr{display:block;background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin:0 0 10px;padding:8px 12px}
+      table.table-cards td{display:flex!important;justify-content:space-between;align-items:center;gap:12px;border:0!important;padding:5px 0!important;white-space:normal!important;text-align:right}
+      table.table-cards td::before{content:attr(data-label);font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:left;flex:0 0 38%}
+      table.table-cards td:first-child{display:block!important;text-align:left;font-size:1rem;border-bottom:1px solid #e2e8f0!important;padding-bottom:8px!important;margin-bottom:4px}
+      table.table-cards td:first-child::before{display:none}
+      table.table-cards td[colspan]{display:block!important;text-align:center}
+      table.table-cards td[colspan]::before{display:none}
+      .table-cards.sticky-first td:first-child{position:static;box-shadow:none}
+    }
+    .act-btn{width:40px;height:40px;border-radius:9999px;background:#e6e8f1;border:0;display:inline-flex;align-items:center;justify-content:center;box-shadow:5px 5px 10px #cbcee0,-5px -5px 10px #fff;cursor:pointer;padding:0!important;min-height:0!important;transition:box-shadow .15s}
+    .act-btn:active,.act-btn[aria-expanded="true"]{box-shadow:inset 3px 3px 6px #cbcee0,inset -3px -3px 6px #fff}
+    .act-menu{position:fixed;z-index:60;min-width:12rem;background:#fff;border:1px solid #e2e8f0;border-radius:.9rem;box-shadow:0 10px 25px rgba(15,23,42,.18);padding:.35rem;text-align:left}
+    .act-menu button{display:flex;width:100%;align-items:center;gap:.5rem;text-align:left;border-radius:.6rem;font-size:.8rem;font-weight:600;color:#334155;white-space:nowrap}
+    .act-menu button:hover{background:#f1f5f9}
+    .act-menu button.hidden{display:none}
+    .act-menu button.danger{color:#e11d48}
+    .act-menu button:disabled{opacity:.4;pointer-events:none}
     @supports (height:100dvh){body{height:100dvh!important}#sidebar{height:100dvh!important}}
     @media print{
       @page{size:A4;margin:14mm}
@@ -143,7 +171,7 @@
                     </button>
                     <button onclick="switchTab('membros')" id="nav-membros" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                         <i data-lucide="users" class="w-4 h-4"></i>
-                        <span>Membros & Taxas</span>
+                        <span>Membros</span>
                     </button>
                     <button onclick="switchTab('pecas')" id="nav-pecas" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                         <i data-lucide="clapperboard" class="w-4 h-4"></i>
@@ -216,6 +244,7 @@
                     <h2 id="page-title" class="text-lg md:text-xl font-bold text-slate-800 truncate">Dashboard Geral</h2>
                 </div>
                 <div class="flex items-center space-x-2 shrink-0">
+                    <span id="dirty-flag" class="hidden text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-semibold whitespace-nowrap">● Alterações não salvas</span>
                     <button id="btn-whats" onclick="copyWhats()" title="Copiar resumo para o WhatsApp" class="hidden px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold whitespace-nowrap">📲 <span class="hidden sm:inline">Copiar Resumo (WhatsApp)</span></button>
                     <div id="bell-wrap" class="hidden relative"><button onclick="toggleBell()" class="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100"><i data-lucide="bell" class="w-5 h-5"></i><span id="bell-count" class="hidden absolute -top-0.5 -right-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">0</span></button><div id="bell-panel" class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] bg-white border border-slate-200 rounded-2xl shadow-xl z-50 max-h-96 overflow-y-auto"></div></div>
                     <span id="view-only-notice" class="hidden text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">
@@ -234,6 +263,11 @@
                 <section id="tab-dashboard" class="space-y-6">
                     <div id="prontidao-card" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs"></div>
                     <div id="camarim-dash"></div>
+                    <div id="dash-charts" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200"><h3 class="text-sm font-bold text-slate-700 mb-2">Frequência Global do Elenco</h3><div class="relative h-56"><canvas id="ch-freq"></canvas></div><p id="ch-freq-sub" class="text-[11px] text-slate-500 mt-2 text-center"></p></div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200"><h3 class="text-sm font-bold text-slate-700 mb-2">Taxas Arrecadadas × Despesas</h3><div class="relative h-56"><canvas id="ch-fin"></canvas></div></div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200"><h3 class="text-sm font-bold text-slate-700 mb-2">Progresso da Meta</h3><div class="relative h-56"><canvas id="ch-meta"></canvas><div class="absolute inset-0 flex flex-col items-center justify-end pb-8 pointer-events-none"><span id="ch-meta-pct" class="text-3xl font-extrabold text-indigo-700">0%</span><span id="ch-meta-sub" class="text-[11px] text-slate-500"></span></div></div></div>
+                    </div>
                     <!-- Resumo Geral e Financeiro -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -261,7 +295,6 @@
                             </div>
                             <p id="dash-falta" class="text-2xl font-bold text-amber-600 mt-2">R$ 0,00</p>
                             <p id="dash-meta-desc" class="text-xs text-slate-400 mt-1">Meta esperada: R$ 0,00</p>
-                            <div class="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="fin-prog-bar" class="h-2 bg-emerald-500 rounded-full transition-all duration-700" style="width:0%"></div></div><p id="fin-prog-txt" class="text-[11px] text-slate-500 mt-1"></p>
                         </div>
 
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -298,6 +331,8 @@
                      ABA 2: MEMBROS & TAXAS
                 =========================================== -->
                 <section id="tab-membros" class="space-y-6 hidden">
+                    <div id="flt-membros"></div>
+                    <div id="lt-membros"></div>
                     <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                             <div>
@@ -311,7 +346,7 @@
                         </div>
 
                         <div class="overflow-x-auto -mx-4 md:mx-0">
-                            <table class="w-full text-left border-collapse min-w-[700px]">
+                            <table class="table-cards w-full text-left border-collapse min-w-[700px]">
                                 <thead>
                                     <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
                                         <th class="py-3 px-4">Membro / Função</th>
@@ -329,6 +364,8 @@
                      ABA 3: PEÇAS & PERSONAGENS
                 =========================================== -->
                 <section id="tab-pecas" class="space-y-6 hidden">
+                    <div id="flt-pecas"></div>
+                    <div id="lt-pecas"></div>
                     <div id="my-pecas"></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
@@ -385,6 +422,7 @@
                      ABA 4: ESCALAÇÃO (QUEM VAI INTERPRETAR)
                 =========================================== -->
                 <section id="tab-escalacao" class="space-y-6 hidden">
+                    <div id="flt-escalacao"></div>
                     <div class="bg-white p-5 rounded-2xl border border-slate-200">
                         <h3 class="text-lg font-bold text-slate-800 mb-1">Distribuição de Papéis Separados por Peça</h3>
                         <button onclick="copyEscalacao()" class="mb-3 px-3 py-2.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold">📲 Copiar Escalação para WhatsApp</button>
@@ -397,6 +435,7 @@
                      ABA 5: CONTROLE DE FALTAS (ENSAIOS / REUNIÕES)
                 =========================================== -->
                 <section id="tab-faltas" class="space-y-6 hidden">
+                    <div id="flt-faltas"></div>
                     <div id="my-faltas"></div>
                     <!-- Barra de Legenda e Criação -->
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -429,6 +468,8 @@
                      ABA 6: FINANCEIRO COMPLETO
                 =========================================== -->
                 <section id="tab-ranking" class="space-y-6 hidden">
+                    <div id="flt-ranking"></div>
+                    <div id="lt-ranking"></div>
                     <div class="bg-white p-5 rounded-2xl border border-slate-200">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                             <div>
@@ -437,11 +478,10 @@
                             </div>
                             <div class="flex flex-col gap-2">
                                 <label id="rank-abater-wrap" class="hidden flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" id="rank-abater" onchange="setAbater(this.checked)"> Abater falta justificada (somente Master)</label>
-                                <label class="flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" id="rank-show-ex" onchange="renderAll()"> Mostrar ex-integrantes</label>
                             </div>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="sticky-first w-full text-left border-collapse min-w-[920px]">
+                            <table class="table-cards sticky-first w-full text-left border-collapse min-w-[920px]">
                                 <thead>
                                     <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
                                         <th class="py-3 px-3">Membro</th>
@@ -461,6 +501,7 @@
                 </section>
 
                 <section id="tab-financeiro" class="space-y-6 hidden">
+                    <div id="flt-financeiro"></div>
                     <!-- Cards Financeiros -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-xs">
@@ -490,12 +531,12 @@
                         <div id="cfg-panel" class="hidden lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-3">Configurações Financeiras (Master)</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro (R$)</label><input id="cfg-enc" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
-                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro do casal (R$, total)</label><input id="cfg-casal" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
-                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe do casal (R$, total)</label><input id="cfg-casal-eq" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
-                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe (R$)</label><input id="cfg-eq" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro (R$)</label><input id="cfg-enc" oninput="refreshDirty()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro do casal (R$, total)</label><input id="cfg-casal" oninput="refreshDirty()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe do casal (R$, total)</label><input id="cfg-casal-eq" oninput="refreshDirty()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe (R$)</label><input id="cfg-eq" oninput="refreshDirty()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
                             </div>
-                            <button onclick="saveConfig()" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Salvar configurações</button>
+                            <p class="mt-3 text-xs text-slate-500">Alterou valores? Use o botão flutuante <b>Salvar alterações</b> para gravar tudo de uma vez.</p>
                         </div>
 
                         <div id="fin-taxas" class="lg:col-span-2 space-y-4"></div>
@@ -504,7 +545,7 @@
                         <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-4">Controle de Pagamentos por Membro (Meta: <span data-fee="meta"></span>/membro)</h3>
                             <div class="overflow-x-auto -mx-4 md:mx-0">
-                                <table class="sticky-first w-full text-left border-collapse min-w-[780px]">
+                                <table class="table-cards sticky-first w-full text-left border-collapse min-w-[780px]">
                                     <thead>
                                         <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
                                             <th class="py-3 px-3">Membro</th>
@@ -512,7 +553,7 @@
                                             <th class="py-3 px-3">Tx. Equipe (<span data-fee="eq"></span>)</th>
                                             <th class="py-3 px-3">Falta Pagar</th>
                                             <th class="py-3 px-3">Status</th>
-                                            <th class="py-3 px-3 text-right master-only">Editar</th>
+                                            <th class="py-3 px-3 text-right master-only">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody id="fin-members-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
@@ -534,6 +575,7 @@
                                 </div>
                                 <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-xl text-xs font-semibold">Registrar Gasto</button>
                             </form>
+                            <div id="flt-despesas"></div>
                             <div id="expenses-list" class="space-y-2 max-h-80 overflow-y-auto"></div>
                         </div>
                     </div>
@@ -542,7 +584,8 @@
                 <!-- ==========================================
                      ABA 7: GERENCIAR USUÁRIOS (EXCLUSIVO MASTER)
                 =========================================== -->
-                                <section id="tab-conquistas" class="space-y-6 hidden"><div id="game-body" class="space-y-6"></div></section>
+                                <section id="tab-conquistas" class="space-y-6 hidden">
+                    <div id="flt-conquistas"></div><div id="game-body" class="space-y-6"></div></section>
 
                                 <section id="tab-feedback" class="space-y-6 hidden">
                     <form onsubmit="addFeedback(event)" class="master-only bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
@@ -559,33 +602,27 @@
                         <textarea id="fb-text" required rows="4" placeholder="Descreva com detalhes: o que funcionou, o que precisa melhorar, o que foi utilizado..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></textarea>
                         <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Salvar feedback</button>
                     </form>
+                    <div id="flt-feedback"></div>
                     <div id="fb-list" class="space-y-3"></div>
                     <div id="dir-card" class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <div class="print-only"><h1 style="font-size:18px;font-weight:800">EncenaPro - Relatório para a Equipe Dirigente</h1><p id="print-title" style="font-size:11px"></p></div>
                         <div class="no-print">
                             <h3 class="text-lg font-bold text-slate-800">Relatório para a Equipe Dirigente</h3>
-                            <p class="text-xs text-slate-500">Documento gerado automaticamente com os dados do sistema: resumo, dinâmica das reuniões, frequência, elenco, financeiro detalhado, feedbacks e destaques.</p>
+                            <p class="text-xs text-slate-500">Documento executivo gerado automaticamente com os dados do sistema, em 4 módulos: resumo e status da equipe, frequência e alertas de evasão, saúde financeira e feedbacks e destaques.</p>
+                        </div>
+                        <div class="no-print sticky top-0 z-20 py-2 bg-white/95 backdrop-blur flex flex-wrap gap-2 border-b border-slate-100">
+                            <button onclick="printDir()" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">🖨️ Imprimir / Gerar PDF Executivo</button>
+                            <button onclick="pdfDir()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">⬇️ Baixar PDF para a Direção</button>
+                            <button onclick="copyDirWhats()" class="bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-lg text-sm font-semibold">📲 Copiar Resumo Formatado para o WhatsApp</button>
                         </div>
                         <div class="no-print">
                             <p class="text-xs font-bold text-slate-600 mb-1">Dados que entram no relatório:</p>
-                            <div id="dr-opts" class="grid grid-cols-1 sm:grid-cols-2 text-xs text-slate-700">
-                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-resumo" checked onchange="renderDirPreview()"> Resumo executivo</label>
-                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-reunioes" checked onchange="renderDirPreview()"> Dinâmica das reuniões e ensaios</label>
-                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-frequencia" checked onchange="renderDirPreview()"> Frequência por membro</label>
-                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-elenco" checked onchange="renderDirPreview()"> Elenco: peças e personagens</label>
-                                <label class="flex items-center gap-2 py-1 dr-fin"><input type="checkbox" id="dr-sel-pagamentos" checked onchange="renderDirPreview()"> Financeiro: quem pagou a Tx. do Encontro</label>
-                                <label class="flex items-center gap-2 py-1 dr-fin"><input type="checkbox" id="dr-sel-despesas" onchange="renderDirPreview()"> Financeiro: despesas detalhadas</label>
-                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-fbgeral" checked onchange="renderDirPreview()"> Feedback geral e financeiro</label>
-                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-fbmembro" checked onchange="renderDirPreview()"> Feedback por membro</label>
-                                <label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-destaques" checked onchange="renderDirPreview()"> Destaques de engajamento e prontidão</label>
-                            </div>
+                            <div id="dr-opts" class="space-y-2 text-xs text-slate-700"><div class=""><p class="font-bold text-indigo-700 mb-0.5">1. Resumo Executivo & Status da Equipe</p><div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4"><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-resumo" checked onchange="renderDirPreview()"> Resumo executivo</label><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-elenco" checked onchange="renderDirPreview()"> Elenco: peças e personagens</label><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-destaques" checked onchange="renderDirPreview()"> Destaques e prontidão</label></div></div><div class=""><p class="font-bold text-indigo-700 mb-0.5">2. Panorama de Frequência & Alertas de Evasão</p><div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4"><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-reunioes" checked onchange="renderDirPreview()"> Dinâmica das reuniões</label><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-frequencia" checked onchange="renderDirPreview()"> Frequência por membro</label><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-alertas" checked onchange="renderDirPreview()"> Alertas de evasão</label></div></div><div class="dr-fin"><p class="font-bold text-indigo-700 mb-0.5">3. Saúde Financeira e Prestação de Contas</p><div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4"><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-pagamentos" checked onchange="renderDirPreview()"> Quem pagou a Tx. do Encontro</label><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-despesas" onchange="renderDirPreview()"> Despesas detalhadas</label></div></div><div class=""><p class="font-bold text-indigo-700 mb-0.5">4. Feedbacks e Destaques do Elenco</p><div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4"><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-fbgeral" checked onchange="renderDirPreview()"> Feedback geral e financeiro</label><label class="flex items-center gap-2 py-1"><input type="checkbox" id="dr-sel-fbmembro" checked onchange="renderDirPreview()"> Feedback por membro</label></div></div></div>
                             <div class="flex gap-4 text-xs mt-1"><button type="button" onclick="drSelectAll(true)" class="text-indigo-600 font-semibold hover:underline">Marcar todos</button><button type="button" onclick="drSelectAll(false)" class="text-indigo-600 font-semibold hover:underline">Desmarcar todos</button></div>
                         </div>
                         <div class="no-print flex flex-wrap items-end gap-3">
                             <div><label class="block text-xs font-bold text-slate-600 mb-1">De</label><input id="dr-from" type="date" onchange="renderDirPreview()" class="px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
                             <div><label class="block text-xs font-bold text-slate-600 mb-1">Até</label><input id="dr-to" type="date" onchange="renderDirPreview()" class="px-3 py-2 border border-slate-300 rounded-lg text-sm"></div>
-                            <button onclick="pdfDir()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Baixar PDF para a Direção</button>
-                            <button onclick="printDir()" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">🖨️ Imprimir / Salvar PDF (A4)</button>
                         </div>
                         <div id="dr-body" class="overflow-x-auto"></div>
                     </div>
@@ -604,6 +641,8 @@
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <h3 class="text-lg font-bold text-slate-800">Histórico de alterações críticas</h3>
                         <p class="text-xs text-slate-500">Registro automático das últimas alterações: exclusão de membros, pagamentos e despesas, chamadas, permissões, senhas e backups. Visível só para o Master.</p>
+                        <div id="flt-seguranca"></div>
+                        <div id="lt-hist"></div>
                         <div id="audit-body" class="overflow-x-auto"></div>
                     </div>
                     <div class="bg-white p-5 rounded-2xl border border-rose-300 space-y-3">
@@ -625,28 +664,23 @@
                         <textarea id="av-text" required rows="3" placeholder="Mensagem" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></textarea>
                         <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Publicar aviso</button>
                     </form>
+                    <div id="flt-avisos"></div>
                     <div id="avisos-list" class="space-y-3"></div>
                 </section>
 
                 <section id="tab-relatorios" class="space-y-6 hidden">
+                    <div id="flt-relatorios"></div>
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <div class="flex flex-wrap items-center justify-between gap-2">
-                            <div id="rep-tabs" class="flex flex-wrap gap-2 text-xs font-semibold">
-                                <button data-v="membro" onclick="setRep('membro')">Personagens por membro</button>
-                                <button data-v="pecas" onclick="setRep('pecas')">Peças e personagens</button>
-                                <button data-v="freq" onclick="setRep('freq')">Frequência</button>
-                                <button data-v="fin" onclick="setRep('fin')">Financeiro</button>
-                                <button data-v="pago-enc" onclick="setRep('pago-enc')">Quem pagou Tx. Encontro</button>
-                                <button data-v="pago-eq" onclick="setRep('pago-eq')">Quem pagou Tx. Equipe</button>
-                            </div>
-                            <button onclick="pdfReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-semibold">Baixar PDF deste relatório</button>
+                            <h3 class="font-bold text-slate-800">Resultado do relatório</h3>
+                            <button id="rep-pdf-btn" onclick="pdfReport()" disabled class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-lg text-xs font-semibold">Baixar PDF deste relatório</button>
                         </div>
-                        <label id="rep-parcial-wrap" class="hidden flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" id="rep-parcial" onchange="renderReports()"> Incluir também quem pagou parcialmente</label>
                         <div id="rep-body" class="overflow-x-auto"></div>
                     </div>
                 </section>
 
                 <section id="tab-acessos" class="space-y-6 hidden">
+                    <div id="flt-acessos"></div>
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <button onclick="switchTab('usuarios')" class="text-xs font-semibold text-indigo-600 hover:underline">← Voltar para Usuários Cadastrados</button>
                         <h3 class="text-lg font-bold text-slate-800">Acessos e Permissões</h3>
@@ -664,6 +698,7 @@
                 </section>
 
                 <section id="tab-usuarios" class="space-y-6 hidden">
+                    <div id="flt-usuarios"></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Criar Novo Usuário -->
                         <div class="bg-white p-5 rounded-2xl border border-slate-200">
@@ -697,7 +732,7 @@
                         <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-4">Usuários Cadastrados no Sistema</h3>
                             <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse min-w-[550px]">
+                                <table class="table-cards w-full text-left border-collapse min-w-[550px]">
                                     <thead>
                                         <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">
                                             <th class="py-3 px-3">Nome</th>
@@ -721,6 +756,8 @@
     <!-- ==========================================
          MODAL: CRIAR / EDITAR MEMBRO & TAXAS
     =========================================== -->
+    <button id="fab-save" onclick="saveAllPending()" class="no-print hidden fixed bottom-5 right-5 z-40 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3.5 rounded-full shadow-lg text-sm font-bold">💾 Salvar alterações</button>
+
     <div id="pw-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4">
             <h3 id="pw-title" class="font-bold text-slate-800">Redefinir senha</h3>
@@ -860,6 +897,7 @@
                 renderBell();
                 const ae = document.activeElement;
                 if (ae && ae.id && /^(pg-|cfg-)/.test(ae.id)) return;
+                if (editingPay.size) return;
                 try {
                     const r = await api('/api/state');
                     if (r.status === 401) { handleLogout(); showNotification('Sessão expirada. Entre novamente.', 'warning'); return; }
@@ -980,6 +1018,7 @@
             if ((tabId === 'usuarios' || tabId === 'acessos' || tabId === 'seguranca') && !isMaster()) return;
             activeTab = tabId;
             if (tabId === 'seguranca') { loadSnaps(); refreshAudit(); }
+            setTimeout(refreshDirty, 0);
             const hh = '/' + (ROUTE_OUT[tabId] || tabId);
             if (location.hash !== '#' + hh) location.hash = hh;
             if (SCREENS[tabId] && !can(tabId, 'v')) tabId = 'bloqueado';
@@ -1467,7 +1506,7 @@
         function renderAudit() {
             const el = document.getElementById('audit-body');
             if (!el || !isMaster()) return;
-            el.innerHTML = tbl(['Data/hora', 'Usuário', 'Ação', 'Detalhe'], (state.auditLog || []).slice(0, 100).map(x => [new Date(x.dataHora).toLocaleString('pt-BR'), '@' + x.usuario, x.acao, x.detalhe]));
+            el.innerHTML = tbl(['Data/hora', 'Usuário', 'Ação', 'Detalhe'], ltHist((state.auditLog || []).filter(x => hit(FA('seguranca').q, x.usuario, x.acao, x.detalhe) && inRange(String(x.dataHora).slice(0, 10), FA('seguranca').de, FA('seguranca').ate))).slice(0, 100).map(x => [new Date(x.dataHora).toLocaleString('pt-BR'), '@' + x.usuario, x.acao, x.detalhe]));
         }
         async function refreshAudit() {
             try { const r = await api('/api/state'); if (r.ok) { const j = await r.json(); state.auditLog = j.state.auditLog || []; renderAudit(); } } catch (e) {}
@@ -1517,15 +1556,244 @@
         function printDir() {
             const t = document.getElementById('print-title');
             if (t) t.textContent = 'Gerado em ' + new Date().toLocaleString('pt-BR') + (currentUser ? ' por ' + currentUser.name : '');
+            const dts = [...document.querySelectorAll('#dr-body details')], was = dts.map(x => x.open);
+            dts.forEach(x => { x.open = true; });
             document.body.classList.add('printing-report');
             window.print();
             document.body.classList.remove('printing-report');
+            dts.forEach((x, i) => { x.open = was[i]; });
         }
         window.addEventListener('afterprint', () => document.body.classList.remove('printing-report'));
         function setProg(prefix, pct) {
             const b = document.getElementById(prefix + '-bar'), t = document.getElementById(prefix + '-txt');
             if (b) { b.style.width = pct + '%'; b.parentElement.setAttribute('aria-valuenow', pct); }
             if (t) t.textContent = pct + '% da meta arrecadada';
+        }
+
+        // ==========================================
+        // FILTROS (APLICAR FILTROS) E MENU DE AÇÕES
+        // ==========================================
+        const normT = s => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const hit = (q, ...v) => !q || normT(v.map(x => x ?? '').join(' ')).includes(normT(q));
+        const inRange = (d, de, ate) => (!de || d >= de) && (!ate || d <= ate);
+        const idDate = v => { const d = new Date(v); return isNaN(d) ? '' : d.toISOString().slice(0, 10); };
+        const APPLIED = {}, APPLIED_FLAG = {};
+        const FA = k => APPLIED[k] || {};
+        const SIT = [['', 'Todos'], ['ativo', 'Ativos'], ['ex', 'Ex-integrantes']];
+        const NIVEL_OPTS = [['', 'Todos'], ['Estreante', 'Estreante'], ['Elenco de Apoio', 'Elenco de Apoio'], ['Protagonista', 'Protagonista'], ['Mestre de Cena', 'Mestre de Cena']];
+        const FILTER_DEFS = {
+            membros: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Nome ou função' }, { k: 'sit', l: 'Situação', t: 'sel', o: SIT }, { k: 'tipo', l: 'Tipo', t: 'sel', o: [['', 'Todos'], ['ator', 'Ator/Atriz'], ['apoio', 'Direção/Apoio']] }, { k: 'casal', l: 'Casal', t: 'sel', o: [['', 'Todos'], ['casal', 'Em casal'], ['solteiro', 'Sem casal']] }],
+            pecas: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Peça, personagem ou ator' }, { k: 'peca', l: 'Peça', t: 'sel', o: 'pecas' }, { k: 'sit', l: 'Personagens', t: 'sel', o: [['', 'Todos'], ['alocado', 'Com intérprete'], ['livre', 'Sem intérprete']] }],
+            escalacao: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Peça, personagem ou intérprete' }, { k: 'peca', l: 'Peça', t: 'sel', o: 'pecas' }, { k: 'sit', l: 'Situação', t: 'sel', o: [['', 'Todos'], ['alocado', 'Já alocados'], ['livre', 'Aguardando escalação']] }, { k: 'membro', l: 'Intérprete', t: 'sel', o: 'membros' }],
+            faltas: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Título do ensaio' }, { k: 'de', l: 'De', t: 'date' }, { k: 'ate', l: 'Até', t: 'date' }],
+            financeiro: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Nome do membro' }, { k: 'sit', l: 'Situação do pagamento', t: 'sel', o: [['', 'Todos'], ['quitado', 'Quitado'], ['parcial', 'Pagamento parcial'], ['pendente', 'Ainda não pagou'], ['isento', 'Isento da Tx. da Equipe']] }, { k: 'tipo', l: 'Casal', t: 'sel', o: [['', 'Todos'], ['casal', 'Em casal'], ['solteiro', 'Sem casal']] }, { k: 'ativ', l: 'Membro', t: 'sel', o: SIT }],
+            despesas: [{ k: 'q', l: 'Buscar gasto', t: 'text', ph: 'Descrição' }, { k: 'de', l: 'De', t: 'date' }, { k: 'ate', l: 'Até', t: 'date' }],
+            ranking: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Nome ou função' }, { k: 'nivel', l: 'Nível', t: 'sel', o: NIVEL_OPTS }, { k: 'ex', l: 'Mostrar ex-integrantes', t: 'chk' }],
+            conquistas: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Nome do ator' }, { k: 'nivel', l: 'Nível', t: 'sel', o: NIVEL_OPTS }],
+            relatorios: [{ k: 'tipo', l: 'Relatório', t: 'sel', o: [['membro', 'Personagens por membro'], ['pecas', 'Peças e personagens'], ['freq', 'Frequência'], ['fin', 'Financeiro (geral)'], ['pago-enc', 'Quem pagou a Tx. do Encontro'], ['pago-eq', 'Quem pagou a Tx. da Equipe']] }, { k: 'q', l: 'Buscar', t: 'text', ph: 'Membro, peça ou personagem' }, { k: 'sit', l: 'Situação do membro', t: 'sel', o: SIT }, { k: 'de', l: 'Ensaios de (frequência)', t: 'date' }, { k: 'ate', l: 'Ensaios até (frequência)', t: 'date' }, { k: 'parcial', l: 'Incluir pagamento parcial', t: 'chk' }],
+            feedback: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Texto, autor ou alvo' }, { k: 'tipo', l: 'Tipo', t: 'sel', o: [['', 'Todos'], ['membro', 'Membro'], ['reuniao', 'Reunião'], ['financeiro', 'Financeiro'], ['geral', 'Geral']] }, { k: 'membro', l: 'Membro', t: 'sel', o: 'membros' }, { k: 'de', l: 'De', t: 'date' }, { k: 'ate', l: 'Até', t: 'date' }],
+            avisos: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Título ou texto' }, { k: 'status', l: 'Status', t: 'sel', o: [['', 'Todos'], ['ativo', 'Ativos'], ['off', 'Desativados']] }],
+            usuarios: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Nome ou login' }, { k: 'perfil', l: 'Perfil', t: 'sel', o: [['', 'Todos'], ['master', 'Master'], ['user', 'User'], ['membro', 'Membro']] }],
+            acessos: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Nome ou login' }, { k: 'perfil', l: 'Perfil', t: 'sel', o: [['', 'Todos'], ['master', 'Master'], ['user', 'User'], ['membro', 'Membro']] }],
+            seguranca: [{ k: 'q', l: 'Buscar no histórico', t: 'text', ph: 'Usuário, ação ou detalhe' }, { k: 'de', l: 'De', t: 'date' }, { k: 'ate', l: 'Até', t: 'date' }]
+        };
+        function filterHtml(sc) {
+            const cell = 'mt-1 w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm';
+            const fields = FILTER_DEFS[sc].map(f => {
+                const id = `flt-${sc}-${f.k}`;
+                if (f.t === 'text') return `<label class="block text-xs font-semibold text-slate-600">${f.l}<input id="${id}" type="text" placeholder="${f.ph || ''}" class="${cell}" onkeydown="if(event.key==='Enter'){applyFilters('${sc}')}"></label>`;
+                if (f.t === 'date') return `<label class="block text-xs font-semibold text-slate-600">${f.l}<input id="${id}" type="date" class="${cell}"></label>`;
+                if (f.t === 'chk') return `<label class="flex items-center gap-2 text-xs font-semibold text-slate-600 sm:pt-6"><input id="${id}" type="checkbox"> ${f.l}</label>`;
+                return `<label class="block text-xs font-semibold text-slate-600">${f.l}<select id="${id}" class="${cell}">${Array.isArray(f.o) ? f.o.map(([v, l]) => `<option value="${v}">${l}</option>`).join('') : '<option value="">Todos</option>'}</select></label>`;
+            }).join('');
+            return `<div class="no-print bg-white p-4 rounded-2xl border border-slate-200 space-y-3"><h3 class="text-sm font-bold text-slate-700">🔎 Filtros</h3><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">${fields}</div><div class="flex flex-wrap items-center gap-2"><button type="button" onclick="applyFilters('${sc}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-xs font-semibold">Aplicar filtros</button><button type="button" onclick="clearFilters('${sc}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-lg text-xs font-semibold">Limpar filtros</button><span id="flt-${sc}-count" class="text-xs text-slate-500"></span></div></div>`;
+        }
+        function buildFilterBars() { Object.keys(FILTER_DEFS).forEach(sc => { const h = document.getElementById('flt-' + sc); if (h) h.innerHTML = filterHtml(sc); }); }
+        function refreshFilterOptions() {
+            const kinds = { membros: () => state.members.map(m => [m.id, m.name]), pecas: () => state.plays.map(p => [p.id, p.title]), ensaios: () => state.meetings.map(t => [t.id, t.date.split('-').reverse().join('/') + ' - ' + t.title]) };
+            Object.keys(FILTER_DEFS).forEach(sc => FILTER_DEFS[sc].forEach(f => {
+                if (typeof f.o !== 'string') return;
+                const sel = document.getElementById(`flt-${sc}-${f.k}`);
+                if (!sel || document.activeElement === sel) return;
+                const cur = sel.value;
+                sel.innerHTML = '<option value="">Todos</option>' + kinds[f.o]().map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('');
+                sel.value = cur;
+            }));
+        }
+        function applyFilters(sc) {
+            const o = {};
+            FILTER_DEFS[sc].forEach(f => { const el = document.getElementById(`flt-${sc}-${f.k}`); o[f.k] = f.t === 'chk' ? !!el.checked : String(el.value || '').trim(); });
+            APPLIED[sc] = o; APPLIED_FLAG[sc] = true;
+            renderAll();
+        }
+        function clearFilters(sc) {
+            FILTER_DEFS[sc].forEach(f => { const el = document.getElementById(`flt-${sc}-${f.k}`); if (!el) return; if (f.t === 'chk') el.checked = false; else el.value = Array.isArray(f.o) && sc === 'relatorios' && f.k === 'tipo' ? f.o[0][0] : ''; });
+            APPLIED[sc] = {}; APPLIED_FLAG[sc] = sc !== 'relatorios';
+            renderAll();
+        }
+        function setCount(sc, shown, total) { const el = document.getElementById(`flt-${sc}-count`); if (el) el.textContent = `Exibindo ${shown} de ${total}`; }
+        // ---- Botão Ações (menu ☰)
+        const BARS = '<svg width="22" height="16" viewBox="0 0 22 16" fill="none" aria-hidden="true"><rect x="0" y="0" width="22" height="3.2" rx="1.6" fill="#8d90b0"/><rect x="0" y="6.4" width="22" height="3.2" rx="1.6" fill="#8d90b0"/><rect x="0" y="12.8" width="22" height="3.2" rx="1.6" fill="#8d90b0"/></svg>';
+        function actMenu(items) {
+            return `<div class="inline-block" data-menu><button type="button" class="act-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Ações" title="Ações" onclick="toggleMenu(this)">${BARS}</button><div class="act-menu hidden" role="menu">${items.map(i => `<button type="button" role="menuitem" class="${i.cls || ''} ${i.danger ? 'danger' : ''}" ${i.disabled ? 'disabled' : ''} onclick="${i.f}; closeMenus()">${i.t}</button>`).join('')}</div></div>`;
+        }
+        function closeMenus() {
+            document.querySelectorAll('.act-menu').forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.act-btn[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+        }
+        function toggleMenu(btn) {
+            const menu = btn.nextElementSibling, was = !menu.classList.contains('hidden');
+            closeMenus();
+            if (was) return;
+            menu.classList.remove('hidden'); btn.setAttribute('aria-expanded', 'true');
+            const r = btn.getBoundingClientRect(), w = menu.offsetWidth, h = menu.offsetHeight;
+            menu.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)) + 'px';
+            menu.style.top = ((r.bottom + h + 8 > window.innerHeight && r.top - h - 8 > 0) ? r.top - h - 4 : r.bottom + 4) + 'px';
+        }
+        document.addEventListener('click', e => { if (!(e.target.closest && e.target.closest('[data-menu]'))) closeMenus(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenus(); });
+        document.addEventListener('scroll', closeMenus, true);
+        window.addEventListener('resize', closeMenus);
+        // ---- Financeiro: edição por linha
+        const editingPay = new Set();
+        function startPayEdit(id) { editingPay.add(id); renderAll(); const el = document.getElementById('pg-enc-' + id); if (el && el.focus) el.focus(); }
+        function cancelPayEdit(id) { editingPay.delete(id); renderAll(); }
+
+        // ==========================================
+        // GRÁFICOS, LISTAS (BUSCA/CHIPS/ORDEM), SALVAR ÚNICO, CARTÕES NO CELULAR
+        // ==========================================
+        const CH = {};
+        function mkChart(id, cfg) {
+            if (typeof Chart === 'undefined') return null;
+            const c = document.getElementById(id);
+            if (!c || !c.getContext) return null;
+            if (CH[id]) { CH[id].data = cfg.data; CH[id].update(); return CH[id]; }
+            CH[id] = new Chart(c, cfg);
+            return CH[id];
+        }
+        function dropChart(id) { if (CH[id]) { CH[id].destroy(); delete CH[id]; } }
+        const fmtMonth = k => k.slice(5) + '/' + k.slice(0, 4);
+        function finMonthly() {
+            const mm = {}, key = d => String(d).slice(0, 7);
+            const total = state.members.reduce((a, m) => a + (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0), 0);
+            let logged = 0;
+            (state.payLog || []).forEach(p => { const k = key(p.at), v = (Number(p.enc) || 0) + (Number(p.eq) || 0); mm[k] = mm[k] || { a: 0, d: 0 }; mm[k].a += v; logged += v; });
+            state.expenses.forEach(x => { const k = idDate(x.id).slice(0, 7); if (!k) return; mm[k] = mm[k] || { a: 0, d: 0 }; mm[k].d += Number(x.amount) || 0; });
+            const base = Math.max(0, total - logged), keys = Object.keys(mm).sort(), pre = base > 0.005;
+            return { labels: [...(pre ? ['Antes do histórico'] : []), ...keys.map(fmtMonth)], arrec: [...(pre ? [base] : []), ...keys.map(k => Math.max(0, mm[k].a))], desp: [...(pre ? [0] : []), ...keys.map(k => mm[k].d)] };
+        }
+        function metaPct() {
+            const ativos = state.members.filter(m => m.active !== false), esperado = ativos.reduce((a, m) => a + metaDe(m), 0);
+            return esperado > 0 ? Math.min(100, Math.round(ativos.reduce((a, m) => a + Math.min(metaDe(m), (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0)), 0) / esperado * 100)) : 0;
+        }
+        function renderDashCharts() {
+            let p = 0, fj = 0, fsj = 0;
+            const atores = state.members.filter(isActor);
+            state.meetings.forEach(t => atores.forEach(m => { const s = (t.attendance || {})[m.id]; if (s === 'P') p++; else if (s === 'FJ') fj++; else if (s === 'FSJ') fsj++; }));
+            const tt = p + fj + fsj, sub = document.getElementById('ch-freq-sub');
+            if (sub) sub.textContent = tt ? `P ${Math.round(p / tt * 100)}% · FJ ${Math.round(fj / tt * 100)}% · FSJ ${Math.round(fsj / tt * 100)}%` : 'Sem registros de chamada ainda';
+            mkChart('ch-freq', { type: 'doughnut', data: { labels: ['Presenças (P)', 'Faltas justificadas (FJ)', 'Faltas sem justificativa (FSJ)'], datasets: [{ data: [p, fj, fsj], backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } } });
+            const f = finMonthly();
+            mkChart('ch-fin', { type: 'bar', data: { labels: f.labels, datasets: [{ label: 'Taxas arrecadadas', data: f.arrec, backgroundColor: '#10b981', borderRadius: 6 }, { label: 'Despesas registradas', data: f.desp, backgroundColor: '#f43f5e', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + formatBRL(c.parsed.y) } } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v } } } } });
+            const mp = metaPct(), pe = document.getElementById('ch-meta-pct'), ps = document.getElementById('ch-meta-sub');
+            if (pe) pe.textContent = mp + '%';
+            if (ps) ps.textContent = 'da meta arrecadada';
+            mkChart('ch-meta', { type: 'doughnut', data: { labels: ['Arrecadado', 'Falta'], datasets: [{ data: [mp, 100 - mp], backgroundColor: ['#6366f1', '#e2e8f0'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, rotation: -90, circumference: 180, cutout: '72%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.parsed + '%' } } } } });
+        }
+        // ---- Listas: busca instantânea, chips e ordenação
+        const LT_DEFS = {
+            membros: { ph: 'Busca instantânea: nome, função ou status', peca: true, sorts: [['nome', 'Nome'], ['freq', 'Frequência'], ['xp', 'XP'], ['cadastro', 'Cadastro (mais recentes)']], chips: [['sit', 'ativo', 'Ativos'], ['sit', 'ex', 'Inativos'], ['tipo', 'ator', 'Atores'], ['tipo', 'apoio', 'Direção/Apoio'], ['faltas', 'faltas', 'Com faltas críticas'], ['casal', 'casal', 'Casais']] },
+            pecas: { ph: 'Busca instantânea: peça, descrição ou personagem', peca: true, sorts: [['nome', 'Nome'], ['chars', 'Nº de personagens'], ['cadastro', 'Cadastro (mais recentes)']], chips: [['est', 'pend', 'Com personagem sem intérprete'], ['est', 'completa', 'Escalação completa'], ['est', 'semchars', 'Sem personagens']] },
+            ranking: { ph: 'Busca instantânea: nome ou função', sorts: [['xp', 'XP'], ['nome', 'Nome'], ['freq', 'Frequência'], ['chama', 'Sequência (chama)']], chips: [['sit', 'ativo', 'Ativos'], ['sit', 'ex', 'Ex-integrantes'], ['faltas', 'faltas', 'Com faltas críticas']] },
+            hist: { ph: 'Busca instantânea: usuário, ação ou detalhe', sorts: [['recentes', 'Mais recentes'], ['antigos', 'Mais antigos'], ['usuario', 'Usuário']], chips: [['cat', 'membro', 'Membros'], ['cat', 'pagamento', 'Financeiro'], ['cat', 'chamada', 'Chamadas'], ['cat', 'permissao', 'Permissões e usuários'], ['cat', 'backup', 'Backups'], ['per', 'hoje', 'Hoje'], ['per', '7d', 'Últimos 7 dias']] }
+        };
+        function ltHtml(sc) {
+            const d = LT_DEFS[sc], cell = 'px-3 py-2.5 border border-slate-300 rounded-lg text-sm';
+            return `<div class="no-print bg-white p-3 rounded-2xl border border-slate-200 space-y-2"><div class="flex flex-wrap items-center gap-2"><input id="lt-${sc}-q" type="search" placeholder="${d.ph}" oninput="renderAll()" class="flex-1 min-w-[12rem] ${cell}">${d.peca ? `<select id="lt-${sc}-peca" onchange="renderAll()" class="${cell}"><option value="">Por peça: todas</option></select>` : ''}<select id="lt-${sc}-sort" onchange="renderAll()" class="${cell}" aria-label="Ordenar">${d.sorts.map(([v, l]) => `<option value="${v}">Ordenar: ${l}</option>`).join('')}</select></div><div class="flex flex-wrap gap-2">${d.chips.map(([g, k, l]) => `<button type="button" class="chip" data-g="${g}" data-k="${k}" aria-pressed="false" onclick="ltChip(this)">${l}</button>`).join('')}</div></div>`;
+        }
+        function buildListToolbars() { Object.keys(LT_DEFS).forEach(sc => { const h = document.getElementById('lt-' + sc); if (h) h.innerHTML = ltHtml(sc); }); }
+        function ltChip(b) { b.classList.toggle('on'); b.setAttribute('aria-pressed', b.classList.contains('on')); renderAll(); }
+        function ltRead(sc) {
+            const v = id => (document.getElementById(id) || {}).value || '', on = {};
+            document.querySelectorAll(`#lt-${sc} .chip.on`).forEach(b => { (on[b.dataset.g] = on[b.dataset.g] || []).push(b.dataset.k); });
+            return { q: v(`lt-${sc}-q`), sort: v(`lt-${sc}-sort`), peca: v(`lt-${sc}-peca`), on };
+        }
+        const chipOk = (on, g, fn) => !on[g] || on[g].some(fn);
+        const gam = m => calcularGamificacaoMembro(m.id) || {};
+        function ltMembros(list) {
+            const t = ltRead('membros'), on = t.on;
+            const l = list.filter(m => hit(t.q, m.name, m.role, m.active === false ? 'inativo ex-integrante' : 'ativo', isActor(m) ? 'ator atriz' : 'direcao apoio')
+                && chipOk(on, 'sit', k => (k === 'ex') === (m.active === false)) && chipOk(on, 'tipo', k => (k === 'apoio') === !isActor(m))
+                && (!on.faltas || gam(m).fsj >= 2) && (!on.casal || !!parceiro(m))
+                && (!t.peca || state.characters.some(c => String(c.playId) === t.peca && c.memberId === m.id)));
+            const by = { nome: (a, b) => a.name.localeCompare(b.name), freq: (a, b) => (gam(b).pct ?? -1) - (gam(a).pct ?? -1), xp: (a, b) => (gam(b).xp || 0) - (gam(a).xp || 0), cadastro: (a, b) => b.id - a.id };
+            return by[t.sort] ? l.sort(by[t.sort]) : l;
+        }
+        function ltPecas(list) {
+            const t = ltRead('pecas'), on = t.on, ch = p => state.characters.filter(c => c.playId === p.id);
+            const l = list.filter(p => hit(t.q, p.title, p.desc, ch(p).map(c => c.name).join(' ')) && (!t.peca || String(p.id) === t.peca)
+                && chipOk(on, 'est', k => k === 'pend' ? ch(p).some(c => !c.memberId) : k === 'completa' ? ch(p).length > 0 && ch(p).every(c => c.memberId) : ch(p).length === 0));
+            const by = { nome: (a, b) => a.title.localeCompare(b.title), chars: (a, b) => ch(b).length - ch(a).length, cadastro: (a, b) => b.id - a.id };
+            return by[t.sort] ? l.sort(by[t.sort]) : l;
+        }
+        function ltRanking(list) {
+            const t = ltRead('ranking'), on = t.on;
+            const l = list.filter(r => hit(t.q, r.m.name, r.m.role) && chipOk(on, 'sit', k => (k === 'ex') === (r.m.active === false)) && (!on.faltas || r.fsj >= 2));
+            const by = { nome: (a, b) => a.m.name.localeCompare(b.m.name), freq: (a, b) => (b.pct ?? -1) - (a.pct ?? -1), chama: (a, b) => b.chama - a.chama };
+            return by[t.sort] ? l.sort(by[t.sort]) : l;
+        }
+        function ltHist(list) {
+            const t = ltRead('hist'), on = t.on, hoje = new Date().toISOString().slice(0, 10), sete = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+            const cat = { membro: /Membro/, pagamento: /Pagamento|Despesa/, chamada: /Chamada|Ensaio/, permissao: /Permiss|Perfil|Usuário|Senha/, backup: /Backup|zerados/i };
+            const l = list.filter(x => hit(t.q, x.usuario, x.acao, x.detalhe) && chipOk(on, 'cat', k => cat[k].test(x.acao)) && chipOk(on, 'per', k => { const d = String(x.dataHora).slice(0, 10); return k === 'hoje' ? d === hoje : d >= sete; }));
+            return t.sort === 'antigos' ? [...l].reverse() : t.sort === 'usuario' ? [...l].sort((a, b) => String(a.usuario).localeCompare(String(b.usuario))) : l;
+        }
+        function refreshListOptions() {
+            ['membros', 'pecas'].forEach(sc => {
+                const sel = document.getElementById(`lt-${sc}-peca`);
+                if (!sel || document.activeElement === sel) return;
+                const cur = sel.value;
+                sel.innerHTML = '<option value="">Por peça: todas</option>' + state.plays.map(p => `<option value="${p.id}">${esc(p.title)}</option>`).join('');
+                sel.value = cur;
+            });
+        }
+        // ---- Salvar tudo (botão flutuante) e aviso de alterações não salvas
+        function pendingPay() {
+            return [...editingPay].filter(id => {
+                const m = state.members.find(x => x.id === id), a = document.getElementById('pg-enc-' + id), b = document.getElementById('pg-eq-' + id);
+                return m && ((a && (parseFloat(a.value) || 0) !== (Number(m.txEncontro) || 0)) || (b && (parseFloat(b.value) || 0) !== (Number(m.txEquipe) || 0)));
+            });
+        }
+        function cfgDirty() {
+            if (!isMaster()) return false;
+            const c = cfg();
+            return [['cfg-enc', c.valorTaxaEncontro], ['cfg-eq', c.valorTaxaEquipe], ['cfg-casal', c.valorTaxaCasal], ['cfg-casal-eq', c.valorTaxaEquipeCasal]].some(([id, v]) => { const el = document.getElementById(id), x = el ? parseFloat(el.value) : NaN; return !isNaN(x) && x !== v; });
+        }
+        function refreshDirty() {
+            const n = pendingPay().length + (cfgDirty() ? 1 : 0), fab = document.getElementById('fab-save'), flag = document.getElementById('dirty-flag');
+            if (fab) { fab.classList.toggle('hidden', !n || activeTab !== 'financeiro'); fab.textContent = '💾 Salvar alterações (' + n + ')'; }
+            if (flag) flag.classList.toggle('hidden', !n);
+            return n;
+        }
+        function saveAllPending() {
+            const ids = pendingPay(), cd = cfgDirty();
+            if (!ids.length && !cd) { showNotification('Nenhuma alteração pendente.', 'warning'); return; }
+            lockBtn();
+            if (cd) {
+                const n = (id, d) => { const v = parseFloat(document.getElementById(id).value); return v >= 0 ? v : d; };
+                state.config = { ...cfg(), valorTaxaEncontro: n('cfg-enc', 60), valorTaxaEquipe: n('cfg-eq', 60), valorTaxaCasal: n('cfg-casal', 100), valorTaxaEquipeCasal: n('cfg-casal-eq', 60) };
+            }
+            ids.forEach(applyPayment);
+            saveState();
+            showNotification('Salvo com sucesso! ' + (ids.length + (cd ? 1 : 0)) + ' alteração(ões) gravada(s) de uma vez.');
+        }
+        window.addEventListener('beforeunload', e => { if (refreshDirty()) { e.preventDefault(); e.returnValue = ''; } });
+        // ---- Tabelas viram cartões empilhados no celular
+        function applyTableLabels() {
+            document.querySelectorAll('table.table-cards').forEach(t => {
+                const heads = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+                t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (heads[i] !== undefined) td.setAttribute('data-label', heads[i]); }));
+            });
         }
 
         // ==========================================
@@ -1583,6 +1851,7 @@
         function fillConfig() {
             const pn = document.getElementById('cfg-panel');
             if (!pn || (pn.contains && pn.contains(document.activeElement))) return;
+            if (cfgDirty()) return;
             document.getElementById('cfg-enc').value = cfg().valorTaxaEncontro;
             document.getElementById('cfg-eq').value = cfg().valorTaxaEquipe;
             document.getElementById('cfg-casal').value = cfg().valorTaxaCasal;
@@ -1597,13 +1866,21 @@
         }
         function savePayment(id) {
             if (!can('financeiro', 'i')) return;
+            const mm = state.members.find(x => x.id === id);
+            if (!mm) return;
+            applyPayment(id);
+            saveState();
+            showNotification('Salvo com sucesso! Pagamento de ' + mm.name + ' atualizado.');
+        }
+        function applyPayment(id) {
+            if (!can('financeiro', 'i')) return;
             const m = state.members.find(x => x.id === id);
             if (!m) return;
+            editingPay.delete(id);
             const v = (el, max, cur) => { const t = parseFloat(document.getElementById(el + id).value) || 0; return t === (Number(cur) || 0) ? (Number(cur) || 0) : Math.min(max, Math.max(0, t)); };
             m.txEncontro = v('pg-enc-', encDe(m), m.txEncontro);
             m.txEquipe = eqDe(m) === 0 ? (Number(m.txEquipe) || 0) : v('pg-eq-', eqDe(m), m.txEquipe);
             saveState();
-            showNotification('Salvo com sucesso! Pagamento de ' + m.name + ' atualizado.');
         }
         // ---- Rotas por #hash
         const ROUTE_OUT = { escalacao: 'papeis', faltas: 'ensaios', relatorios: 'relatorio', seguranca: 'backup', acessos: 'permissoes' };
@@ -1677,10 +1954,14 @@
                 sel.classList.toggle('hidden', t === 'financeiro' || t === 'geral');
             }
             const el = document.getElementById('fb-list');
-            el.innerHTML = (state.feedbacks || []).map(f => `<div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex flex-wrap items-center gap-2 text-xs"><span class="px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-800">${FB_TYPES[f.type] || esc(f.type)}</span>${fbTarget(f) ? `<b class="text-slate-800">${esc(fbTarget(f))}</b>` : ''}<span class="text-slate-400">${esc(f.date.split('-').reverse().join('/'))} · ${esc(f.by || '')}</span></div><button onclick="deleteFeedback(${f.id})" class="master-only text-xs font-semibold text-rose-600 hover:underline">Excluir</button></div><p class="text-sm text-slate-600 mt-2" style="white-space:pre-line">${esc(f.text)}</p></div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">Nenhum feedback registrado.</p>';
+            const fbf = FA('feedback');
+            const fbVis = (state.feedbacks || []).filter(f => hit(fbf.q, f.text, fbTarget(f), f.by) && (!fbf.tipo || f.type === fbf.tipo) && (!fbf.membro || (f.type === 'membro' && String(f.targetId) === fbf.membro)) && inRange(f.date, fbf.de, fbf.ate));
+            setCount('feedback', fbVis.length, (state.feedbacks || []).length);
+            el.innerHTML = fbVis.map(f => `<div class="bg-white p-4 rounded-2xl border border-slate-200"><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex flex-wrap items-center gap-2 text-xs"><span class="px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-800">${FB_TYPES[f.type] || esc(f.type)}</span>${fbTarget(f) ? `<b class="text-slate-800">${esc(fbTarget(f))}</b>` : ''}<span class="text-slate-400">${esc(f.date.split('-').reverse().join('/'))} · ${esc(f.by || '')}</span></div><div class="master-only">${actMenu([{ t: '🗑️ Excluir feedback', f: `deleteFeedback(${f.id})`, cls: 'master-only', danger: true }])}</div></div><p class="text-sm text-slate-600 mt-2" style="white-space:pre-line">${esc(f.text)}</p></div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">Nenhum feedback registrado.</p>';
             renderDirPreview();
         }
         // ---- Relatório para a Equipe Dirigente (gerado com os dados do sistema)
+        const DIR_MODS = { 1: 'Resumo Executivo & Status da Equipe', 2: 'Panorama de Frequência & Alertas de Evasão', 3: 'Saúde Financeira e Prestação de Contas', 4: 'Feedbacks e Destaques do Elenco' };
         function dirData() {
             const from = document.getElementById('dr-from').value, to = document.getElementById('dr-to').value;
             const inR = d => (!from || d >= from) && (!to || d <= to);
@@ -1693,58 +1974,115 @@
             const tot = rows.reduce((a, [, s]) => ({ p: a.p + s.p, fj: a.fj + s.fj, fsj: a.fsj + s.fsj }), { p: 0, fj: 0, fsj: 0 });
             const chars = state.characters;
             const fin = can('financeiro', 'v');
-            const paid = m => (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
-            const arr = state.members.reduce((a, m) => a + paid(m), 0), usado = state.expenses.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+            const txr = fin ? taxasResumo() : null;
+            const despPer = state.expenses.filter(x => inR(idDate(x.id))).reduce((a, x) => a + (Number(x.amount) || 0), 0);
+            const recent = m => ms.filter(t => t.attendance && t.attendance[m.id] && t.attendance[m.id] !== 'NA').slice(-4).map(t => t.attendance[m.id]);
+            const alertas = rows.filter(([m]) => m.active !== false).map(([m, s]) => {
+                const r4 = recent(m), f4 = r4.filter(x => x !== 'P').length, pct = pctOf(s.p, s.fj, s.fsj), mot = [];
+                if (s.fsj >= 2) mot.push(`${s.fsj} faltas sem justificativa`);
+                if (f4 >= 3) mot.push(`${f4} faltas nas últimas ${r4.length} chamadas`);
+                if (pct !== null && s.t >= 3 && pct < 60) mot.push(`presença de ${Math.round(pct)}%`);
+                return { m, pct, r4, mot };
+            }).filter(a => a.mot.length);
+            const pr = calcularProntidaoEquipe(), rk = rankingXP(false);
             const sections = [
-                { id: 'resumo', h: 'Resumo executivo', head: ['Indicador', 'Valor'], body: [
+                { id: 'resumo', mod: 1, h: 'Resumo executivo', head: ['Indicador', 'Valor'], body: [
                     ['Período analisado', (from || to) ? `${from ? fdate(from) : 'início'} a ${to ? fdate(to) : 'hoje'}` : 'Todo o histórico'],
                     ['Membros ativos', act.length], ['Atores/atrizes ativos', act.filter(isActor).length], ['Ensaios/reuniões no período', ms.length],
                     ['Presença média do elenco', pctTxt(pctOf(tot.p, tot.fj, tot.fsj))], ['Peças cadastradas', state.plays.length],
                     ['Personagens (com intérprete / total)', `${chars.filter(c => c.memberId).length} / ${chars.length}`],
-                    ...(fin ? [['Tx. do Encontro arrecadada', formatBRL(taxasResumo().enc.arrec)], ['Tx. do Encontro esperada (membros ativos)', formatBRL(taxasResumo().enc.esperado)], ['Membros que pagaram a Tx. do Encontro', String(taxasResumo().enc.pagaram.length + taxasResumo().enc.parcial.length)]] : [])] },
-                { id: 'reunioes', h: 'Dinâmica das reuniões e ensaios', head: ['Data', 'Reunião', 'Presentes', 'FJ', 'FSJ', 'N/A', 'Observações (feedback)'], body: ms.map(t => {
+                    ...(fin ? [['Tx. do Encontro arrecadada', formatBRL(txr.enc.arrec)], ['Tx. do Encontro esperada (membros ativos)', formatBRL(txr.enc.esperado)], ['Membros que pagaram a Tx. do Encontro', String(txr.enc.pagaram.length + txr.enc.parcial.length)]] : [])] },
+                { id: 'elenco', mod: 1, h: 'Elenco: peças e personagens', head: ['Peça', 'Personagem', 'Intérprete'], body: chars.map(c => [playName(c.playId), c.name, c.memberId ? memberName(c.memberId) : 'Sem intérprete']) },
+                { id: 'destaques', mod: 1, h: 'Destaques de engajamento e prontidão', head: ['Indicador', 'Resultado'], body: [
+                    ['Termômetro de Prontidão da Equipe', `${pr.pct}% - ${noEmoji(pr.fase)}`],
+                    ...rk.slice(0, 3).map((r, i) => [`Top ${i + 1} do Ranking de Engajamento (XP)`, `${r.m.name} - ${r.xp} XP (${r.nivel.nome})`]),
+                    ['Pilar da Equipe (100% de presença)', rk.filter(r => r.auto.pilar).map(r => r.m.name).join(', ') || 'Nenhum membro no momento']] },
+                { id: 'reunioes', mod: 2, h: 'Dinâmica das reuniões e ensaios', head: ['Data', 'Reunião', 'Presentes', 'FJ', 'FSJ', 'N/A', 'Observações (feedback)'], body: ms.map(t => {
                     const v = actors.map(m => (t.attendance || {})[m.id]).filter(Boolean), c = k => v.filter(x => x === k).length;
-                    return [fdate(t.date), t.title, c('P'), c('FJ'), c('FSJ'), c('NA'), fbs.filter(f => f.type === 'reuniao' && f.targetId === t.id).map(f => f.text).join(' | ') || '—'];
+                    return [fdate(t.date), t.title, c('P'), c('FJ'), c('FSJ'), c('NA'), fbs.filter(f => f.type === 'reuniao' && f.targetId === t.id).map(f => f.text).join(' | ') || '-'];
                 }) },
-                { id: 'frequencia', h: 'Frequência por membro', head: ['Membro', 'Ensaios válidos', 'P', 'FJ', 'FSJ', '% Presença'], body: rows.map(([m, s]) => [m.name + (m.active === false ? ' (ex)' : ''), s.t, s.p, s.fj, s.fsj, pctTxt(pctOf(s.p, s.fj, s.fsj))]) },
-                { id: 'elenco', h: 'Elenco: peças e personagens', head: ['Peça', 'Personagem', 'Intérprete'], body: chars.map(c => [playName(c.playId), c.name, c.memberId ? memberName(c.memberId) : 'Sem intérprete']) }
+                { id: 'frequencia', mod: 2, h: 'Frequência por membro', head: ['Membro', 'Ensaios válidos', 'P', 'FJ', 'FSJ', '% Presença'], body: rows.map(([m, s]) => [m.name + (m.active === false ? ' (ex)' : ''), s.t, s.p, s.fj, s.fsj, pctTxt(pctOf(s.p, s.fj, s.fsj))]) },
+                { id: 'alertas', mod: 2, h: 'Alertas de evasão (risco de abandono)', head: ['Membro', '% Presença', 'Últimas chamadas', 'Motivo do alerta'], body: alertas.map(a => [a.m.name, pctTxt(a.pct), a.r4.join(' ') || '-', a.mot.join('; ')]) }
             ];
             if (fin) sections.push(
-                { id: 'pagamentos', h: 'Financeiro: quem pagou a Tx. do Encontro', head: ['Membro', 'Situação', 'Casal', 'Valor devido', 'Valor pago', 'Pagamento'], body: (() => { const g = taxasResumo().enc, l = [...g.pagaram, ...g.parcial].sort((a, b) => a.m.name.localeCompare(b.m.name)); return [...l.map(e => [e.m.name + (e.ex ? ' (ex)' : ''), e.ex ? 'Ex-integrante' : 'Ativo', parceiro(e.m) ? 'Casal com ' + parceiro(e.m).name : '-', formatBRL(e.d), formatBRL(e.p), e.p >= e.d ? 'Quitado' : 'Parcial']), ['TOTAL ARRECADADO', '', '', '', formatBRL(l.reduce((a, e) => a + e.p, 0)), '']]; })() },
-                { id: 'despesas', h: 'Financeiro: despesas detalhadas (o que foi utilizado)', head: ['Data', 'Descrição', 'Valor', 'Registrado por'], body: state.expenses.filter(x => inR(new Date(x.id).toISOString().slice(0, 10))).map(x => [new Date(x.id).toLocaleDateString('pt-BR'), x.desc, formatBRL(Number(x.amount) || 0), x.atualizadoPor || '—']) });
+                { id: 'pagamentos', mod: 3, h: 'Financeiro: quem pagou a Tx. do Encontro', head: ['Membro', 'Situação', 'Casal', 'Valor devido', 'Valor pago', 'Pagamento'], body: (() => { const g = txr.enc, l = [...g.pagaram, ...g.parcial].sort((a, b) => a.m.name.localeCompare(b.m.name)); return [...l.map(e => [e.m.name + (e.ex ? ' (ex)' : ''), e.ex ? 'Ex-integrante' : 'Ativo', parceiro(e.m) ? 'Casal com ' + parceiro(e.m).name : '-', formatBRL(e.d), formatBRL(e.p), e.p >= e.d ? 'Quitado' : 'Parcial']), ['TOTAL ARRECADADO', '', '', '', formatBRL(l.reduce((a, e) => a + e.p, 0)), '']]; })() },
+                { id: 'despesas', mod: 3, h: 'Despesas detalhadas (o que foi utilizado)', head: ['Data', 'Descrição', 'Valor', 'Registrado por'], body: state.expenses.filter(x => inR(idDate(x.id))).map(x => [new Date(x.id).toLocaleDateString('pt-BR'), x.desc, formatBRL(Number(x.amount) || 0), x.atualizadoPor || '-']) });
             sections.push(
-                { id: 'fbgeral', h: 'Feedback geral e financeiro', head: ['Data', 'Tipo', 'Feedback', 'Autor'], body: fbs.filter(f => f.type === 'geral' || f.type === 'financeiro').map(f => [fdate(f.date), FB_TYPES[f.type], f.text, f.by || '']) },
-                { id: 'fbmembro', h: 'Feedback por membro', head: ['Data', 'Membro', 'Feedback', 'Autor'], body: fbs.filter(f => f.type === 'membro').map(f => [fdate(f.date), fbTarget(f), f.text, f.by || '']) });
-            const pr = calcularProntidaoEquipe(), rk = rankingXP(false);
-            sections.push({ id: 'destaques', h: 'Destaques de engajamento e prontidão', head: ['Indicador', 'Resultado'], body: [
-                ['Termômetro de Prontidão da Equipe', `${pr.pct}% - ${noEmoji(pr.fase)}`],
-                ...rk.slice(0, 3).map((r, i) => [`Top ${i + 1} do Ranking de Engajamento (XP)`, `${r.m.name} - ${r.xp} XP (${r.nivel.nome})`]),
-                ['Pilar da Equipe (100% de presença)', rk.filter(r => r.auto.pilar).map(r => r.m.name).join(', ') || 'Nenhum membro no momento']] });
+                { id: 'fbgeral', mod: 4, h: 'Feedback geral e financeiro', head: ['Data', 'Tipo', 'Feedback', 'Autor'], body: fbs.filter(f => f.type === 'geral' || f.type === 'financeiro').map(f => [fdate(f.date), FB_TYPES[f.type], f.text, f.by || '']) },
+                { id: 'fbmembro', mod: 4, h: 'Feedback por membro', head: ['Data', 'Membro', 'Feedback', 'Autor'], body: fbs.filter(f => f.type === 'membro').map(f => [fdate(f.date), fbTarget(f), f.text, f.by || '']) });
             const sel = id => { const el = document.getElementById('dr-sel-' + id); return !el || el.checked; };
-            const chosen = sections.filter(x => sel(x.id)).map((x, i) => ({ ...x, h: (i + 1) + '. ' + x.h }));
+            const chosen = sections.filter(x => sel(x.id));
             const coord = state.members.filter(m => m.active !== false && !isActor(m)).map(m => ({ name: m.name, role: m.role || 'Direção/Apoio' }));
-            return { title: 'Relatório para a Equipe Dirigente', sections: chosen, coord };
+            const meta = {
+                periodo: (from || to) ? `${from ? fdate(from) : 'início'} a ${to ? fdate(to) : 'hoje'}` : 'Todo o histórico',
+                membros: act.length, atores: act.filter(isActor).length, ensaios: ms.length, presenca: pctOf(tot.p, tot.fj, tot.fsj), pecas: state.plays.length,
+                escalados: chars.filter(c => c.memberId).length, personagens: chars.length, prontidao: pr, alertas: alertas.length, fsjTotal: tot.fsj,
+                top5: rows.map(([m, s]) => ({ name: m.name, pct: pctOf(s.p, s.fj, s.fsj) })).filter(x => x.pct !== null).sort((a, b) => b.pct - a.pct).slice(0, 5),
+                faltas: rows.map(([m, s]) => ({ name: m.name, fj: s.fj, fsj: s.fsj })).filter(x => x.fj + x.fsj > 0).sort((a, b) => (b.fj + b.fsj) - (a.fj + a.fsj)).slice(0, 8),
+                enc: txr && txr.enc, despesas: fin ? despPer : null, temDesp: chosen.some(x => x.id === 'despesas'), feedbacks: fbs.length,
+                pilares: rk.filter(r => r.auto.pilar).map(r => r.m.name), top3: rk.slice(0, 3), alertaNomes: alertas.map(a => a.m.name)
+            };
+            return { title: 'Relatório para a Equipe Dirigente', sections: chosen, coord, meta };
         }
         function drSelectAll(v) { document.querySelectorAll('#dr-opts input').forEach(i => { i.checked = v; }); renderDirPreview(); }
+        function dirKpis(mod, M) {
+            const f = v => v === null || v === undefined ? '-' : v;
+            const T = {
+                1: [['👥', 'Membros ativos', M.membros], ['🎭', 'Atores', M.atores], ['🎬', 'Ensaios', M.ensaios], ['📈', 'Presença média', pctTxt(M.presenca)], ['🎯', 'Prontidão', M.prontidao.pct + '%'], ['🎪', 'Personagens escalados', M.escalados + '/' + M.personagens]],
+                2: [['🎬', 'Ensaios no período', M.ensaios], ['📈', 'Presença média', pctTxt(M.presenca)], ['⚠️', 'Alertas de evasão', M.alertas], ['🔴', 'Faltas sem justificativa', M.fsjTotal]],
+                3: M.enc ? [['🎟️', 'Tx. Encontro arrecadada', formatBRL(M.enc.arrec)], ['🎯', 'Esperada', formatBRL(M.enc.esperado)], ['✅', 'Quem pagou', M.enc.pagaram.length + M.enc.parcial.length], ...(M.temDesp ? [['💸', 'Despesas', formatBRL(M.despesas)]] : [])] : [],
+                4: [['💬', 'Feedbacks no período', M.feedbacks], ['💎', 'Pilares da equipe', M.pilares.length], ['🏆', 'Top 1 de XP', M.top3[0] ? M.top3[0].m.name : '-']]
+            }[mod];
+            return T.map(([i, l, v]) => `<div class="rounded-2xl bg-slate-50 border border-slate-200 p-3"><div class="text-[11px] font-bold uppercase text-slate-500">${i} ${l}</div><div class="text-lg font-extrabold text-slate-800 mt-0.5">${esc(f(v))}</div></div>`).join('');
+        }
         function renderDirPreview() {
             const el = document.getElementById('dr-body');
             if (!el || !can('feedback', 'v')) return;
             document.querySelectorAll('.dr-fin').forEach(x => x.classList.toggle('hidden', !can('financeiro', 'v')));
-            const d = dirData();
-            el.innerHTML = (d.sections.map(s => `<h4 class="font-bold text-slate-800 mt-4 mb-2">${esc(s.h)}</h4>` + tbl(s.head, s.body)).join('') || '<p class="text-sm text-slate-400 py-4">Selecione ao menos um item para o relatório.</p>')
+            ['dr-ch-top', 'dr-ch-faltas', 'dr-ch-caixa'].forEach(dropChart);
+            const d = dirData(), M = d.meta, mods = [...new Set(d.sections.map(s => s.mod))].sort();
+            const box = (id, tit) => `<div class="rounded-2xl border border-slate-200 p-3"><p class="text-xs font-bold text-slate-600 mb-1">${tit}</p><div class="relative h-48"><canvas id="${id}"></canvas></div></div>`;
+            const charts = { 2: (M.top5.length || M.faltas.length) ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-3">${box('dr-ch-top', 'Top 5 de frequência (% de presença)')}${box('dr-ch-faltas', 'Distribuição de faltas por membro')}</div>` : '', 3: M.enc ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-3">${box('dr-ch-caixa', 'Balanço de caixa simplificado')}</div>` : '' };
+            el.innerHTML = `<div class="rounded-2xl bg-gradient-to-r from-indigo-700 to-violet-700 text-white p-5"><p class="text-xs uppercase tracking-wider opacity-80">EncenaPro</p><h2 class="text-xl font-extrabold">Relatório para a Equipe Dirigente</h2><p class="text-xs opacity-90 mt-1">Período: ${esc(M.periodo)} · Gerado em ${new Date().toLocaleDateString('pt-BR')}</p></div>`
+                + (mods.map((mod, n) => `<section class="dr-mod rounded-2xl border border-slate-200 overflow-hidden mt-4"><div class="px-4 py-2.5 bg-indigo-600 text-white text-sm font-bold">${n + 1}. ${DIR_MODS[mod]}</div><div class="p-4 space-y-4"><div class="grid grid-cols-2 lg:grid-cols-3 gap-3">${dirKpis(mod, M)}</div>${charts[mod] || ''}${d.sections.filter(s => s.mod === mod).map(s => `<details class="rounded-xl border border-slate-200"><summary class="cursor-pointer px-3 py-2.5 text-sm font-semibold text-slate-700">${esc(s.h)}</summary><div class="overflow-x-auto p-2">${tbl(s.head, s.body)}</div></details>`).join('')}</div></section>`).join('') || '<p class="text-sm text-slate-400 py-4">Selecione ao menos um item para o relatório.</p>')
                 + `<div class="mt-8 pt-5 border-t border-slate-200"><p class="font-bold text-slate-800">Ass: A Coordenação</p><p class="text-xs text-slate-500 mb-2">composta por diretores e apoio</p>${d.coord.map(c => `<p class="text-sm text-slate-700">${esc(c.name)} <span class="text-xs text-slate-400">— ${esc(c.role)}</span></p>`).join('') || '<p class="text-xs text-slate-400">Nenhum diretor ou apoio cadastrado (desmarque "É ator/atriz" no cadastro do membro).</p>'}</div>`;
+            const opt = { responsive: true, maintainAspectRatio: false, animation: false };
+            if (M.top5.length) mkChart('dr-ch-top', { type: 'bar', data: { labels: M.top5.map(x => x.name), datasets: [{ label: '% de presença', data: M.top5.map(x => Math.round(x.pct)), backgroundColor: '#6366f1', borderRadius: 6 }] }, options: { ...opt, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 100 } } } });
+            if (M.faltas.length) mkChart('dr-ch-faltas', { type: 'bar', data: { labels: M.faltas.map(x => x.name), datasets: [{ label: 'FJ', data: M.faltas.map(x => x.fj), backgroundColor: '#f59e0b' }, { label: 'FSJ', data: M.faltas.map(x => x.fsj), backgroundColor: '#f43f5e' }] }, options: { ...opt, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } } } });
+            if (M.enc) mkChart('dr-ch-caixa', { type: 'bar', data: { labels: ['Arrecadado (Encontro)', 'Esperado (Encontro)', ...(M.temDesp ? ['Despesas'] : [])], datasets: [{ data: [M.enc.arrec, M.enc.esperado, ...(M.temDesp ? [M.despesas] : [])], backgroundColor: ['#10b981', '#94a3b8', '#f43f5e'], borderRadius: 6 }] }, options: { ...opt, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => formatBRL(c.parsed.y) } } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v } } } } });
+        }
+        function copyDirWhats() {
+            const d = dirData(), M = d.meta, has = id => d.sections.some(s => s.id === id), mod = k => d.sections.some(s => s.mod === k);
+            if (!d.sections.length) { showNotification('Selecione ao menos um item para o relatório.', 'warning'); return; }
+            const L = ['*📋 Relatório para a Direção - EncenaPro*', `🗓️ Período: ${M.periodo}`];
+            if (mod(1)) L.push('', '*1) Resumo e status da equipe*', `👥 Membros ativos: ${M.membros} | 🎭 Atores: ${M.atores} | 🎬 Ensaios: ${M.ensaios}`, `📈 Presença média: ${pctTxt(M.presenca)}`, `🎯 Prontidão: ${M.prontidao.pct}% - ${M.prontidao.fase}`, `🎪 Personagens escalados: ${M.escalados}/${M.personagens}`);
+            if (mod(2)) L.push('', '*2) Frequência e alertas*', `🏆 Top 3 de presença: ${M.top5.slice(0, 3).map(x => x.name + ' (' + Math.round(x.pct) + '%)').join(', ') || '-'}`, `⚠️ Alertas de evasão (${M.alertas}): ${M.alertaNomes.join(', ') || 'nenhum'}`);
+            if (mod(3) && M.enc) L.push('', '*3) Financeiro*', `🎟️ Tx. do Encontro: ${formatBRL(M.enc.arrec)} de ${formatBRL(M.enc.esperado)} esperados`, `✅ Quem pagou: ${M.enc.pagaram.length + M.enc.parcial.length} membro(s)`, ...(M.temDesp ? [`💸 Despesas: ${formatBRL(M.despesas)}`] : []));
+            if (mod(4)) L.push('', '*4) Feedbacks e destaques*', `💬 Feedbacks no período: ${M.feedbacks}`, `💎 Pilares da equipe: ${M.pilares.join(', ') || 'nenhum'}`, `⭐ Top XP: ${M.top3.map(r => r.m.name + ' (' + r.xp + ')').join(', ') || '-'}`);
+            L.push('', '_Ass: A Coordenação_' + (d.coord.length ? ' - ' + d.coord.map(c => c.name).join(', ') : ''));
+            copyText(L.join('\n'), 'Resumo copiado! Cole no grupo da direção.');
         }
         function pdfDir() {
             if (!window.jspdf) { showNotification('A biblioteca de PDF não carregou. Recarregue a página.', 'error'); return; }
+            renderDirPreview();
             const d = dirData(), doc = new window.jspdf.jsPDF();
             if (!d.sections.length) { showNotification('Selecione ao menos um item para o relatório.', 'warning'); return; }
             doc.setFontSize(18); doc.text('EncenaPro - ' + d.title, 14, 18);
-            doc.setFontSize(9); doc.text('Gerado automaticamente em ' + new Date().toLocaleString('pt-BR') + ' por ' + (currentUser ? currentUser.name : ''), 14, 25);
-            let y = 32;
+            doc.setFontSize(9); doc.text('Período: ' + noEmoji(d.meta.periodo) + ' | Gerado automaticamente em ' + new Date().toLocaleString('pt-BR') + ' por ' + (currentUser ? currentUser.name : ''), 14, 25);
+            const img = id => { const c = document.getElementById(id); try { return c && c.width > 0 && typeof c.toDataURL === 'function' ? c.toDataURL('image/png') : null; } catch (e) { return null; } };
+            let y = 32, lastMod = 0, n = 0;
             d.sections.forEach(s => {
+                if (s.mod !== lastMod) {
+                    lastMod = s.mod; n++;
+                    if (y > 235) { doc.addPage(); y = 18; }
+                    doc.setFillColor(79, 70, 229); doc.rect(14, y, 182, 8, 'F'); doc.setTextColor(255); doc.setFontSize(11); doc.text(n + '. ' + noEmoji(DIR_MODS[s.mod]), 17, y + 5.6); doc.setTextColor(0);
+                    y += 12;
+                    const imgs = (s.mod === 2 ? ['dr-ch-top', 'dr-ch-faltas'] : s.mod === 3 ? ['dr-ch-caixa'] : []).map(img).filter(Boolean);
+                    if (imgs.length) { if (y > 215) { doc.addPage(); y = 18; } imgs.forEach((u, i) => doc.addImage(u, 'PNG', 14 + i * 92, y, 88, 48)); y += 54; }
+                }
                 if (y > 250) { doc.addPage(); y = 18; }
-                doc.setFontSize(12); doc.text(noEmoji(s.h), 14, y + 5);
-                doc.autoTable({ startY: y + 8, head: [s.head.map(noEmoji)], body: s.body.length ? s.body.map(r => r.map(noEmoji)) : [['Sem registros no período'].concat(Array(s.head.length - 1).fill(''))], styles: { fontSize: 8.5, cellPadding: 2, overflow: 'linebreak' }, headStyles: { fillColor: [79, 70, 229] } });
+                doc.setFontSize(11); doc.text(noEmoji(s.h), 14, y + 4);
+                doc.autoTable({ startY: y + 7, head: [s.head.map(noEmoji)], body: s.body.length ? s.body.map(r => r.map(noEmoji)) : [['Sem registros no período'].concat(Array(s.head.length - 1).fill(''))], styles: { fontSize: 8.5, cellPadding: 2, overflow: 'linebreak' }, headStyles: { fillColor: [99, 102, 241] } });
                 y = doc.lastAutoTable.finalY + 9;
             });
             if (y > 215) { doc.addPage(); y = 20; }
@@ -1757,10 +2095,11 @@
                 if (y > 270) { doc.addPage(); y = 25; }
                 doc.line(x, y, x + 80, y); doc.setFontSize(10); doc.text(String(c.name), x, y + 5); doc.setFontSize(8); doc.text(String(c.role), x, y + 10);
             });
-            const n = doc.getNumberOfPages();
-            for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFontSize(8); doc.text('Página ' + i + ' de ' + n, 190, 290, { align: 'right' }); }
+            const total = doc.getNumberOfPages();
+            for (let i = 1; i <= total; i++) { doc.setPage(i); doc.setFontSize(8); doc.text('Página ' + i + ' de ' + total, 190, 290, { align: 'right' }); }
             doc.save('relatorio-direcao-' + new Date().toISOString().slice(0, 10) + '.pdf');
         }
+
         // ---- Segurança: backup, restauração e zerar dados (só Master)
         let snaps = [];
         async function adminCall(body) {
@@ -1784,7 +2123,7 @@
         function renderSnaps() {
             const el = document.getElementById('snap-list');
             if (!el) return;
-            el.innerHTML = snaps.map(s => `<div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm"><div><b class="text-slate-800">${new Date(s.at).toLocaleString('pt-BR')}</b> <span class="text-xs text-slate-500">· ${esc(s.kind)} · por ${esc(s.by)} · ${s.membros} membros, ${s.ensaios} ensaios</span></div><button onclick="restoreSnap('${esc(s.id)}')" class="px-3 py-2 bg-amber-100 text-amber-800 rounded-lg text-xs font-semibold">Restaurar</button></div>`).join('') || '<p class="text-xs text-slate-400">Nenhum backup guardado no servidor ainda.</p>';
+            el.innerHTML = snaps.map(s => `<div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm"><div><b class="text-slate-800">${new Date(s.at).toLocaleString('pt-BR')}</b> <span class="text-xs text-slate-500">· ${esc(s.kind)} · por ${esc(s.by)} · ${s.membros} membros, ${s.ensaios} ensaios</span></div>${actMenu([{ t: '♻️ Restaurar este backup', f: `restoreSnap('${esc(s.id)}')` }])}</div>`).join('') || '<p class="text-xs text-slate-400">Nenhum backup guardado no servidor ainda.</p>';
         }
         async function doBackup() {
             if (!isMaster()) return;
@@ -1830,7 +2169,7 @@
         // ==========================================
         // PERMISSÕES, AVISOS, RELATÓRIOS, SINO
         // ==========================================
-        const SCREENS = { dashboard: 'Dashboard', avisos: 'Avisos', membros: 'Membros & Taxas', pecas: 'Peças & Personagens', escalacao: 'Quem Interpreta', faltas: 'Controle de Faltas', financeiro: 'Financeiro', ranking: 'Ranking', conquistas: 'Conquistas', relatorios: 'Relatórios', feedback: 'Feedback & Relatório' };
+        const SCREENS = { dashboard: 'Dashboard', avisos: 'Avisos', membros: 'Membros', pecas: 'Peças & Personagens', escalacao: 'Quem Interpreta', faltas: 'Controle de Faltas', financeiro: 'Financeiro', ranking: 'Ranking', conquistas: 'Conquistas', relatorios: 'Relatórios', feedback: 'Feedback & Relatório' };
         const LEVELS = ['Bloqueado', 'Consultar', 'Inserir/Editar', 'Total (c/ excluir)'];
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const memberName = id => (state.members.find(m => m.id === id) || {}).name || '—';
@@ -1866,7 +2205,10 @@
             if (!el || !isMaster()) return;
             const sc = Object.keys(SCREENS);
             const cor = l => l === 0 ? 'bg-rose-50 text-rose-700 border-rose-300' : l === 3 ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : l === 2 ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-white text-slate-700 border-slate-300';
-            el.innerHTML = state.users.map(u => u.role === 'master'
+            const acf = FA('acessos');
+            const accVis = state.users.filter(u => hit(acf.q, u.name, u.username) && (!acf.perfil || u.role === acf.perfil));
+            setCount('acessos', accVis.length, state.users.length);
+            el.innerHTML = accVis.map(u => u.role === 'master'
                 ? `<div id="acc-u-${u.id}" class="border border-slate-200 rounded-2xl p-4 flex flex-wrap items-center gap-2"><p class="font-bold text-slate-800">${esc(u.name)}</p><span class="text-[10px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">MASTER</span><span class="text-xs text-slate-400">Acesso total a todas as telas.</span></div>`
                 : `<div id="acc-u-${u.id}" class="border border-slate-200 rounded-2xl p-4 space-y-3"><div class="flex flex-wrap items-end justify-between gap-3"><div><p class="font-bold text-slate-800">${esc(u.name)}</p><p class="text-[11px] uppercase text-slate-400">${esc(u.role)} · @${esc(u.username)}</p></div><label class="text-xs font-semibold text-slate-600">Membro vinculado<select onchange="setUserMember(${u.id}, this.value)" class="mt-1 block px-2 py-2.5 border border-slate-300 rounded-lg text-xs min-w-[10rem]"><option value="">— nenhum —</option>${state.members.map(m => `<option value="${m.id}" ${u.memberId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label></div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">${sc.map(s => `<label class="block text-[11px] font-semibold text-slate-600">${SCREENS[s]}<select onchange="setPerm(${u.id}, '${s}', this.value)" class="mt-1 w-full px-2 py-2.5 border rounded-lg text-xs ${cor(lvl(u, s))}">${LEVELS.map((n, i) => `<option value="${i}" ${lvl(u, s) === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`).join('')}</div></div>`).join('');
         }
@@ -1896,8 +2238,9 @@
             const el = document.getElementById('avisos-list');
             if (!el) return;
             const edit = can('avisos', 'i');
-            const list = (state.avisos || []).filter(a => edit || a.active !== false);
-            el.innerHTML = list.map(a => `<div class="bg-white p-5 rounded-2xl border ${a.active === false ? 'border-slate-200 opacity-60' : 'border-amber-300'}"><div class="flex justify-between gap-2"><h4 class="font-bold text-slate-800">${esc(a.title)}${a.active === false ? ' <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">DESATIVADO</span>' : ''}</h4><span class="text-xs text-slate-400 shrink-0">${esc(String(a.date || '').split('-').reverse().join('/'))}</span></div><p class="text-sm text-slate-600 mt-1" style="white-space:pre-line">${esc(a.text)}</p><div class="flex gap-3 mt-3"><button onclick="toggleAviso(${a.id})" class="master-only text-xs font-semibold text-amber-600 hover:underline">${a.active === false ? 'Ativar' : 'Desativar'}</button><button onclick="deleteAviso(${a.id})" class="master-only text-xs font-semibold text-rose-600 hover:underline">Excluir</button></div></div>`).join('') || '<p class="text-sm text-slate-400 text-center py-8">Nenhum aviso no momento.</p>';
+            const af = FA('avisos'), list = (state.avisos || []).filter(a => (edit || a.active !== false) && hit(af.q, a.title, a.text) && (!af.status || (af.status === 'ativo') === (a.active !== false)));
+            setCount('avisos', list.length, (state.avisos || []).length);
+            el.innerHTML = list.map(a => `<div class="bg-white p-5 rounded-2xl border ${a.active === false ? 'border-slate-200 opacity-60' : 'border-amber-300'}"><div class="flex justify-between gap-2"><h4 class="font-bold text-slate-800">${esc(a.title)}${a.active === false ? ' <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">DESATIVADO</span>' : ''}</h4><span class="text-xs text-slate-400 shrink-0">${esc(String(a.date || '').split('-').reverse().join('/'))}</span></div><p class="text-sm text-slate-600 mt-1" style="white-space:pre-line">${esc(a.text)}</p><div class="mt-3 master-only">${actMenu([{ t: a.active === false ? '✅ Ativar aviso' : '⏸️ Desativar aviso', f: `toggleAviso(${a.id})`, cls: 'master-only' }, { t: '🗑️ Excluir aviso', f: `deleteAviso(${a.id})`, cls: 'master-only', danger: true }])}</div></div>`).join('') || '<p class="text-sm text-slate-400 text-center py-8">Nenhum aviso no momento.</p>';
         }
         // ---- Sino de notificações (leitura guardada neste aparelho)
         function logChange(text) {
@@ -1934,17 +2277,19 @@
         }
         // ---- Relatórios e PDF
         let repView = 'membro';
-        const tbl = (head, body) => `<table class="w-full text-left text-sm border-collapse min-w-[480px]"><thead><tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">${head.map(h => `<th class="py-2.5 px-3">${esc(h)}</th>`).join('')}</tr></thead><tbody class="divide-y divide-slate-100">${body.map(r => `<tr>${r.map(c => `<td class="py-2.5 px-3">${esc(c)}</td>`).join('')}</tr>`).join('') || `<tr><td class="py-4 px-3 text-slate-400" colspan="${head.length}">Sem dados.</td></tr>`}</tbody></table>`;
+        const tbl = (head, body) => `<table class="table-cards w-full text-left text-sm border-collapse min-w-[480px]"><thead><tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200">${head.map(h => `<th class="py-2.5 px-3">${esc(h)}</th>`).join('')}</tr></thead><tbody class="divide-y divide-slate-100">${body.map(r => `<tr>${r.map(c => `<td class="py-2.5 px-3">${esc(c)}</td>`).join('')}</tr>`).join('') || `<tr><td class="py-4 px-3 text-slate-400" colspan="${head.length}">Sem dados.</td></tr>`}</tbody></table>`;
         function repData(v) {
-            const act = state.members.filter(m => m.active !== false);
-            const st = m => { let p = 0, fj = 0, fsj = 0; state.meetings.forEach(t => { const s = t.attendance && t.attendance[m.id]; if (s === 'P') p++; else if (s === 'FJ') fj++; else if (s === 'FSJ') fsj++; }); return { p, fj, fsj, t: p + fj + fsj }; };
+            const rf = FA('relatorios'), sitOk = m => !rf.sit || (rf.sit === 'ex') === (m.active === false);
+            const msR = state.meetings.filter(t => inRange(t.date, rf.de, rf.ate));
+            const act = state.members.filter(m => sitOk(m) && (m.active !== false || rf.sit === 'ex' || state.characters.some(c => c.memberId === m.id)));
+            const st = m => { let p = 0, fj = 0, fsj = 0; msR.forEach(t => { const s = t.attendance && t.attendance[m.id]; if (s === 'P') p++; else if (s === 'FJ') fj++; else if (s === 'FSJ') fsj++; }); return { p, fj, fsj, t: p + fj + fsj }; };
             if (v === 'membro') return { title: 'Personagens por Membro', sections: [{ h: 'Participação por membro', head: ['Membro', 'Nº de peças', 'Peças (personagem)'], body: act.map(m => { const cs = state.characters.filter(c => c.memberId === m.id); return [m.name, new Set(cs.map(c => c.playId)).size, cs.map(c => playName(c.playId) + ' (' + c.name + ')').join('; ') || '—']; }).sort((a, b) => b[1] - a[1]) }] };
             if (v === 'pecas') return { title: 'Peças e Personagens', sections: state.plays.map(p => ({ h: p.title, head: ['Personagem', 'Intérprete'], body: state.characters.filter(c => c.playId === p.id).map(c => [c.name, c.memberId ? memberName(c.memberId) : 'Sem intérprete']) })) };
-            if (v === 'freq') return { title: 'Relatório de Frequência', sections: [{ h: 'Frequência por membro (' + state.meetings.length + ' ensaios)', head: ['Membro', 'Ensaios', 'P', 'FJ', 'FSJ', '% Presença'], body: state.members.map(m => [m, st(m)]).filter(([m, s]) => isActor(m) && (m.active !== false || s.t)).map(([m, s]) => [m.name + (m.active === false ? ' (ex)' : ''), s.t, s.p, s.fj, s.fsj, pctTxt(pctOf(s.p, s.fj, s.fsj))]) }] };
+            if (v === 'freq') return { title: 'Relatório de Frequência', sections: [{ h: 'Frequência por membro (' + msR.length + ' ensaios)', head: ['Membro', 'Ensaios', 'P', 'FJ', 'FSJ', '% Presença'], body: state.members.map(m => [m, st(m)]).filter(([m, s]) => isActor(m) && sitOk(m) && (m.active !== false || s.t)).map(([m, s]) => [m.name + (m.active === false ? ' (ex)' : ''), s.t, s.p, s.fj, s.fsj, pctTxt(pctOf(s.p, s.fj, s.fsj))]) }] };
             if (v === 'pago-enc' || v === 'pago-eq') {
                 const enc = v === 'pago-enc', g = enc ? taxasResumo().enc : taxasResumo().eq;
-                const incl = document.getElementById('rep-parcial') && document.getElementById('rep-parcial').checked;
-                const lista = [...g.pagaram, ...(incl ? g.parcial : [])].sort((a, b) => a.m.name.localeCompare(b.m.name));
+                const incl = rf.parcial;
+                const lista = [...g.pagaram, ...(incl ? g.parcial : [])].filter(e => sitOk(e.m)).sort((a, b) => a.m.name.localeCompare(b.m.name));
                 const total = lista.reduce((a, e) => a + e.p, 0);
                 const secs = [{ h: (enc ? 'Pagaram a Tx. do Encontro' : 'Pagaram a Tx. da Equipe') + ' (' + lista.length + ')', head: ['Membro', 'Situação', 'Casal', 'Valor devido', 'Valor pago'], body: [...lista.map(e => [e.m.name, e.ex ? 'Ex-integrante' : 'Ativo', parceiro(e.m) ? 'Casal com ' + parceiro(e.m).name : '-', formatBRL(e.d), formatBRL(e.p)]), ['TOTAL ARRECADADO', '', '', '', formatBRL(total)]] }];
                 if (!enc && g.isentos.length) secs.push({ h: 'Isentos da Tx. da Equipe (direção/apoio)', head: ['Membro', 'Função'], body: g.isentos.map(e => [e.m.name, e.m.role || 'Direção/Apoio']) });
@@ -1954,22 +2299,30 @@
             const arr = state.members.reduce((a, m) => a + paid(m), 0), usado = state.expenses.reduce((a, x) => a + (Number(x.amount) || 0), 0);
             return { title: 'Relatório Financeiro', sections: [
                 { h: 'Resumo', head: ['Item', 'Valor'], body: [['Total arrecadado', formatBRL(arr)], ['Arrecadado: Tx. do Encontro', formatBRL(taxasResumo().enc.arrec)], ['Arrecadado: Tx. da Equipe', formatBRL(taxasResumo().eq.arrec)], ['Total gasto', formatBRL(usado)], ['Tx. da Equipe − Gastos', formatBRL(taxasResumo().eq.arrec - usado)], ['Saldo disponível', formatBRL(arr - usado)], ['Falta arrecadar (ativos)', formatBRL(act.reduce((a, m) => a + Math.max(0, metaDe(m) - paid(m)), 0))]] },
-                { h: 'Taxas por membro', head: ['Membro', 'Situação', 'Tx Encontro', 'Tx Equipe', 'Pago', 'Falta'], body: state.members.map(m => [m.name, m.active === false ? 'Ex-integrante' : 'Ativo', formatBRL(Number(m.txEncontro) || 0), formatBRL(Number(m.txEquipe) || 0), formatBRL(paid(m)), formatBRL(m.active === false ? 0 : Math.max(0, metaDe(m) - paid(m)))]) },
+                { h: 'Taxas por membro', head: ['Membro', 'Situação', 'Tx Encontro', 'Tx Equipe', 'Pago', 'Falta'], body: state.members.filter(sitOk).map(m => [m.name, m.active === false ? 'Ex-integrante' : 'Ativo', formatBRL(Number(m.txEncontro) || 0), formatBRL(Number(m.txEquipe) || 0), formatBRL(paid(m)), formatBRL(m.active === false ? 0 : Math.max(0, metaDe(m) - paid(m)))]) },
                 { h: 'Despesas', head: ['Descrição', 'Valor'], body: state.expenses.map(x => [x.desc, formatBRL(Number(x.amount) || 0)]) }] };
         }
-        function setRep(v) { repView = v; renderReports(); }
         function renderReports() {
-            const el = document.getElementById('rep-body');
+            const el = document.getElementById('rep-body'), btn = document.getElementById('rep-pdf-btn');
             if (!el) return;
-            document.getElementById('rep-parcial-wrap').classList.toggle('hidden', !['pago-enc', 'pago-eq'].includes(repView));
-            document.querySelectorAll('#rep-tabs button').forEach(b => { b.className = 'px-3 py-1.5 rounded-lg ' + (b.dataset.v === repView ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'); });
-            if (['fin', 'pago-enc', 'pago-eq'].includes(repView) && !can('financeiro', 'v')) { el.innerHTML = '<p class="text-sm text-slate-500 py-6">Seu usuário não tem perfil para visualizar este relatório.</p>'; return; }
-            el.innerHTML = repData(repView).sections.map(s => `<h4 class="font-bold text-slate-800 mt-4 mb-2">${esc(s.h)}</h4>` + tbl(s.head, s.body)).join('') || '<p class="text-sm text-slate-400 py-6">Nenhuma peça cadastrada.</p>';
+            if (!APPLIED_FLAG.relatorios) { el.innerHTML = '<p class="text-sm text-slate-500 py-6">Escolha o relatório e os filtros acima e clique em <b>Aplicar filtros</b> para listar os dados.</p>'; if (btn) btn.disabled = true; return; }
+            repView = FA('relatorios').tipo || 'membro';
+            if (['fin', 'pago-enc', 'pago-eq'].includes(repView) && !can('financeiro', 'v')) { el.innerHTML = '<p class="text-sm text-slate-500 py-6">Seu usuário não tem perfil para visualizar este relatório.</p>'; if (btn) btn.disabled = true; return; }
+            const d = reportData();
+            if (btn) btn.disabled = false;
+            el.innerHTML = '<h3 class="font-bold text-slate-800 mb-1">' + esc(d.title) + '</h3>' + (d.sections.map(s => `<h4 class="font-bold text-slate-800 mt-4 mb-2">${esc(s.h)}</h4>` + tbl(s.head, s.body)).join('') || '<p class="text-sm text-slate-400 py-6">Nenhum dado para os filtros escolhidos.</p>');
+        }
+        function reportData() {
+            const f = FA('relatorios'), d = repData(repView);
+            if (!f.q) return d;
+            const isTot = r => /^TOTAL/.test(String(r[0]));
+            return { ...d, sections: d.sections.map(x => hit(f.q, x.h) ? x : { ...x, body: x.body.filter(r => isTot(r) || hit(f.q, ...r)) }).filter(x => hit(f.q, x.h) || x.body.some(r => !isTot(r))) };
         }
         function pdfReport() {
             if (!window.jspdf) { showNotification('A biblioteca de PDF não carregou. Recarregue a página.', 'error'); return; }
+            if (!APPLIED_FLAG.relatorios) { showNotification('Aplique os filtros antes de gerar o PDF.', 'warning'); return; }
             if (['fin', 'pago-enc', 'pago-eq'].includes(repView) && !can('financeiro', 'v')) return;
-            const d = repData(repView), doc = new window.jspdf.jsPDF();
+            const d = reportData(), doc = new window.jspdf.jsPDF();
             doc.setFontSize(16); doc.text(d.title, 14, 16);
             doc.setFontSize(9); doc.text('Gerado em ' + new Date().toLocaleDateString('pt-BR'), 14, 22);
             let y = 28;
@@ -1993,6 +2346,7 @@
             const ro = !(isMaster() || Object.keys(SCREENS).some(s => can(s, 'i'))), vo = document.getElementById('view-only-notice');
             vo.classList.toggle('hidden', !ro);
             vo.setAttribute('role', 'switch'); vo.setAttribute('aria-checked', String(ro)); vo.setAttribute('aria-readonly', 'true'); vo.setAttribute('aria-label', 'Modo leitura');
+            document.querySelectorAll('[data-menu]').forEach(w => w.classList.toggle('hidden', ![...w.querySelectorAll('[role="menuitem"]')].some(b => !b.classList.contains('hidden'))));
             document.getElementById('bell-wrap').classList.toggle('hidden', !can('pecas', 'v'));
             document.getElementById('btn-whats').classList.toggle('hidden', !(can('dashboard', 'v') && can('financeiro', 'v')));
             document.getElementById('cfg-panel').classList.toggle('hidden', !isMaster());
@@ -2098,17 +2452,20 @@
         function renderGame() {
             const el = document.getElementById('game-body');
             if (!el) return;
-            const rank = rankingXP(false), edit = can('membros', 'i') || can('faltas', 'i');
-            const rows = rank.map(r => `<tr class="hover:bg-slate-50"><td class="py-2.5 px-3"><span class="font-bold text-slate-700 mr-2">${['🥇', '🥈', '🥉'][r.pos - 1] || r.pos}</span><span class="font-semibold text-slate-800">${esc(r.m.name)}</span></td><td class="py-2.5 px-3">${r.nivel.icon} ${r.nivel.nome}</td><td class="py-2.5 px-3 font-bold">${r.xp}</td><td class="py-2.5 px-3">${chamaTxt(r)}</td><td class="py-2.5 px-3"><div class="flex gap-1">${conquistasIcons(r)}</div></td>${edit ? `<td class="py-2.5 px-3"><div class="flex gap-1">${BADGES_MANUAL.map(b => `<button onclick="toggleBadge(${r.m.id}, '${b.k}')" title="${esc(b.n)}: ${esc(b.d)}" aria-pressed="${r.manuais.includes(b.k)}" class="w-9 h-9 rounded-lg text-base ${r.manuais.includes(b.k) ? 'bg-amber-100 ring-2 ring-amber-400' : 'bg-slate-100 opacity-50'}">${b.e}</button>`).join('')}</div></td>` : ''}</tr>`).join('') || `<tr><td colspan="6" class="py-4 px-3 text-slate-400">Nenhum ator para exibir.</td></tr>`;
+            const cf = FA('conquistas'), rank = rankingXP(false).filter(r => hit(cf.q, r.m.name) && (!cf.nivel || r.nivel.nome === cf.nivel)), edit = can('membros', 'i') || can('faltas', 'i');
+            setCount('conquistas', rank.length, rankingXP(false).length);
+            const rows = rank.map(r => `<tr class="hover:bg-slate-50"><td class="py-2.5 px-3"><span class="font-bold text-slate-700 mr-2">${['🥇', '🥈', '🥉'][r.pos - 1] || r.pos}</span><span class="font-semibold text-slate-800">${esc(r.m.name)}</span></td><td class="py-2.5 px-3">${r.nivel.icon} ${r.nivel.nome}</td><td class="py-2.5 px-3 font-bold">${r.xp}</td><td class="py-2.5 px-3">${chamaTxt(r)}</td><td class="py-2.5 px-3"><div class="flex gap-1">${conquistasIcons(r)}</div></td>${edit ? `<td class="py-2.5 px-3">${actMenu(BADGES_MANUAL.map(b => ({ t: (r.manuais.includes(b.k) ? '✅ ' : '⬜ ') + b.e + ' ' + b.n, f: `toggleBadge(${r.m.id}, '${b.k}')` })))}</td>` : ''}</tr>`).join('') || `<tr><td colspan="6" class="py-4 px-3 text-slate-400">Nenhum ator para exibir.</td></tr>`;
             const regras = `<div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-4"><h3 class="text-lg font-bold text-slate-800">Tabela de Regras, Níveis e Insígnias</h3>
                 <div class="overflow-x-auto">${tbl(['Regra de XP', 'XP'], [['Presença (P)', '+100 XP'], ['A cada 3 presenças seguidas (bônus de sequência)', '+30 XP'], ['Falta justificada (FJ)', '0 XP, congela a chama'], ['N/A (não fazia parte da equipe)', '0 XP, congela a chama'], ['Falta sem justificativa (FSJ)', '−50 XP e zera a chama'], ['Cada personagem atribuído', '+25 XP'], ['Taxas 100% quitadas', '+100 XP'], ['Cada insígnia manual da coordenação', '+50 XP']])}</div>
                 <div class="overflow-x-auto">${tbl(['Nível', 'Faixa de XP'], NIVEIS.map(n => [n.icon + ' ' + n.nome, n.faixa]))}</div>
                 <div class="overflow-x-auto">${tbl(['Insígnia', 'Como conquistar', 'Tipo'], [...BADGES_AUTO.map(b => [b.e + ' ' + b.n, b.d, 'Automática']), ...BADGES_MANUAL.map(b => [b.e + ' ' + b.n, b.d, 'Manual (+50 XP)'])])}</div>
                 <div class="overflow-x-auto">${tbl(['Desempate', 'Critério'], [['1º', 'Maior XP'], ['2º', 'Maior % de presença'], ['3º', 'Mais presenças'], ['4º', 'Maior sequência (chama)'], ['5º', 'Mais conquistas'], ['6º', 'Continua igual: mesma posição']])}</div></div>`;
-            el.innerHTML = camarimHtml() + `<div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div><h3 class="text-lg font-bold text-slate-800">Ranking de Engajamento (XP)</h3><p class="text-xs text-slate-500">Só atores/atrizes ativos entram. Passe o mouse (ou toque) nas insígnias para ver o que significam.${edit ? ' Os botões da última coluna concedem ou retiram as insígnias manuais.' : ''}</p></div><div class="overflow-x-auto"><table class="w-full text-left text-sm border-collapse min-w-[560px]"><thead><tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200"><th class="py-2.5 px-3">Membro</th><th class="py-2.5 px-3">Nível</th><th class="py-2.5 px-3">XP</th><th class="py-2.5 px-3">🔥 Sequência</th><th class="py-2.5 px-3">🏅 Conquistas</th>${edit ? '<th class="py-2.5 px-3">Manuais</th>' : ''}</tr></thead><tbody class="divide-y divide-slate-100">${rows}</tbody></table></div></div>` + regras;
+            el.innerHTML = camarimHtml() + `<div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3"><div><h3 class="text-lg font-bold text-slate-800">Ranking de Engajamento (XP)</h3><p class="text-xs text-slate-500">Só atores/atrizes ativos entram. Passe o mouse (ou toque) nas insígnias para ver o que significam.${edit ? ' O botão Ações da última coluna concede ou retira as insígnias manuais.' : ''}</p></div><div class="overflow-x-auto"><table class="table-cards w-full text-left text-sm border-collapse min-w-[560px]"><thead><tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-y border-slate-200"><th class="py-2.5 px-3">Membro</th><th class="py-2.5 px-3">Nível</th><th class="py-2.5 px-3">XP</th><th class="py-2.5 px-3">🔥 Sequência</th><th class="py-2.5 px-3">🏅 Conquistas</th>${edit ? '<th class="py-2.5 px-3">Ações</th>' : ''}</tr></thead><tbody class="divide-y divide-slate-100">${rows}</tbody></table></div></div>` + regras;
         }
 
         function renderAll() {
+            refreshFilterOptions();
+            refreshListOptions();
             // Cálculos Financeiros
             const activeMembers = state.members.filter(m => m.active !== false);
             const exCount = state.members.length - activeMembers.length;
@@ -2156,7 +2513,11 @@
             `).join('') || '<p class="text-slate-400 text-xs">Nenhuma reunião registrada.</p>';
 
             // 2. Tabela Membros & Taxas
-            document.getElementById('members-table-body').innerHTML = state.members.map(m => {
+            const mf = FA('membros');
+            let membrosVis = state.members.filter(m => hit(mf.q, m.name, m.role) && (!mf.sit || (mf.sit === 'ex') === (m.active === false)) && (!mf.tipo || (mf.tipo === 'apoio') === !isActor(m)) && (!mf.casal || (mf.casal === 'casal') === !!parceiro(m)));
+            membrosVis = ltMembros(membrosVis);
+            setCount('membros', membrosVis.length, state.members.length);
+            document.getElementById('members-table-body').innerHTML = membrosVis.map(m => {
                 const totalPago = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
                 const st = getFinancialStatus(m.txEncontro, m.txEquipe, metaDe(m));
                 return `
@@ -2166,18 +2527,17 @@
                             <p class="text-xs text-slate-400">${m.role}${m.game === false ? ' · fora do game' : ''}</p>
                         </td>
                         <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${m.active === false ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-800'}">${m.active === false ? 'Ex-integrante' : 'Ativo'}</span> <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${isActor(m) ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'}">${isActor(m) ? 'Ator/Atriz' : 'Direção/Apoio'}</span>${parceiro(m) ? ` <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-pink-100 text-pink-700">💑 Casal com ${esc(parceiro(m).name)}</span>` : ''}</td>
-                        <td class="py-3 px-4 text-right master-only space-x-2">
-                            <button onclick="openMemberModal(${m.id})" class="text-indigo-600 hover:underline text-xs font-semibold">Editar</button>
-                            <button onclick="toggleMemberActive(${m.id})" class="text-amber-600 hover:underline text-xs font-semibold">${m.active === false ? 'Reativar' : 'Desativar'}</button>
-                            <button onclick="deleteMember(${m.id})" class="text-rose-600 hover:underline text-xs font-semibold">Excluir</button>
-                        </td>
+                        <td class="py-3 px-4 text-right master-only">${actMenu([{ t: '✏️ Editar', f: `openMemberModal(${m.id})`, cls: 'master-only' }, { t: m.active === false ? '↩️ Reativar' : '⏸️ Desativar', f: `toggleMemberActive(${m.id})`, cls: 'master-only' }, { t: '🗑️ Excluir', f: `deleteMember(${m.id})`, cls: 'master-only', danger: true }])}</td>
                     </tr>
                 `;
             }).join('') || '<tr><td colspan="3" class="py-6 text-center text-slate-400">Nenhum membro cadastrado.</td></tr>';
 
             // Ranking de Frequência com Score de Engajamento (XP)
-            const showEx = document.getElementById('rank-show-ex') && document.getElementById('rank-show-ex').checked;
-            document.getElementById('ranking-tbody').innerHTML = rankingXP(showEx).map(r => {
+const rkf = FA('ranking'), rkAll = rankingXP(!!rkf.ex);
+            let rkVis = rkAll.filter(r => hit(rkf.q, r.m.name, r.m.role) && (!rkf.nivel || r.nivel.nome === rkf.nivel));
+            rkVis = ltRanking(rkVis);
+            setCount('ranking', rkVis.length, rkAll.length);
+            document.getElementById('ranking-tbody').innerHTML = rkVis.map(r => {
                 const cor = r.pct === null ? 'bg-slate-100 text-slate-500' : (r.pct >= 75 ? 'bg-emerald-100 text-emerald-800' : (r.pct >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'));
                 return `<tr class="hover:bg-slate-50 ${r.m.active === false ? 'opacity-60' : ''}">
                     <td class="py-3 px-3"><span class="font-bold text-slate-700 mr-2">${['🥇', '🥈', '🥉'][r.pos - 1] || r.pos}</span><span class="font-semibold text-slate-800">${esc(r.m.name)}</span>${r.m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}<span class="block text-xs text-slate-400">${esc(r.m.role)}</span></td>
@@ -2195,8 +2555,14 @@
             const playSelect = document.getElementById('char-play-select');
             playSelect.innerHTML = state.plays.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
 
-            document.getElementById('plays-list-container').innerHTML = state.plays.map(p => {
-                const chars = state.characters.filter(c => c.playId === p.id);
+            const pf = FA('pecas');
+            const actorOf = c => state.members.find(m => m.id === c.memberId);
+            const charOk = (c, p) => (!pf.sit || (pf.sit === 'alocado') === !!actorOf(c)) && (hit(pf.q, p.title, p.desc) || hit(pf.q, c.name, (actorOf(c) || {}).name));
+            let pecasVis = state.plays.filter(p => (!pf.peca || String(p.id) === pf.peca) && (!pf.q || hit(pf.q, p.title, p.desc) || state.characters.some(c => c.playId === p.id && hit(pf.q, c.name, (actorOf(c) || {}).name))) && (!pf.sit || state.characters.some(c => c.playId === p.id && charOk(c, p))));
+            pecasVis = ltPecas(pecasVis);
+            setCount('pecas', pecasVis.length, state.plays.length);
+            document.getElementById('plays-list-container').innerHTML = pecasVis.map(p => {
+                const chars = state.characters.filter(c => c.playId === p.id && charOk(c, p));
                 return `
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <div class="flex justify-between items-start border-b border-slate-100 pb-3">
@@ -2204,10 +2570,7 @@
                                 <h4 class="font-bold text-slate-800 text-base">${p.title}</h4>
                                 <p class="text-xs text-slate-400">${p.desc || 'Sem descrição'}</p>
                             </div>
-                            <div class="master-only flex gap-2">
-                                <button onclick="editPlay(${p.id})" class="text-xs font-semibold text-indigo-600 hover:underline">Editar</button>
-                                <button onclick="deletePlay(${p.id})" class="text-xs font-semibold text-rose-600 hover:underline">Excluir Peça</button>
-                            </div>
+                            <div class="master-only">${actMenu([{ t: '✏️ Editar peça', f: `editPlay(${p.id})`, cls: 'master-only' }, { t: '🗑️ Excluir peça', f: `deletePlay(${p.id})`, cls: 'master-only', danger: true }])}</div>
                         </div>
                         <div class="space-y-2">
                             <p class="text-xs font-bold uppercase text-slate-400">Personagens (${chars.length}):</p>
@@ -2222,7 +2585,7 @@
                                                     ${actor ? '✓ Alocado: ' + actor.name : '• Disponível (Sem ator)'}
                                                 </span>
                                             </div>
-                                            <button onclick="deleteCharacter(${c.id})" class="master-only text-rose-500 hover:text-rose-700 text-xs font-bold px-2">Excluir</button>
+                                            <div class="master-only">${actMenu([{ t: '🗑️ Excluir personagem', f: `deleteCharacter(${c.id})`, cls: 'master-only', danger: true }])}</div>
                                         </div>
                                     `;
                                 }).join('') || '<p class="text-xs text-slate-400">Nenhum personagem adicionado nesta peça.</p>'}
@@ -2233,8 +2596,13 @@
             }).join('') || '<div class="bg-white p-6 rounded-2xl border text-center text-slate-400">Nenhuma peça cadastrada.</div>';
 
             // 4. Escalação Separada por Peças
-            document.getElementById('casting-by-play-container').innerHTML = state.plays.map(p => {
-                const chars = state.characters.filter(c => c.playId === p.id);
+            const ef = FA('escalacao');
+            const eActor = c => state.members.find(m => m.id === c.memberId);
+            const eCharOk = (c, p) => (!ef.sit || (ef.sit === 'alocado') === !!eActor(c)) && (!ef.membro || String(c.memberId) === ef.membro) && (!ef.q || hit(ef.q, p.title, c.name, (eActor(c) || {}).name));
+            const escVis = state.plays.filter(p => (!ef.peca || String(p.id) === ef.peca) && (!(ef.sit || ef.membro || ef.q) || state.characters.some(c => c.playId === p.id && eCharOk(c, p))));
+            setCount('escalacao', escVis.length, state.plays.length);
+            document.getElementById('casting-by-play-container').innerHTML = escVis.map(p => {
+                const chars = state.characters.filter(c => c.playId === p.id && eCharOk(c, p));
                 return `
                     <div class="border border-slate-200 rounded-2xl overflow-hidden">
                         <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center">
@@ -2268,7 +2636,10 @@
             }).join('');
 
             // 5. Cards de Reuniões / Controle de Faltas
-            document.getElementById('meetings-cards-grid').innerHTML = state.meetings.map(m => {
+            const ff = FA('faltas');
+            const reunVis = state.meetings.filter(m => hit(ff.q, m.title) && inRange(m.date, ff.de, ff.ate));
+            setCount('faltas', reunVis.length, state.meetings.length);
+            document.getElementById('meetings-cards-grid').innerHTML = reunVis.map(m => {
                 const values = state.members.filter(isActor).map(x => (m.attendance || {})[x.id]).filter(Boolean);
                 const pCount = values.filter(v => v === 'P').length;
                 const fjCount = values.filter(v => v === 'FJ').length;
@@ -2302,7 +2673,14 @@
             document.getElementById('fin-falta').innerText = formatBRL(faltaArrecadar);
             document.getElementById('fin-esperado').innerText = `Meta Total: ${formatBRL(totalEsperado)}`;
 
-            document.getElementById('fin-members-tbody').innerHTML = state.members.map(m => {
+            const fq = FA('financeiro');
+            const finVis = state.members.filter(m => {
+                const pg = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0), fl = m.active === false ? 0 : Math.max(0, metaDe(m) - pg);
+                const sitF = (m.active !== false && metaDe(m) > 0 && fl === 0) ? 'quitado' : (pg > 0 ? 'parcial' : 'pendente');
+                return hit(fq.q, m.name) && (!fq.sit || (fq.sit === 'isento' ? eqDe(m) === 0 : sitF === fq.sit)) && (!fq.tipo || (fq.tipo === 'casal') === !!parceiro(m)) && (!fq.ativ || (fq.ativ === 'ex') === (m.active === false));
+            });
+            setCount('financeiro', finVis.length, state.members.length);
+            document.getElementById('fin-members-tbody').innerHTML = finVis.map(m => {
                 const pago = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
                 const faltaMembro = m.active === false ? 0 : Math.max(0, metaDe(m) - pago);
                 const st = getFinancialStatus(m.txEncontro, m.txEquipe, metaDe(m));
@@ -2310,30 +2688,34 @@
                 return `
                     <tr class="hover:bg-slate-50 ${quitado ? 'bg-emerald-50' : ''}">
                         <td class="py-3 px-3 font-semibold text-slate-800">${m.name}${m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}${parceiro(m) ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 text-pink-700">💑 Casal</span>' : ''}${eqDe(m) === 0 ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">Isento Tx. Equipe</span>' : ''}<span class="block text-[11px] font-normal text-slate-400">Encontro ${formatBRL(encDe(m))} · Equipe ${formatBRL(eqDe(m))}</span></td>
-                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${encDe(m)}" id="pg-enc-${m.id}" value="${Number(m.txEncontro) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm">` : formatBRL(m.txEncontro)}</td>
-                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${eqDe(m)}" ${eqDe(m) === 0 ? 'disabled title="Isento da Tx. da Equipe"' : ''} id="pg-eq-${m.id}" value="${Number(m.txEquipe) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm">` : formatBRL(m.txEquipe)}</td>
+                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${encDe(m)}" id="pg-enc-${m.id}" value="${Number(m.txEncontro) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm ${editingPay.has(m.id) ? '' : 'bg-slate-100 text-slate-500'}" ${editingPay.has(m.id) ? '' : 'readonly'} oninput="refreshDirty()">` : formatBRL(m.txEncontro)}</td>
+                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${eqDe(m)}" ${eqDe(m) === 0 ? 'disabled title="Isento da Tx. da Equipe"' : ''} id="pg-eq-${m.id}" value="${Number(m.txEquipe) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm ${editingPay.has(m.id) ? '' : 'bg-slate-100 text-slate-500'}" ${editingPay.has(m.id) ? '' : 'readonly'} oninput="refreshDirty()">` : formatBRL(m.txEquipe)}</td>
                         <td class="py-3 px-3 font-bold text-rose-600">${formatBRL(faltaMembro)}</td>
                         <td class="py-3 px-3">${quitado ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white">✅ Quitado</span>' : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${st.classes}">${st.label}</span>`}</td>
-                        <td class="py-3 px-3 text-right master-only">
-                            <button onclick="savePayment(${m.id})" class="px-3.5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700">Salvar</button>
-                        </td>
+                        <td class="py-3 px-3 text-right master-only">${actMenu([{ t: '✏️ Editar', f: `startPayEdit(${m.id})`, cls: 'master-only', disabled: editingPay.has(m.id) }, { t: '💾 Salvar', f: `savePayment(${m.id})`, cls: 'master-only', disabled: !editingPay.has(m.id) }, ...(editingPay.has(m.id) ? [{ t: '✖️ Cancelar edição', f: `cancelPayEdit(${m.id})`, cls: 'master-only' }] : [])])}</td>
                     </tr>
                 `;
             }).join('');
 
-            document.getElementById('expenses-list').innerHTML = state.expenses.map(x => `
+            const dfl = FA('despesas');
+            const despVis = state.expenses.filter(x => hit(dfl.q, x.desc) && inRange(idDate(x.id), dfl.de, dfl.ate));
+            setCount('despesas', despVis.length, state.expenses.length);
+            document.getElementById('expenses-list').innerHTML = despVis.map(x => `
                 <div class="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm">
                     <div>
                         <p class="font-semibold text-slate-800">${x.desc}</p>
                         <p class="text-xs font-bold text-rose-600">- ${formatBRL(x.amount)}</p>
                     </div>
-                    <button onclick="deleteExpense(${x.id})" class="master-only text-xs text-rose-500 hover:underline">Remover</button>
+                    <div class="master-only">${actMenu([{ t: '🗑️ Remover gasto', f: `deleteExpense(${x.id})`, cls: 'master-only', danger: true }])}</div>
                 </div>
             `).join('') || '<p class="text-xs text-slate-400 text-center py-4">Nenhum gasto registrado.</p>';
 
             // 7. Aba Usuários (Visível somente ao Master)
             if (isMaster()) {
-                document.getElementById('users-table-body').innerHTML = state.users.map(u => `
+                const uf = FA('usuarios');
+                const usersVis = state.users.filter(u => hit(uf.q, u.name, u.username) && (!uf.perfil || u.role === uf.perfil));
+                setCount('usuarios', usersVis.length, state.users.length);
+                document.getElementById('users-table-body').innerHTML = usersVis.map(u => `
                     <tr class="hover:bg-slate-50">
                         <td class="py-3 px-3 font-semibold text-slate-800">${u.name}</td>
                         <td class="py-3 px-3 font-mono text-xs text-slate-600">@${u.username}</td>
@@ -2345,10 +2727,7 @@
                             </select><button onclick="openAccess(${u.id})" title="Abrir Acessos e Permissões deste usuário" class="px-2.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold whitespace-nowrap">🔑 Permissões</button></div>
                         </td>
                         <td class="py-3 px-3 font-mono tracking-widest text-slate-500" title="Senha protegida (hash)">••••••••</td>
-                        <td class="py-3 px-3 text-right">
-                            <button onclick="openPwModal(${u.id})" class="text-emerald-700 hover:underline text-xs font-semibold mr-3">Redefinir Senha</button>
-                            <button onclick="deleteUser(${u.id})" class="text-rose-600 hover:underline text-xs font-semibold">Remover</button>
-                        </td>
+                        <td class="py-3 px-3 text-right">${actMenu([{ t: '🔑 Redefinir senha', f: `openPwModal(${u.id})` }, { t: '🗑️ Remover usuário', f: `deleteUser(${u.id})`, danger: true }])}</td>
                     </tr>
                 `).join('');
             }
@@ -2363,10 +2742,15 @@
             renderFinTaxas();
             document.getElementById('dash-arrec-split').textContent = 'Esperado: ' + formatBRL(txs.enc.esperado) + ' · Total geral (Encontro + Equipe): ' + formatBRL(totalArrecadado);
             renderFeedback(); renderProntidao(); renderCamarimDash(); renderGame(); renderAvisos(); renderReports(); renderAccess(); renderMine(); renderBell();
+            renderDashCharts();
+            applyTableLabels();
             applyPermissions();
+            refreshDirty();
             lucide.createIcons();
         }
 
+        buildFilterBars();
+        buildListToolbars();
         lucide.createIcons();
         (async () => {
             const hideBoot = () => document.getElementById('boot-loader').classList.add('hidden');
