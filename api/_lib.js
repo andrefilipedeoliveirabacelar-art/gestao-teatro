@@ -21,7 +21,7 @@ const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,
 const clean = (s, n) => String(s || '').replace(/[<>&"'`]/g, '').trim().slice(0, n);
 
 const DEF_CFG = { valorTaxaEncontro: 60, valorTaxaEquipe: 60, valorTaxaCasal: 100, valorTaxaEquipeCasal: 60, abaterFaltaJustificada: true };
-const fix = (st) => { st.avisos = st.avisos || []; st.changes = st.changes || []; st.feedbacks = st.feedbacks || []; st.auditLog = st.auditLog || []; st.config = { ...DEF_CFG, ...(st.config || {}) }; return st; };
+const fix = (st) => { st.avisos = st.avisos || []; st.changes = st.changes || []; st.feedbacks = st.feedbacks || []; st.auditLog = st.auditLog || []; st.payLog = st.payLog || []; st.config = { ...DEF_CFG, ...(st.config || {}) }; return st; };
 const cleanConfig = (c, prev) => {
   const p = { ...DEF_CFG, ...(prev || {}) }, n = (v, d) => { v = Number(v); return v >= 0 && v <= 100000 ? Math.round(v * 100) / 100 : d; };
   return { valorTaxaEncontro: n(c && c.valorTaxaEncontro, p.valorTaxaEncontro), valorTaxaEquipe: n(c && c.valorTaxaEquipe, p.valorTaxaEquipe), valorTaxaCasal: n(c && c.valorTaxaCasal, p.valorTaxaCasal), valorTaxaEquipeCasal: n(c && c.valorTaxaEquipeCasal, p.valorTaxaEquipeCasal), abaterFaltaJustificada: c && typeof c.abaterFaltaJustificada === 'boolean' ? c.abaterFaltaJustificada : p.abaterFaltaJustificada };
@@ -70,7 +70,7 @@ const save = (st) => redis(['SET', KEY, JSON.stringify(st)]);
 const pub = (st, u) => {
   const { rev, users, ...rest } = st;
   const o = { ...rest, users: users.map(({ passHash, ...x }) => x) };
-  if (u && lvl(u, 'financeiro') < 1) { o.expenses = []; o.members = (o.members || []).map(({ txEncontro, txEquipe, ...m }) => m); }
+  if (u && lvl(u, 'financeiro') < 1) { o.payLog = []; o.expenses = []; o.members = (o.members || []).map(({ txEncontro, txEquipe, ...m }) => m); }
   if (!u || u.role !== 'master') delete o.auditLog;
   return o;
 };

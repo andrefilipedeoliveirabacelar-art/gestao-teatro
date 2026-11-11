@@ -81,6 +81,14 @@ module.exports = async (req, res) => {
       if (J([o.txEncontro, o.txEquipe]) !== J([m.txEncontro, m.txEquipe])) add('Pagamento alterado', `${m.name}: Encontro ${o.txEncontro || 0} → ${m.txEncontro || 0}; Equipe ${o.txEquipe || 0} → ${m.txEquipe || 0}`);
     }
   }
+  const pays = [];
+  for (const [id, m] of nm) {
+    const o = om2.get(id);
+    if (!o) continue;
+    const de = (Number(m.txEncontro) || 0) - (Number(o.txEncontro) || 0), dq = (Number(m.txEquipe) || 0) - (Number(o.txEquipe) || 0);
+    if (de || dq) pays.push({ at: when, id, enc: Math.round(de * 100) / 100, eq: Math.round(dq * 100) / 100 });
+  }
+  next.payLog = [...pays, ...(st.payLog || [])].slice(0, 3000);
   const oe = idm(st.expenses), ne = idm(next.expenses);
   for (const [id, x] of oe) if (!ne.has(id)) add('Despesa excluída', `${x.desc} (R$ ${x.amount})`);
   for (const [id, x] of ne) { const o = oe.get(id); if (!o) add('Despesa lançada', `${x.desc} (R$ ${x.amount})`); else if (J(strip(o)) !== J(strip(x))) add('Despesa alterada', `${x.desc}: R$ ${o.amount} → R$ ${x.amount}`); }

@@ -30,6 +30,7 @@ module.exports = async (req, res) => {
     await snapshot(st, u.username, 'antes de zerar');
     const next = { ...st, rev: st.rev + 1 };
     COLS.forEach((k) => { next[k] = []; });
+    next.payLog = [];
     if (!b.keepUsers) next.users = [u];
     if (!b.keepConfig) delete next.config;
     L.addLog(next, u.username, 'Dados zerados', 'Backup automático feito antes');
@@ -48,6 +49,7 @@ module.exports = async (req, res) => {
     await snapshot(st, u.username, 'antes de restaurar');
     const next = { ...st, rev: st.rev + 1 };
     COLS.forEach((k) => { next[k] = Array.isArray(src[k]) ? src[k] : []; });
+    next.payLog = Array.isArray(src.payLog) ? src.payLog : [];
     if (src.config) next.config = L.cleanConfig(src.config, st.config);
     L.addLog(next, u.username, 'Backup restaurado', b.id ? 'Cópia do servidor' : 'Arquivo enviado');
     await L.save(next);
