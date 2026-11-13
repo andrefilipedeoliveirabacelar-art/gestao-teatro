@@ -20,6 +20,8 @@
     .nav-btn[data-locked="1"]{opacity:.45}
     .overflow-x-auto{-webkit-overflow-scrolling:touch;overflow-x:auto}
     .print-only{display:none}
+    .pill{padding:.55rem 1.1rem;border-radius:9999px;background:#e2e8f0;color:#475569;font-size:.8rem;font-weight:700;cursor:pointer}
+    .pill.on{background:#4f46e5;color:#fff}
     .chip{padding:.4rem .85rem;border-radius:9999px;border:1px solid #cbd5e1;font-size:.75rem;font-weight:600;background:#fff;color:#475569;cursor:pointer}
     .chip.on{background:#4f46e5;border-color:#4f46e5;color:#fff}
     main .text-slate-400{color:#64748b}
@@ -54,8 +56,8 @@
       body.printing-report,body.printing-report #app-screen{display:block!important;width:auto!important;height:auto!important;overflow:visible!important}
       body.printing-report main{overflow:visible!important;height:auto!important;padding:0!important}
       body.printing-report main>section{display:none!important}
-      body.printing-report main>section#tab-feedback{display:block!important}
-      body.printing-report #tab-feedback>*:not(#dir-card){display:none!important}
+      body.printing-report main>section#tab-relatorios{display:block!important}
+      body.printing-report #tab-relatorios>*:not(#dir-card){display:none!important}
       body.printing-report #dir-card{border:0!important;box-shadow:none!important;padding:0!important}
       body.printing-report .print-only{display:block!important}
       body.printing-report .overflow-x-auto{overflow:visible!important}
@@ -175,23 +177,15 @@
                     </button>
                     <button onclick="switchTab('pecas')" id="nav-pecas" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                         <i data-lucide="clapperboard" class="w-4 h-4"></i>
-                        <span>Peças & Personagens</span>
-                    </button>
-                    <button onclick="switchTab('escalacao')" id="nav-escalacao" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
-                        <i data-lucide="user-check" class="w-4 h-4"></i>
-                        <span>Quem Interpreta</span>
+                        <span>Peças & Escalação</span>
                     </button>
                     <button onclick="switchTab('faltas')" id="nav-faltas" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                         <i data-lucide="calendar-check" class="w-4 h-4"></i>
-                        <span>Controle de Faltas</span>
+                        <span>Ensaios & Frequência</span>
                     </button>
                     <button onclick="switchTab('financeiro')" id="nav-financeiro" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                         <i data-lucide="dollar-sign" class="w-4 h-4"></i>
                         <span>Financeiro</span>
-                    </button>
-                    <button onclick="switchTab('ranking')" id="nav-ranking" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
-                        <i data-lucide="trophy" class="w-4 h-4"></i>
-                        <span>Ranking de Frequência</span>
                     </button>
                     <button onclick="switchTab('avisos')" id="nav-avisos" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                         <i data-lucide="megaphone" class="w-4 h-4"></i>
@@ -203,20 +197,16 @@
                     </button>
                     <button onclick="switchTab('feedback')" id="nav-feedback" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                         <i data-lucide="messages-square" class="w-4 h-4"></i>
-                        <span>Feedback & Relatório</span>
+                        <span>Feedback</span>
                     </button>
                     <button onclick="switchTab('relatorios')" id="nav-relatorios" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                         <i data-lucide="file-text" class="w-4 h-4"></i>
                         <span>Relatórios</span>
                     </button>
                     <!-- Exclusivo Master -->
-                    <button onclick="switchTab('seguranca')" id="nav-seguranca" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hidden">
-                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
-                        <span>Segurança e Backup</span>
-                    </button>
-                    <button onclick="switchTab('usuarios')" id="nav-usuarios" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hidden">
-                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
-                        <span>Usuários (Master)</span>
+                    <button onclick="switchTab('config')" id="nav-config" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800 hidden">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span>Configurações & Sistema</span>
                     </button>
                 </nav>
             </div>
@@ -269,43 +259,7 @@
                         <div class="bg-white p-5 rounded-2xl border border-slate-200"><h3 class="text-sm font-bold text-slate-700 mb-2">Progresso da Meta</h3><div class="relative h-56"><canvas id="ch-meta"></canvas><div class="absolute inset-0 flex flex-col items-center justify-end pb-8 pointer-events-none"><span id="ch-meta-pct" class="text-3xl font-extrabold text-indigo-700">0%</span><span id="ch-meta-sub" class="text-[11px] text-slate-500"></span></div></div></div>
                     </div>
                     <!-- Resumo Geral e Financeiro -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-                            <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
-                                <span>Tx. do Encontro (Total)</span>
-                                <i data-lucide="ticket" class="w-5 h-5 text-emerald-600"></i>
-                            </div>
-                            <p id="dash-arrecadado" class="text-2xl font-bold text-emerald-600 mt-2">R$ 0,00</p>
-                            <p id="dash-arrec-split" class="text-xs text-slate-400 mt-1">Soma das taxas pagas</p>
-                        </div>
-
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-                            <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
-                                <span>Tx. da Equipe − Gastos</span>
-                                <i data-lucide="trending-down" class="w-5 h-5 text-rose-600"></i>
-                            </div>
-                            <p id="dash-usado" class="text-2xl font-bold text-rose-600 mt-2">R$ 0,00</p>
-                            <p id="dash-equipe-sub" class="text-xs text-slate-400 mt-1">Despesas registradas</p>
-                        </div>
-
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-                            <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
-                                <span>Falta para a Meta</span>
-                                <i data-lucide="target" class="w-5 h-5 text-amber-600"></i>
-                            </div>
-                            <p id="dash-falta" class="text-2xl font-bold text-amber-600 mt-2">R$ 0,00</p>
-                            <p id="dash-meta-desc" class="text-xs text-slate-400 mt-1">Meta esperada: R$ 0,00</p>
-                        </div>
-
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-                            <div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase">
-                                <span>Equipe & Peças</span>
-                                <i data-lucide="users" class="w-5 h-5 text-indigo-600"></i>
-                            </div>
-                            <p id="dash-membros-count" class="text-2xl font-bold text-slate-800 mt-2">0 Membros</p>
-                            <p id="dash-pecas-count" class="text-xs text-slate-400 mt-1">0 Peças / 0 Ensaios</p>
-                        </div>
-                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs"><div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase"><span>Saldo Líquido & Meta</span><i data-lucide="wallet" class="w-5 h-5 text-emerald-600"></i></div><p id="dash-saldo" class="text-2xl font-bold text-emerald-600 mt-2">R$ 0,00</p><p id="dash-saldo-sub" class="text-xs text-slate-500 mt-1"></p><p id="dash-meta-desc" class="text-xs text-slate-500 mt-1"></p></div><div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs"><div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase"><span>Alerta de Frequência</span><i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600"></i></div><p id="dash-alerta" class="text-2xl font-bold text-emerald-600 mt-2">0</p><p class="text-xs text-slate-500">membro(s) com 2 ou mais FSJ</p><p id="dash-alerta-sub" class="text-xs text-slate-500 mt-1"></p></div><div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs"><div class="flex justify-between items-center text-slate-500 text-xs font-semibold uppercase"><span>Status de Escalação</span><i data-lucide="clapperboard" class="w-5 h-5 text-indigo-600"></i></div><div class="mt-2 grid grid-cols-3 gap-2 text-center"><div><p id="dash-esc-pecas" class="text-2xl font-bold text-slate-800">0</p><p class="text-[11px] text-slate-500">Peças</p></div><div><p id="dash-esc-livres" class="text-2xl font-bold text-amber-600">0</p><p class="text-[11px] text-slate-500">Personagens sem ator</p></div><div><p id="dash-esc-ensaios" class="text-2xl font-bold text-slate-800">0</p><p class="text-[11px] text-slate-500">Ensaios realizados</p></div></div></div></div>
 
                     <!-- Atalhos Rápidos -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -331,18 +285,14 @@
                      ABA 2: MEMBROS & TAXAS
                 =========================================== -->
                 <section id="tab-membros" class="space-y-6 hidden">
-                    <div id="flt-membros"></div>
-                    <div id="lt-membros"></div>
                     <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-800">Membros da Equipe & Taxas</h3>
-                                <p class="text-xs text-slate-500">Os pagamentos são lançados na aba Financeiro. Aqui ficam os dados do membro, a função e o status.</p>
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                            <h3 class="text-lg font-bold text-slate-800">Elenco & Equipe</h3>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <input id="mem-q" type="search" placeholder="Buscar por nome ou função" oninput="renderAll()" aria-label="Buscar membro" class="px-3 py-2.5 border border-slate-300 rounded-xl text-sm w-full sm:w-60">
+                                <select id="mem-sit" onchange="renderAll()" aria-label="Status do membro" class="px-3 py-2.5 border border-slate-300 rounded-xl text-sm"><option value="">Todos</option><option value="ativo">Ativos</option><option value="ex">Inativos</option></select>
+                                <button onclick="openMemberModal()" class="master-only bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold">+ Adicionar Membro</button>
                             </div>
-                            <button onclick="openMemberModal()" class="master-only bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shrink-0">
-                                <i data-lucide="user-plus" class="w-4 h-4"></i>
-                                <span>Adicionar Membro</span>
-                            </button>
                         </div>
 
                         <div class="overflow-x-auto -mx-4 md:mx-0">
@@ -412,7 +362,8 @@
                         <!-- Coluna 2 e 3: Listagem de Peças e Seus Personagens -->
                         <div class="lg:col-span-2 space-y-4">
                             <h3 class="font-bold text-slate-800 text-base">Peças e Personagens Cadastrados</h3>
-                            <div id="plays-list-container" class="space-y-4"></div>
+                            <div class="no-print"><button onclick="copyEscalacao()" class="px-3 py-2.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold">📲 Copiar Escalação para WhatsApp</button></div>
+                    <div id="plays-list-container" class="space-y-4"></div>
                         </div>
 
                     </div>
@@ -421,20 +372,13 @@
                 <!-- ==========================================
                      ABA 4: ESCALAÇÃO (QUEM VAI INTERPRETAR)
                 =========================================== -->
-                <section id="tab-escalacao" class="space-y-6 hidden">
-                    <div id="flt-escalacao"></div>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200">
-                        <h3 class="text-lg font-bold text-slate-800 mb-1">Distribuição de Papéis Separados por Peça</h3>
-                        <button onclick="copyEscalacao()" class="mb-3 px-3 py-2.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold">📲 Copiar Escalação para WhatsApp</button>
-                        <p class="text-xs text-slate-500 mb-6">Defina quem vai interpretar cada personagem. Personagens já alocados mostram o status em verde.</p>
-                        <div id="casting-by-play-container" class="space-y-6"></div>
-                    </div>
-                </section>
 
                 <!-- ==========================================
                      ABA 5: CONTROLE DE FALTAS (ENSAIOS / REUNIÕES)
                 =========================================== -->
                 <section id="tab-faltas" class="space-y-6 hidden">
+                    <div class="no-print flex flex-wrap gap-2" role="tablist" data-pill-parent="faltas"><button type="button" role="tab" class="pill" data-pill="faltas" aria-selected="false" onclick="switchTab('faltas')">📅 Ensaios e Chamada</button><button type="button" role="tab" class="pill" data-pill="ranking" aria-selected="false" onclick="switchTab('ranking')">🏆 Ranking de Frequência</button></div>
+                    <div data-sub-parent="faltas" data-sub="faltas" class="space-y-6">
                     <div id="flt-faltas"></div>
                     <div id="my-faltas"></div>
                     <!-- Barra de Legenda e Criação -->
@@ -442,12 +386,6 @@
                         <div class="space-y-2">
                             <h3 class="text-lg font-bold text-slate-800">Reuniões & Ensaios</h3>
                             <button onclick="copyChamada()" class="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold">📲 Copiar Chamada para WhatsApp</button>
-                            <div class="flex flex-wrap gap-2 text-xs">
-                                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-semibold">P = Presença</span>
-                                <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-semibold">FJ = Falta Justificada</span>
-                                <span class="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 font-semibold">FSJ = Falta Sem Justificativa</span>
-                                <span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-semibold">N/A = Não fazia parte da equipe</span>
-                            </div>
                         </div>
 
                         <form onsubmit="createMeeting(event)" class="master-only flex flex-col sm:flex-row gap-2">
@@ -462,12 +400,8 @@
 
                     <!-- Grid de Cards de Reuniões -->
                     <div id="meetings-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-                </section>
-
-                <!-- ==========================================
-                     ABA 6: FINANCEIRO COMPLETO
-                =========================================== -->
-                <section id="tab-ranking" class="space-y-6 hidden">
+                </div>
+                    <div data-sub-parent="faltas" data-sub="ranking" class="space-y-6 hidden">
                     <div id="flt-ranking"></div>
                     <div id="lt-ranking"></div>
                     <div class="bg-white p-5 rounded-2xl border border-slate-200">
@@ -498,7 +432,12 @@
                             </table>
                         </div>
                     </div>
+                </div>
                 </section>
+
+                <!-- ==========================================
+                     ABA 6: FINANCEIRO COMPLETO
+                =========================================== -->
 
                 <section id="tab-financeiro" class="space-y-6 hidden">
                     <div id="flt-financeiro"></div>
@@ -531,12 +470,11 @@
                         <div id="cfg-panel" class="hidden lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200">
                             <h3 class="font-bold text-slate-800 mb-3">Configurações Financeiras (Master)</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro (R$)</label><input id="cfg-enc" oninput="refreshDirty()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
-                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro do casal (R$, total)</label><input id="cfg-casal" oninput="refreshDirty()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
-                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe do casal (R$, total)</label><input id="cfg-casal-eq" oninput="refreshDirty()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
-                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe (R$)</label><input id="cfg-eq" oninput="refreshDirty()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro (R$)</label><input id="cfg-enc" oninput="onEdit()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa do Encontro do casal (R$, total)</label><input id="cfg-casal" oninput="onEdit()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe do casal (R$, total)</label><input id="cfg-casal-eq" oninput="onEdit()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-600 mb-1">Taxa da Equipe (R$)</label><input id="cfg-eq" oninput="onEdit()" type="number" step="0.01" min="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm"></div>
                             </div>
-                            <p class="mt-3 text-xs text-slate-500">Alterou valores? Use o botão flutuante <b>Salvar alterações</b> para gravar tudo de uma vez.</p>
                         </div>
 
                         <div id="fin-taxas" class="lg:col-span-2 space-y-4"></div>
@@ -604,6 +542,20 @@
                     </form>
                     <div id="flt-feedback"></div>
                     <div id="fb-list" class="space-y-3"></div>
+                    
+                </section>
+
+                <section id="tab-avisos" class="space-y-6 hidden">
+                    <form onsubmit="addAviso(event)" class="master-only bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <input id="av-title" required placeholder="Título do aviso" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                        <textarea id="av-text" required rows="3" placeholder="Mensagem" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></textarea>
+                        <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Publicar aviso</button>
+                    </form>
+                    <div id="flt-avisos"></div>
+                    <div id="avisos-list" class="space-y-3"></div>
+                </section>
+
+                <section id="tab-relatorios" class="space-y-6 hidden">
                     <div id="dir-card" class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <div class="print-only"><h1 style="font-size:18px;font-weight:800">EncenaPro - Relatório para a Equipe Dirigente</h1><p id="print-title" style="font-size:11px"></p></div>
                         <div class="no-print">
@@ -626,49 +578,6 @@
                         </div>
                         <div id="dr-body" class="overflow-x-auto"></div>
                     </div>
-                </section>
-
-                <section id="tab-seguranca" class="space-y-6 hidden">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
-                        <h3 class="text-lg font-bold text-slate-800">Backup e Restauração</h3>
-                        <p class="text-xs text-slate-500">O backup guarda uma cópia dos dados no servidor (últimos 10) e baixa um arquivo no seu computador. O arquivo não contém senhas. Ao restaurar, usuários e senhas atuais não mudam.</p>
-                        <div class="flex flex-wrap items-center gap-3">
-                            <button onclick="doBackup()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Fazer backup agora</button>
-                            <label class="text-xs font-semibold text-slate-600">Restaurar de um arquivo: <input type="file" accept=".json,application/json" onchange="restoreFile(this)" class="text-xs"></label>
-                        </div>
-                        <div id="snap-list" class="space-y-2"></div>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
-                        <h3 class="text-lg font-bold text-slate-800">Histórico de alterações críticas</h3>
-                        <p class="text-xs text-slate-500">Registro automático das últimas alterações: exclusão de membros, pagamentos e despesas, chamadas, permissões, senhas e backups. Visível só para o Master.</p>
-                        <div id="flt-seguranca"></div>
-                        <div id="lt-hist"></div>
-                        <div id="audit-body" class="overflow-x-auto"></div>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl border border-rose-300 space-y-3">
-                        <h3 class="text-lg font-bold text-rose-700">Zona de perigo: zerar dados do sistema</h3>
-                        <p class="text-xs text-slate-600">Apaga membros, peças, personagens, ensaios, despesas, avisos e feedbacks. Antes de apagar, o sistema faz um backup automático (guardado no servidor e baixado no seu computador), e você pode restaurá-lo depois.</p>
-                        <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" id="rs-users" checked> Manter usuários e permissões</label>
-                        <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" id="rs-cfg" checked> Manter configurações financeiras</label>
-                        <div class="flex flex-wrap gap-3">
-                            <input id="rs-confirm" placeholder="Digite ZERAR" autocomplete="off" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm">
-                            <input id="rs-pass" type="password" placeholder="Sua senha de Master" autocomplete="current-password" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm">
-                            <button onclick="doReset()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Fazer backup e zerar dados</button>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="tab-avisos" class="space-y-6 hidden">
-                    <form onsubmit="addAviso(event)" class="master-only bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
-                        <input id="av-title" required placeholder="Título do aviso" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                        <textarea id="av-text" required rows="3" placeholder="Mensagem" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></textarea>
-                        <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Publicar aviso</button>
-                    </form>
-                    <div id="flt-avisos"></div>
-                    <div id="avisos-list" class="space-y-3"></div>
-                </section>
-
-                <section id="tab-relatorios" class="space-y-6 hidden">
                     <div id="flt-relatorios"></div>
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
                         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -676,16 +585,6 @@
                             <button id="rep-pdf-btn" onclick="pdfReport()" disabled class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-lg text-xs font-semibold">Baixar PDF deste relatório</button>
                         </div>
                         <div id="rep-body" class="overflow-x-auto"></div>
-                    </div>
-                </section>
-
-                <section id="tab-acessos" class="space-y-6 hidden">
-                    <div id="flt-acessos"></div>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
-                        <button onclick="switchTab('usuarios')" class="text-xs font-semibold text-indigo-600 hover:underline">← Voltar para Usuários Cadastrados</button>
-                        <h3 class="text-lg font-bold text-slate-800">Acessos e Permissões</h3>
-                        <p class="text-xs text-slate-500">Escolha o nível de cada usuário por tela: Bloqueado, Consultar, Inserir/Editar ou Total (com excluir). O perfil Membro começa só com Frequência, Peças e Avisos para consulta. Vincule o usuário a um membro para ele ver as próprias faltas e peças. As taxas (Tx. Encontro e Tx. Equipe) só podem ser lançadas por quem tem Inserir/Editar no Financeiro; quem edita Membros não precisa ver o Financeiro. Cores: vermelho = bloqueado, branco = consultar, âmbar = inserir/editar, verde = total.</p>
-                        <div id="acc-list" class="space-y-3"></div>
                     </div>
                 </section>
 
@@ -697,7 +596,9 @@
                     </div>
                 </section>
 
-                <section id="tab-usuarios" class="space-y-6 hidden">
+                <section id="tab-config" class="space-y-6 hidden">
+                    <div class="no-print flex flex-wrap gap-2" role="tablist" data-pill-parent="config"><button type="button" role="tab" class="pill" data-pill="usuarios" aria-selected="false" onclick="switchTab('usuarios')">👥 Usuários</button><button type="button" role="tab" class="pill" data-pill="acessos" aria-selected="false" onclick="switchTab('acessos')">🔐 Permissões</button><button type="button" role="tab" class="pill" data-pill="seguranca" aria-selected="false" onclick="switchTab('seguranca')">💾 Backup & Segurança</button></div>
+                    <div data-sub-parent="config" data-sub="usuarios" class="space-y-6">
                     <div id="flt-usuarios"></div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Criar Novo Usuário -->
@@ -738,7 +639,6 @@
                                             <th class="py-3 px-3">Nome</th>
                                             <th class="py-3 px-3">Login</th>
                                             <th class="py-3 px-3">Perfil</th>
-                                            <th class="py-3 px-3">Senha</th>
                                             <th class="py-3 px-3 text-right">Ações</th>
                                         </tr>
                                     </thead>
@@ -747,6 +647,45 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                    <div data-sub-parent="config" data-sub="acessos" class="space-y-6 hidden">
+                    <div id="flt-acessos"></div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <button onclick="switchTab('usuarios')" class="text-xs font-semibold text-indigo-600 hover:underline">← Voltar para Usuários Cadastrados</button>
+                        <h3 class="text-lg font-bold text-slate-800">Acessos e Permissões</h3>
+                        <p class="text-xs text-slate-500">Escolha o nível de cada usuário por tela: Bloqueado, Consultar, Inserir/Editar ou Total (com excluir). O perfil Membro começa só com Frequência, Peças e Avisos para consulta. Vincule o usuário a um membro para ele ver as próprias faltas e peças. As taxas (Tx. Encontro e Tx. Equipe) só podem ser lançadas por quem tem Inserir/Editar no Financeiro; quem edita Membros não precisa ver o Financeiro. Cores: vermelho = bloqueado, branco = consultar, âmbar = inserir/editar, verde = total.</p>
+                        <div id="acc-list" class="space-y-3"></div>
+                    </div>
+                </div>
+                    <div data-sub-parent="config" data-sub="seguranca" class="space-y-6 hidden">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <h3 class="text-lg font-bold text-slate-800">Backup e Restauração</h3>
+                        <p class="text-xs text-slate-500">O backup guarda uma cópia dos dados no servidor (últimos 10) e baixa um arquivo no seu computador. O arquivo não contém senhas. Ao restaurar, usuários e senhas atuais não mudam.</p>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button onclick="doBackup()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Fazer backup agora</button>
+                            <label class="text-xs font-semibold text-slate-600">Restaurar de um arquivo: <input type="file" accept=".json,application/json" onchange="restoreFile(this)" class="text-xs"></label>
+                        </div>
+                        <div id="snap-list" class="space-y-2"></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                        <h3 class="text-lg font-bold text-slate-800">Histórico de alterações críticas</h3>
+                        <p class="text-xs text-slate-500">Registro automático das últimas alterações: exclusão de membros, pagamentos e despesas, chamadas, permissões, senhas e backups. Visível só para o Master.</p>
+                        <div id="flt-seguranca"></div>
+                        <div id="lt-hist"></div>
+                        <div id="audit-body" class="overflow-x-auto"></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-rose-300 space-y-3">
+                        <h3 class="text-lg font-bold text-rose-700">Zona de perigo: zerar dados do sistema</h3>
+                        <p class="text-xs text-slate-600">Apaga membros, peças, personagens, ensaios, despesas, avisos e feedbacks. Antes de apagar, o sistema faz um backup automático (guardado no servidor e baixado no seu computador), e você pode restaurá-lo depois.</p>
+                        <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" id="rs-users" checked> Manter usuários e permissões</label>
+                        <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" id="rs-cfg" checked> Manter configurações financeiras</label>
+                        <div class="flex flex-wrap gap-3">
+                            <input id="rs-confirm" placeholder="Digite ZERAR" autocomplete="off" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm">
+                            <input id="rs-pass" type="password" placeholder="Sua senha de Master" autocomplete="current-password" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm">
+                            <button onclick="doReset()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">Fazer backup e zerar dados</button>
+                        </div>
+                    </div>
+                </div>
                 </section>
 
             </main>
@@ -911,9 +850,9 @@
             try {
                 const r = await api('/api/state', { method: 'PUT', body: { rev, state } });
                 const j = await r.json().catch(() => ({}));
-                if (r.status === 409) { applyServer(j); showNotification('Os dados foram alterados por outra pessoa. Refaça a alteração.', 'warning'); }
+                if (r.status === 409) { setSaveFlag('dirty'); applyServer(j); showNotification('Os dados foram alterados por outra pessoa. Refaça a alteração.', 'warning'); }
                 else if (!r.ok) showNotification(j.error || 'Não foi possível salvar no servidor.', 'error');
-                else { rev = j.rev; state.users.forEach(u => { delete u.password; }); if (isMaster() && activeTab === 'seguranca') refreshAudit(); }
+                else { rev = j.rev; setSaveFlag('saved'); state.users.forEach(u => { delete u.password; }); if (isMaster() && activeTab === 'seguranca') refreshAudit(); }
             } catch (e) { showNotification('Sem conexão com o servidor. Alteração não salva.', 'error'); }
             pending = false;
             unlockBtns();
@@ -925,6 +864,7 @@
         function saveState() {
             renderAll();
             lockBtn();
+            setSaveFlag('saving');
             pending = true;
             clearTimeout(saveTimer);
             saveTimer = setTimeout(pushState, 300);
@@ -1015,48 +955,47 @@
         }
 
         function switchTab(tabId) {
-            if ((tabId === 'usuarios' || tabId === 'acessos' || tabId === 'seguranca') && !isMaster()) return;
+            if (['usuarios', 'acessos', 'seguranca'].includes(tabId) && !isMaster()) return;
+            const ALIAS = { escalacao: ['pecas', null], faltas: ['faltas', 'faltas'], ranking: ['faltas', 'ranking'], usuarios: ['config', 'usuarios'], acessos: ['config', 'acessos'], seguranca: ['config', 'seguranca'] };
             activeTab = tabId;
             if (tabId === 'seguranca') { loadSnaps(); refreshAudit(); }
             setTimeout(refreshDirty, 0);
             const hh = '/' + (ROUTE_OUT[tabId] || tabId);
             if (location.hash !== '#' + hh) location.hash = hh;
-            if (SCREENS[tabId] && !can(tabId, 'v')) tabId = 'bloqueado';
-            const tabs = ['dashboard', 'membros', 'pecas', 'escalacao', 'faltas', 'financeiro', 'ranking', 'relatorios', 'conquistas', 'feedback', 'avisos', 'acessos', 'seguranca', 'bloqueado', 'usuarios'];
+            const permKey = tabId === 'escalacao' ? 'pecas' : tabId;
+            let real = (ALIAS[tabId] || [tabId])[0], sub = (ALIAS[tabId] || [])[1] || null;
+            if (SCREENS[permKey] && !can(permKey, 'v')) { real = 'bloqueado'; sub = null; }
+            const tabs = ['dashboard', 'membros', 'pecas', 'faltas', 'financeiro', 'relatorios', 'conquistas', 'feedback', 'avisos', 'config', 'bloqueado'];
             tabs.forEach(t => {
                 document.getElementById(`tab-${t}`).classList.add('hidden');
                 const btn = document.getElementById(`nav-${t}`);
                 if (btn) {
-                    btn.className = (t === 'usuarios' || t === 'acessos' || t === 'seguranca')
+                    btn.className = t === 'config'
                         ? 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-amber-400 hover:bg-slate-800'
                         : 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white';
                 }
             });
-
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`nav-${tabId === 'acessos' ? 'usuarios' : tabId}`);
+            document.getElementById(`tab-${real}`).classList.remove('hidden');
+            document.querySelectorAll(`[data-sub-parent="${real}"]`).forEach(p => p.classList.toggle('hidden', p.dataset.sub !== sub));
+            document.querySelectorAll(`[data-pill-parent="${real}"] .pill`).forEach(b => { const on = b.dataset.pill === sub; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+            const activeBtn = document.getElementById(`nav-${real}`);
             if (activeBtn) {
                 activeBtn.className = 'nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white';
             }
-
             const titles = {
                 dashboard: 'Dashboard Geral',
-                membros: 'Membros da Equipe & Taxas',
-                pecas: 'Peças & Personagens',
-                escalacao: 'Escalação: Quem Vai Interpretar',
-                faltas: 'Controle de Faltas e Ensaios',
+                membros: 'Elenco & Equipe',
+                pecas: 'Peças & Escalação',
+                faltas: sub === 'ranking' ? 'Ensaios & Frequência: Ranking' : 'Ensaios & Frequência',
                 financeiro: 'Dashboard & Controle Financeiro',
-                ranking: 'Ranking de Frequência',
-                usuarios: 'Gerenciamento de Usuários (Master)',
-                acessos: 'Acessos e Permissões (Master)',
                 relatorios: 'Relatórios',
                 conquistas: 'Conquistas e Insígnias',
-                feedback: 'Feedback e Relatório para a Direção',
-                seguranca: 'Segurança e Backup (Master)',
+                feedback: 'Feedback',
+                config: 'Configurações & Sistema (Master)',
                 avisos: 'Avisos Importantes',
                 bloqueado: 'Acesso restrito'
             };
-            document.getElementById('page-title').innerText = titles[tabId];
+            document.getElementById('page-title').innerText = titles[real];
 
             if (window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
@@ -1306,19 +1245,19 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="cursor-pointer">
-                                <input type="radio" name="att-${m.id}" value="P" ${status === 'P' ? 'checked' : ''} ${disabled} class="peer hidden">
+                                <input type="radio" onchange="markAtt()" name="att-${m.id}" value="P" ${status === 'P' ? 'checked' : ''} ${disabled} class="peer hidden">
                                 <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 inline-block">P (Presença)</span>
                             </label>
                             <label class="cursor-pointer">
-                                <input type="radio" name="att-${m.id}" value="FJ" ${status === 'FJ' ? 'checked' : ''} ${disabled} class="peer hidden">
+                                <input type="radio" onchange="markAtt()" name="att-${m.id}" value="FJ" ${status === 'FJ' ? 'checked' : ''} ${disabled} class="peer hidden">
                                 <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:border-amber-500 inline-block">FJ</span>
                             </label>
                             <label class="cursor-pointer">
-                                <input type="radio" name="att-${m.id}" value="FSJ" ${status === 'FSJ' ? 'checked' : ''} ${disabled} class="peer hidden">
+                                <input type="radio" onchange="markAtt()" name="att-${m.id}" value="FSJ" ${status === 'FSJ' ? 'checked' : ''} ${disabled} class="peer hidden">
                                 <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 peer-checked:bg-rose-600 peer-checked:text-white peer-checked:border-rose-600 inline-block">FSJ</span>
                             </label>
                             <label class="cursor-pointer" title="Não fazia parte da equipe nesta data">
-                                <input type="radio" name="att-${m.id}" value="NA" ${status === 'NA' ? 'checked' : ''} ${disabled} class="peer hidden">
+                                <input type="radio" onchange="markAtt()" name="att-${m.id}" value="NA" ${status === 'NA' ? 'checked' : ''} ${disabled} class="peer hidden">
                                 <span class="px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 peer-checked:bg-slate-600 peer-checked:text-white peer-checked:border-slate-600 inline-block">N/A</span>
                             </label>
                         </div>
@@ -1332,23 +1271,15 @@
         }
 
         function closeAttendanceModal() {
+            if (attDirty) { clearTimeout(autoTimer); runAutoSave(); }
             document.getElementById('attendance-modal').classList.add('hidden');
             activeMeetingId = null;
         }
 
         function saveAttendanceChanges() {
             if (!can('faltas', 'i') || !activeMeetingId) return;
-            const meeting = state.meetings.find(m => m.id === activeMeetingId);
-            if (!meeting) return;
-
-            state.members.filter(m => m.active !== false && isActor(m)).forEach(m => {
-                const checked = document.querySelector(`input[name="att-${m.id}"]:checked`);
-                if (checked) {
-                    meeting.attendance[m.id] = checked.value;
-                } else {
-                    delete meeting.attendance[m.id];
-                }
-            });
+            if (!collectAttendance()) return;
+            attDirty = false;
             saveState();
             closeAttendanceModal();
             showNotification('Salvo com sucesso! Frequência atualizada.');
@@ -1540,8 +1471,8 @@
             catch (e) { const t = document.createElement('textarea'); t.value = txt; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e2) {} t.remove(); }
             showNotification(msg || 'Copiado! Cole no WhatsApp.');
         }
-        function attMarkAll() { document.querySelectorAll('#attendance-modal input[type="radio"][value="P"]:not([disabled])').forEach(r => { r.checked = true; }); }
-        function attClear() { document.querySelectorAll('#attendance-modal input[type="radio"]:not([disabled])').forEach(r => { r.checked = false; }); }
+        function attMarkAll() { document.querySelectorAll('#attendance-modal input[type="radio"][value="P"]:not([disabled])').forEach(r => { r.checked = true; }); markAtt(); }
+        function attClear() { document.querySelectorAll('#attendance-modal input[type="radio"]:not([disabled])').forEach(r => { r.checked = false; }); markAtt(); }
         function copyChamada(id) {
             const t = state.meetings.find(x => x.id === id) || [...state.meetings].sort((a, b) => b.date.localeCompare(a.date))[0];
             if (!t) { showNotification('Nenhum ensaio registrado ainda.', 'warning'); return; }
@@ -1582,9 +1513,7 @@
         const SIT = [['', 'Todos'], ['ativo', 'Ativos'], ['ex', 'Ex-integrantes']];
         const NIVEL_OPTS = [['', 'Todos'], ['Estreante', 'Estreante'], ['Elenco de Apoio', 'Elenco de Apoio'], ['Protagonista', 'Protagonista'], ['Mestre de Cena', 'Mestre de Cena']];
         const FILTER_DEFS = {
-            membros: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Nome ou função' }, { k: 'sit', l: 'Situação', t: 'sel', o: SIT }, { k: 'tipo', l: 'Tipo', t: 'sel', o: [['', 'Todos'], ['ator', 'Ator/Atriz'], ['apoio', 'Direção/Apoio']] }, { k: 'casal', l: 'Casal', t: 'sel', o: [['', 'Todos'], ['casal', 'Em casal'], ['solteiro', 'Sem casal']] }],
-            pecas: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Peça, personagem ou ator' }, { k: 'peca', l: 'Peça', t: 'sel', o: 'pecas' }, { k: 'sit', l: 'Personagens', t: 'sel', o: [['', 'Todos'], ['alocado', 'Com intérprete'], ['livre', 'Sem intérprete']] }],
-            escalacao: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Peça, personagem ou intérprete' }, { k: 'peca', l: 'Peça', t: 'sel', o: 'pecas' }, { k: 'sit', l: 'Situação', t: 'sel', o: [['', 'Todos'], ['alocado', 'Já alocados'], ['livre', 'Aguardando escalação']] }, { k: 'membro', l: 'Intérprete', t: 'sel', o: 'membros' }],
+            pecas: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Peça, personagem ou ator' }, { k: 'peca', l: 'Peça', t: 'sel', o: 'pecas' }, { k: 'sit', l: 'Personagens', t: 'sel', o: [['', 'Todos'], ['alocado', 'Com intérprete'], ['livre', 'Sem intérprete']] }, { k: 'membro', l: 'Intérprete', t: 'sel', o: 'membros' }],
             faltas: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Título do ensaio' }, { k: 'de', l: 'De', t: 'date' }, { k: 'ate', l: 'Até', t: 'date' }],
             financeiro: [{ k: 'q', l: 'Buscar', t: 'text', ph: 'Nome do membro' }, { k: 'sit', l: 'Situação do pagamento', t: 'sel', o: [['', 'Todos'], ['quitado', 'Quitado'], ['parcial', 'Pagamento parcial'], ['pendente', 'Ainda não pagou'], ['isento', 'Isento da Tx. da Equipe']] }, { k: 'tipo', l: 'Casal', t: 'sel', o: [['', 'Todos'], ['casal', 'Em casal'], ['solteiro', 'Sem casal']] }, { k: 'ativ', l: 'Membro', t: 'sel', o: SIT }],
             despesas: [{ k: 'q', l: 'Buscar gasto', t: 'text', ph: 'Descrição' }, { k: 'de', l: 'De', t: 'date' }, { k: 'ate', l: 'Até', t: 'date' }],
@@ -1702,7 +1631,6 @@
         }
         // ---- Listas: busca instantânea, chips e ordenação
         const LT_DEFS = {
-            membros: { ph: 'Busca instantânea: nome, função ou status', peca: true, sorts: [['nome', 'Nome'], ['freq', 'Frequência'], ['xp', 'XP'], ['cadastro', 'Cadastro (mais recentes)']], chips: [['sit', 'ativo', 'Ativos'], ['sit', 'ex', 'Inativos'], ['tipo', 'ator', 'Atores'], ['tipo', 'apoio', 'Direção/Apoio'], ['faltas', 'faltas', 'Com faltas críticas'], ['casal', 'casal', 'Casais']] },
             pecas: { ph: 'Busca instantânea: peça, descrição ou personagem', peca: true, sorts: [['nome', 'Nome'], ['chars', 'Nº de personagens'], ['cadastro', 'Cadastro (mais recentes)']], chips: [['est', 'pend', 'Com personagem sem intérprete'], ['est', 'completa', 'Escalação completa'], ['est', 'semchars', 'Sem personagens']] },
             ranking: { ph: 'Busca instantânea: nome ou função', sorts: [['xp', 'XP'], ['nome', 'Nome'], ['freq', 'Frequência'], ['chama', 'Sequência (chama)']], chips: [['sit', 'ativo', 'Ativos'], ['sit', 'ex', 'Ex-integrantes'], ['faltas', 'faltas', 'Com faltas críticas']] },
             hist: { ph: 'Busca instantânea: usuário, ação ou detalhe', sorts: [['recentes', 'Mais recentes'], ['antigos', 'Mais antigos'], ['usuario', 'Usuário']], chips: [['cat', 'membro', 'Membros'], ['cat', 'pagamento', 'Financeiro'], ['cat', 'chamada', 'Chamadas'], ['cat', 'permissao', 'Permissões e usuários'], ['cat', 'backup', 'Backups'], ['per', 'hoje', 'Hoje'], ['per', '7d', 'Últimos 7 dias']] }
@@ -1769,24 +1697,71 @@
             const c = cfg();
             return [['cfg-enc', c.valorTaxaEncontro], ['cfg-eq', c.valorTaxaEquipe], ['cfg-casal', c.valorTaxaCasal], ['cfg-casal-eq', c.valorTaxaEquipeCasal]].some(([id, v]) => { const el = document.getElementById(id), x = el ? parseFloat(el.value) : NaN; return !isNaN(x) && x !== v; });
         }
+        // ---- Salvamento automático (debounce de 1,5 s) e indicador do cabeçalho
+        let attDirty = false, autoTimer = null;
+        function setSaveFlag(kind) {
+            const f = document.getElementById('dirty-flag');
+            if (!f) return;
+            const M = { dirty: ['● Alterações não salvas', 'bg-amber-100 text-amber-800'], saving: ['⏳ Salvando...', 'bg-amber-100 text-amber-800'], saved: ['✓ Tudo salvo', 'bg-emerald-100 text-emerald-800'] }[kind];
+            if (!M) { f.classList.add('hidden'); return; }
+            f.textContent = M[0];
+            f.className = 'text-xs px-2.5 py-1 rounded-full font-semibold whitespace-nowrap ' + M[1];
+        }
         function refreshDirty() {
-            const n = pendingPay().length + (cfgDirty() ? 1 : 0), fab = document.getElementById('fab-save'), flag = document.getElementById('dirty-flag');
-            if (fab) { fab.classList.toggle('hidden', !n || activeTab !== 'financeiro'); fab.textContent = '💾 Salvar alterações (' + n + ')'; }
-            if (flag) flag.classList.toggle('hidden', !n);
+            const n = pendingPay().length + (cfgDirty() ? 1 : 0) + (attDirty ? 1 : 0), fab = document.getElementById('fab-save');
+            const nf = n - (attDirty ? 1 : 0);
+            if (fab) { fab.classList.toggle('hidden', !nf || activeTab !== 'financeiro'); fab.textContent = '💾 Salvar alterações (' + nf + ')'; }
+            if (n) setSaveFlag('dirty');
             return n;
         }
-        function saveAllPending() {
+        function queueAutoSave() { clearTimeout(autoTimer); autoTimer = setTimeout(runAutoSave, 1500); }
+        function onEdit() { refreshDirty(); queueAutoSave(); }
+        function markAtt() { attDirty = true; refreshDirty(); queueAutoSave(); }
+        function applyPending(keep) {
             const ids = pendingPay(), cd = cfgDirty();
-            if (!ids.length && !cd) { showNotification('Nenhuma alteração pendente.', 'warning'); return; }
-            lockBtn();
             if (cd) {
                 const n = (id, d) => { const v = parseFloat(document.getElementById(id).value); return v >= 0 ? v : d; };
                 state.config = { ...cfg(), valorTaxaEncontro: n('cfg-enc', 60), valorTaxaEquipe: n('cfg-eq', 60), valorTaxaCasal: n('cfg-casal', 100), valorTaxaEquipeCasal: n('cfg-casal-eq', 60) };
             }
-            ids.forEach(applyPayment);
-            saveState();
-            showNotification('Salvo com sucesso! ' + (ids.length + (cd ? 1 : 0)) + ' alteração(ões) gravada(s) de uma vez.');
+            ids.forEach(id => applyPayment(id, keep));
+            return ids.length + (cd ? 1 : 0);
         }
+        function runAutoSave() {
+            autoTimer = null;
+            let did = false;
+            if (attDirty && activeMeetingId && can('faltas', 'i') && collectAttendance()) { attDirty = false; did = true; }
+            if (applyPending(true)) did = true;
+            if (did) saveState(); else refreshDirty();
+        }
+        function saveAllPending() {
+            clearTimeout(autoTimer);
+            const n = applyPending(false);
+            if (!n) { showNotification('Nenhuma alteração pendente.', 'warning'); return; }
+            lockBtn();
+            saveState();
+            showNotification('Salvo com sucesso! ' + n + ' alteração(ões) gravada(s) de uma vez.');
+        }
+        function collectAttendance() {
+            const meeting = state.meetings.find(m => m.id === activeMeetingId);
+            if (!meeting) return false;
+            state.members.filter(m => m.active !== false && isActor(m)).forEach(m => {
+                const checked = document.querySelector(`input[name="att-${m.id}"]:checked`);
+                if (checked) meeting.attendance[m.id] = checked.value; else delete meeting.attendance[m.id];
+            });
+            return true;
+        }
+        // ---- Presets rápidos de permissão
+        const PRESETS = { master: () => 3, coord: s => ({ faltas: 2, financeiro: 2, feedback: 0 }[s] ?? 1), membro: s => (['faltas', 'pecas', 'avisos', 'conquistas'].includes(s) ? 1 : 0) };
+        function applyPreset(uid, kind) {
+            if (!isMaster()) return;
+            const u = state.users.find(x => x.id === uid);
+            if (!u || u.role === 'master' || !PRESETS[kind]) return;
+            u.perms = {};
+            Object.keys(SCREENS).forEach(s => { u.perms[s] = PRESETS[kind](s); });
+            saveState();
+            showNotification('Salvo com sucesso! Preset aplicado a ' + u.name + '.');
+        }
+
         window.addEventListener('beforeunload', e => { if (refreshDirty()) { e.preventDefault(); e.returnValue = ''; } });
         // ---- Tabelas viram cartões empilhados no celular
         function applyTableLabels() {
@@ -1872,11 +1847,11 @@
             saveState();
             showNotification('Salvo com sucesso! Pagamento de ' + mm.name + ' atualizado.');
         }
-        function applyPayment(id) {
+        function applyPayment(id, keep) {
             if (!can('financeiro', 'i')) return;
             const m = state.members.find(x => x.id === id);
             if (!m) return;
-            editingPay.delete(id);
+            if (!keep) editingPay.delete(id);
             const v = (el, max, cur) => { const t = parseFloat(document.getElementById(el + id).value) || 0; return t === (Number(cur) || 0) ? (Number(cur) || 0) : Math.min(max, Math.max(0, t)); };
             m.txEncontro = v('pg-enc-', encDe(m), m.txEncontro);
             m.txEquipe = eqDe(m) === 0 ? (Number(m.txEquipe) || 0) : v('pg-eq-', eqDe(m), m.txEquipe);
@@ -2169,7 +2144,7 @@
         // ==========================================
         // PERMISSÕES, AVISOS, RELATÓRIOS, SINO
         // ==========================================
-        const SCREENS = { dashboard: 'Dashboard', avisos: 'Avisos', membros: 'Membros', pecas: 'Peças & Personagens', escalacao: 'Quem Interpreta', faltas: 'Controle de Faltas', financeiro: 'Financeiro', ranking: 'Ranking', conquistas: 'Conquistas', relatorios: 'Relatórios', feedback: 'Feedback & Relatório' };
+        const SCREENS = { dashboard: 'Dashboard', avisos: 'Avisos', membros: 'Membros', pecas: 'Peças & Escalação', escalacao: 'Escalação de papéis', faltas: 'Ensaios & Frequência', financeiro: 'Financeiro', ranking: 'Ranking', conquistas: 'Conquistas', relatorios: 'Relatórios', feedback: 'Feedback' };
         const LEVELS = ['Bloqueado', 'Consultar', 'Inserir/Editar', 'Total (c/ excluir)'];
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const memberName = id => (state.members.find(m => m.id === id) || {}).name || '—';
@@ -2210,7 +2185,7 @@
             setCount('acessos', accVis.length, state.users.length);
             el.innerHTML = accVis.map(u => u.role === 'master'
                 ? `<div id="acc-u-${u.id}" class="border border-slate-200 rounded-2xl p-4 flex flex-wrap items-center gap-2"><p class="font-bold text-slate-800">${esc(u.name)}</p><span class="text-[10px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">MASTER</span><span class="text-xs text-slate-400">Acesso total a todas as telas.</span></div>`
-                : `<div id="acc-u-${u.id}" class="border border-slate-200 rounded-2xl p-4 space-y-3"><div class="flex flex-wrap items-end justify-between gap-3"><div><p class="font-bold text-slate-800">${esc(u.name)}</p><p class="text-[11px] uppercase text-slate-400">${esc(u.role)} · @${esc(u.username)}</p></div><label class="text-xs font-semibold text-slate-600">Membro vinculado<select onchange="setUserMember(${u.id}, this.value)" class="mt-1 block px-2 py-2.5 border border-slate-300 rounded-lg text-xs min-w-[10rem]"><option value="">— nenhum —</option>${state.members.map(m => `<option value="${m.id}" ${u.memberId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label></div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">${sc.map(s => `<label class="block text-[11px] font-semibold text-slate-600">${SCREENS[s]}<select onchange="setPerm(${u.id}, '${s}', this.value)" class="mt-1 w-full px-2 py-2.5 border rounded-lg text-xs ${cor(lvl(u, s))}">${LEVELS.map((n, i) => `<option value="${i}" ${lvl(u, s) === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`).join('')}</div></div>`).join('');
+                : `<div id="acc-u-${u.id}" class="border border-slate-200 rounded-2xl p-4 space-y-3"><div class="flex flex-wrap items-end justify-between gap-3"><div><p class="font-bold text-slate-800">${esc(u.name)}</p><p class="text-[11px] uppercase text-slate-400">${esc(u.role)} · @${esc(u.username)}</p></div><label class="text-xs font-semibold text-slate-600">Membro vinculado<select onchange="setUserMember(${u.id}, this.value)" class="mt-1 block px-2 py-2.5 border border-slate-300 rounded-lg text-xs min-w-[10rem]"><option value="">— nenhum —</option>${state.members.map(m => `<option value="${m.id}" ${u.memberId === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label></div><div class="flex flex-wrap items-center gap-2"><span class="text-[11px] font-bold uppercase text-slate-500">Preset rápido:</span><button type="button" onclick="applyPreset(${u.id}, 'master')" class="px-3 py-2 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100">Aplicar Perfil Master</button><button type="button" onclick="applyPreset(${u.id}, 'coord')" class="px-3 py-2 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 hover:bg-amber-100">Aplicar Perfil Coordenação (Chamada/Financeiro)</button><button type="button" onclick="applyPreset(${u.id}, 'membro')" class="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Aplicar Perfil Membro (Consulta)</button></div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">${sc.map(s => `<label class="block text-[11px] font-semibold text-slate-600">${SCREENS[s]}<select onchange="setPerm(${u.id}, '${s}', this.value)" class="mt-1 w-full px-2 py-2.5 border rounded-lg text-xs ${cor(lvl(u, s))}">${LEVELS.map((n, i) => `<option value="${i}" ${lvl(u, s) === i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`).join('')}</div></div>`).join('');
         }
         // ---- Avisos
         function addAviso(e) {
@@ -2342,7 +2317,8 @@
                 el.classList.toggle('hidden', !can(scr, del ? 'd' : 'i'));
             });
             Object.keys(SCREENS).forEach(s => { const b = document.getElementById('nav-' + s); if (b) b.dataset.locked = can(s, 'v') ? '0' : '1'; });
-            ['usuarios', 'seguranca'].forEach(t => document.getElementById('nav-' + t).classList.toggle('hidden', !isMaster()));
+            document.getElementById('nav-config').classList.toggle('hidden', !isMaster());
+            { const dc = document.getElementById('dir-card'); if (dc) dc.classList.toggle('hidden', !can('feedback', 'v')); }
             const ro = !(isMaster() || Object.keys(SCREENS).some(s => can(s, 'i'))), vo = document.getElementById('view-only-notice');
             vo.classList.toggle('hidden', !ro);
             vo.setAttribute('role', 'switch'); vo.setAttribute('aria-checked', String(ro)); vo.setAttribute('aria-readonly', 'true'); vo.setAttribute('aria-label', 'Modo leitura');
@@ -2477,16 +2453,19 @@
 
             // 1. Dashboard Cards
             const txs = taxasResumo(), eqMenosGasto = txs.eq.arrec - totalUsado;
-            document.getElementById('dash-arrecadado').innerText = formatBRL(txs.enc.arrec);
-            document.getElementById('dash-usado').innerText = formatBRL(eqMenosGasto);
-            document.getElementById('dash-usado').className = 'text-2xl font-bold mt-2 ' + (eqMenosGasto >= 0 ? 'text-emerald-600' : 'text-rose-600');
-            document.getElementById('dash-equipe-sub').textContent = 'Tx. Equipe ' + formatBRL(txs.eq.arrec) + ' − gasto ' + formatBRL(totalUsado);
-            document.getElementById('dash-falta').innerText = formatBRL(faltaArrecadar);
+            document.getElementById('dash-saldo').innerText = formatBRL(eqMenosGasto);
+            document.getElementById('dash-saldo').className = 'text-2xl font-bold mt-2 ' + (eqMenosGasto >= 0 ? 'text-emerald-600' : 'text-rose-600');
+            document.getElementById('dash-saldo-sub').textContent = 'Tx. Equipe ' + formatBRL(txs.eq.arrec) + ' − gasto ' + formatBRL(totalUsado) + ' · Tx. Encontro ' + formatBRL(txs.enc.arrec);
             const pctMeta = totalEsperado > 0 ? Math.min(100, Math.round(activeMembers.reduce((a, m) => a + Math.min(metaDe(m), (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0)), 0) / totalEsperado * 100)) : 0;
             setProg('fin-prog', pctMeta); setProg('fin2-prog', pctMeta);
-            document.getElementById('dash-meta-desc').innerText = `Meta total (${activeMembers.length} membros ativos): ${formatBRL(totalEsperado)}` + (exCount ? ` · ${exCount} ex-integrante(s) com pagamentos contabilizados` : '');
-            document.getElementById('dash-membros-count').innerText = `${activeMembers.length} Membros`;
-            document.getElementById('dash-pecas-count').innerText = `${state.plays.length} Peças / ${state.meetings.length} Ensaios`;
+            document.getElementById('dash-meta-desc').innerText = `Meta: ${pctMeta}% arrecadada (falta ${formatBRL(faltaArrecadar)} de ${formatBRL(totalEsperado)})` + (exCount ? ` · ${exCount} ex-integrante(s) com pagamentos contabilizados` : '');
+            const criticos = state.members.filter(m => m.active !== false && isActor(m) && gam(m).fsj >= 2);
+            document.getElementById('dash-alerta').innerText = criticos.length;
+            document.getElementById('dash-alerta').className = 'text-2xl font-bold mt-2 ' + (criticos.length ? 'text-rose-600' : 'text-emerald-600');
+            document.getElementById('dash-alerta-sub').textContent = criticos.length ? criticos.slice(0, 3).map(m => m.name).join(', ') + (criticos.length > 3 ? ' e mais ' + (criticos.length - 3) : '') : 'Nenhum membro em alerta';
+            document.getElementById('dash-esc-pecas').innerText = state.plays.length;
+            document.getElementById('dash-esc-livres').innerText = state.characters.filter(c => !c.memberId).length;
+            document.getElementById('dash-esc-ensaios').innerText = state.meetings.length;
 
             // Previews do Dashboard
             document.getElementById('dash-casting-preview').innerHTML = state.characters.slice(0, 5).map(c => {
@@ -2513,10 +2492,8 @@
             `).join('') || '<p class="text-slate-400 text-xs">Nenhuma reunião registrada.</p>';
 
             // 2. Tabela Membros & Taxas
-            const mf = FA('membros');
-            let membrosVis = state.members.filter(m => hit(mf.q, m.name, m.role) && (!mf.sit || (mf.sit === 'ex') === (m.active === false)) && (!mf.tipo || (mf.tipo === 'apoio') === !isActor(m)) && (!mf.casal || (mf.casal === 'casal') === !!parceiro(m)));
-            membrosVis = ltMembros(membrosVis);
-            setCount('membros', membrosVis.length, state.members.length);
+            const mq = (document.getElementById('mem-q') || {}).value || '', msit = (document.getElementById('mem-sit') || {}).value || '';
+            const membrosVis = state.members.filter(m => hit(mq, m.name, m.role) && (!msit || (msit === 'ex') === (m.active === false)));
             document.getElementById('members-table-body').innerHTML = membrosVis.map(m => {
                 const totalPago = (Number(m.txEncontro) || 0) + (Number(m.txEquipe) || 0);
                 const st = getFinancialStatus(m.txEncontro, m.txEquipe, metaDe(m));
@@ -2557,8 +2534,8 @@ const rkf = FA('ranking'), rkAll = rankingXP(!!rkf.ex);
 
             const pf = FA('pecas');
             const actorOf = c => state.members.find(m => m.id === c.memberId);
-            const charOk = (c, p) => (!pf.sit || (pf.sit === 'alocado') === !!actorOf(c)) && (hit(pf.q, p.title, p.desc) || hit(pf.q, c.name, (actorOf(c) || {}).name));
-            let pecasVis = state.plays.filter(p => (!pf.peca || String(p.id) === pf.peca) && (!pf.q || hit(pf.q, p.title, p.desc) || state.characters.some(c => c.playId === p.id && hit(pf.q, c.name, (actorOf(c) || {}).name))) && (!pf.sit || state.characters.some(c => c.playId === p.id && charOk(c, p))));
+            const charOk = (c, p) => (!pf.sit || (pf.sit === 'alocado') === !!actorOf(c)) && (!pf.membro || String(c.memberId) === pf.membro) && (hit(pf.q, p.title, p.desc) || hit(pf.q, c.name, (actorOf(c) || {}).name));
+            let pecasVis = state.plays.filter(p => (!pf.peca || String(p.id) === pf.peca) && (!pf.q || hit(pf.q, p.title, p.desc) || state.characters.some(c => c.playId === p.id && hit(pf.q, c.name, (actorOf(c) || {}).name))) && (!(pf.sit || pf.membro) || state.characters.some(c => c.playId === p.id && charOk(c, p))));
             pecasVis = ltPecas(pecasVis);
             setCount('pecas', pecasVis.length, state.plays.length);
             document.getElementById('plays-list-container').innerHTML = pecasVis.map(p => {
@@ -2578,14 +2555,18 @@ const rkf = FA('ranking'), rkAll = rankingXP(!!rkf.ex);
                                 ${chars.map(c => {
                                     const actor = state.members.find(m => m.id === c.memberId);
                                     return `
-                                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
-                                            <div>
-                                                <p class="font-semibold text-sm text-slate-800">${c.name}</p>
-                                                <span class="text-[11px] font-medium ${actor ? 'text-emerald-600' : 'text-amber-600'}">
-                                                    ${actor ? '✓ Alocado: ' + actor.name : '• Disponível (Sem ator)'}
-                                                </span>
+                                        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2">
+                                            <div class="flex items-start justify-between gap-2">
+                                                <div>
+                                                    <p class="font-semibold text-sm text-slate-800">${c.name}</p>
+                                                    <span class="inline-block mt-0.5 px-2 py-0.5 text-[10px] font-bold rounded-full ${actor ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${actor ? '✅ ALOCADO: ' + actor.name : 'AGUARDANDO ESCALAÇÃO'}</span>${actor && state.characters.filter(x => x.memberId === actor.id).length >= 3 ? ' <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-yellow-100 text-yellow-800">⚠️ Sobrecarga (3+ papéis)</span>' : ''}
+                                                </div>
+                                                <div class="master-only">${actMenu([{ t: '🗑️ Excluir personagem', f: `deleteCharacter(${c.id})`, cls: 'master-only', danger: true }])}</div>
                                             </div>
-                                            <div class="master-only">${actMenu([{ t: '🗑️ Excluir personagem', f: `deleteCharacter(${c.id})`, cls: 'master-only', danger: true }])}</div>
+                                            <select onchange="assignCharacterMember(${c.id}, this.value)" ${(can('pecas', 'i') || can('escalacao', 'i')) ? '' : 'disabled'} class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-medium bg-white" aria-label="Intérprete do personagem">
+                                                <option value="">-- Ninguém selecionado --</option>
+                                                ${state.members.filter(m => m.active !== false).map(m => `<option value="${m.id}" ${c.memberId === m.id ? 'selected' : ''}>${m.name} (${state.characters.filter(x => x.memberId === m.id).length} papéis)${state.characters.filter(x => x.memberId === m.id).length >= 3 ? ' ⚠️ Sobrecarga (3+ papéis)' : ''}</option>`).join('')}
+                                            </select>
                                         </div>
                                     `;
                                 }).join('') || '<p class="text-xs text-slate-400">Nenhum personagem adicionado nesta peça.</p>'}
@@ -2596,45 +2577,6 @@ const rkf = FA('ranking'), rkAll = rankingXP(!!rkf.ex);
             }).join('') || '<div class="bg-white p-6 rounded-2xl border text-center text-slate-400">Nenhuma peça cadastrada.</div>';
 
             // 4. Escalação Separada por Peças
-            const ef = FA('escalacao');
-            const eActor = c => state.members.find(m => m.id === c.memberId);
-            const eCharOk = (c, p) => (!ef.sit || (ef.sit === 'alocado') === !!eActor(c)) && (!ef.membro || String(c.memberId) === ef.membro) && (!ef.q || hit(ef.q, p.title, c.name, (eActor(c) || {}).name));
-            const escVis = state.plays.filter(p => (!ef.peca || String(p.id) === ef.peca) && (!(ef.sit || ef.membro || ef.q) || state.characters.some(c => c.playId === p.id && eCharOk(c, p))));
-            setCount('escalacao', escVis.length, state.plays.length);
-            document.getElementById('casting-by-play-container').innerHTML = escVis.map(p => {
-                const chars = state.characters.filter(c => c.playId === p.id && eCharOk(c, p));
-                return `
-                    <div class="border border-slate-200 rounded-2xl overflow-hidden">
-                        <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center">
-                            <span class="font-bold text-sm">${p.title}</span>
-                            <span class="text-xs text-slate-400">${chars.length} personagem(ns)</span>
-                        </div>
-                        <div class="p-4 divide-y divide-slate-100">
-                            ${chars.map(c => {
-                                const actor = state.members.find(m => m.id === c.memberId);
-                                return `
-                                    <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                        <div>
-                                            <span class="font-bold text-slate-800 text-sm">${c.name}</span>
-                                            <span class="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-full ${actor ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                                                ${actor ? 'JÁ ALOCADO' : 'AGUARDANDO ESCALAÇÃO'}
-                                            </span>${actor && state.characters.filter(x => x.memberId === actor.id).length >= 3 ? ' <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-yellow-100 text-yellow-800">⚠️ Sobrecarga (3+ papéis)</span>' : ''}
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-xs text-slate-500">Intérprete:</span>
-                                            <select onchange="assignCharacterMember(${c.id}, this.value)" ${(can('pecas', 'i') || can('escalacao', 'i')) ? '' : 'disabled'} class="px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-medium bg-white">
-                                                <option value="">-- Ninguém selecionado --</option>
-                                                ${state.members.filter(m => m.active !== false).map(m => `<option value="${m.id}" ${c.memberId === m.id ? 'selected' : ''}>${m.name} (${state.characters.filter(x => x.memberId === m.id).length} papéis)${state.characters.filter(x => x.memberId === m.id).length >= 3 ? ' ⚠️ Sobrecarga (3+ papéis)' : ''}</option>`).join('')}
-                                            </select>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('') || '<p class="text-xs text-slate-400 py-2">Sem personagens nesta peça.</p>'}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
             // 5. Cards de Reuniões / Controle de Faltas
             const ff = FA('faltas');
             const reunVis = state.meetings.filter(m => hit(ff.q, m.title) && inRange(m.date, ff.de, ff.ate));
@@ -2688,8 +2630,8 @@ const rkf = FA('ranking'), rkAll = rankingXP(!!rkf.ex);
                 return `
                     <tr class="hover:bg-slate-50 ${quitado ? 'bg-emerald-50' : ''}">
                         <td class="py-3 px-3 font-semibold text-slate-800">${m.name}${m.active === false ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">EX-INTEGRANTE</span>' : ''}${parceiro(m) ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-pink-100 text-pink-700">💑 Casal</span>' : ''}${eqDe(m) === 0 ? ' <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">Isento Tx. Equipe</span>' : ''}<span class="block text-[11px] font-normal text-slate-400">Encontro ${formatBRL(encDe(m))} · Equipe ${formatBRL(eqDe(m))}</span></td>
-                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${encDe(m)}" id="pg-enc-${m.id}" value="${Number(m.txEncontro) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm ${editingPay.has(m.id) ? '' : 'bg-slate-100 text-slate-500'}" ${editingPay.has(m.id) ? '' : 'readonly'} oninput="refreshDirty()">` : formatBRL(m.txEncontro)}</td>
-                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${eqDe(m)}" ${eqDe(m) === 0 ? 'disabled title="Isento da Tx. da Equipe"' : ''} id="pg-eq-${m.id}" value="${Number(m.txEquipe) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm ${editingPay.has(m.id) ? '' : 'bg-slate-100 text-slate-500'}" ${editingPay.has(m.id) ? '' : 'readonly'} oninput="refreshDirty()">` : formatBRL(m.txEquipe)}</td>
+                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${encDe(m)}" id="pg-enc-${m.id}" value="${Number(m.txEncontro) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm ${editingPay.has(m.id) ? '' : 'bg-slate-100 text-slate-500'}" ${editingPay.has(m.id) ? '' : 'readonly'} oninput="onEdit()">` : formatBRL(m.txEncontro)}</td>
+                        <td class="py-3 px-3">${can('financeiro', 'i') ? `<input type="number" step="0.01" min="0" max="${eqDe(m)}" ${eqDe(m) === 0 ? 'disabled title="Isento da Tx. da Equipe"' : ''} id="pg-eq-${m.id}" value="${Number(m.txEquipe) || 0}" class="w-24 px-2 py-2 border border-slate-300 rounded-lg text-sm ${editingPay.has(m.id) ? '' : 'bg-slate-100 text-slate-500'}" ${editingPay.has(m.id) ? '' : 'readonly'} oninput="onEdit()">` : formatBRL(m.txEquipe)}</td>
                         <td class="py-3 px-3 font-bold text-rose-600">${formatBRL(faltaMembro)}</td>
                         <td class="py-3 px-3">${quitado ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white">✅ Quitado</span>' : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${st.classes}">${st.label}</span>`}</td>
                         <td class="py-3 px-3 text-right master-only">${actMenu([{ t: '✏️ Editar', f: `startPayEdit(${m.id})`, cls: 'master-only', disabled: editingPay.has(m.id) }, { t: '💾 Salvar', f: `savePayment(${m.id})`, cls: 'master-only', disabled: !editingPay.has(m.id) }, ...(editingPay.has(m.id) ? [{ t: '✖️ Cancelar edição', f: `cancelPayEdit(${m.id})`, cls: 'master-only' }] : [])])}</td>
@@ -2726,7 +2668,6 @@ const rkf = FA('ranking'), rkAll = rankingXP(!!rkf.ex);
                                 <option value="membro" ${u.role === 'membro' ? 'selected' : ''}>Membro</option>
                             </select><button onclick="openAccess(${u.id})" title="Abrir Acessos e Permissões deste usuário" class="px-2.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold whitespace-nowrap">🔑 Permissões</button></div>
                         </td>
-                        <td class="py-3 px-3 font-mono tracking-widest text-slate-500" title="Senha protegida (hash)">••••••••</td>
                         <td class="py-3 px-3 text-right">${actMenu([{ t: '🔑 Redefinir senha', f: `openPwModal(${u.id})` }, { t: '🗑️ Remover usuário', f: `deleteUser(${u.id})`, danger: true }])}</td>
                     </tr>
                 `).join('');
@@ -2740,7 +2681,6 @@ const rkf = FA('ranking'), rkAll = rankingXP(!!rkf.ex);
             document.getElementById('rank-formula').textContent = (cfg().abaterFaltaJustificada ? 'Fórmula atual: % de presença = P ÷ (P + FSJ). A falta justificada (FJ) não pesa contra o membro.' : 'Fórmula atual: % de presença = P ÷ (P + FJ + FSJ). A falta justificada (FJ) conta como falta.') + ' Ensaios N/A e membros de direção/apoio não entram. O Master altera esta regra aqui. Ranking ordenado por XP (Score de Engajamento).';
             renderAudit();
             renderFinTaxas();
-            document.getElementById('dash-arrec-split').textContent = 'Esperado: ' + formatBRL(txs.enc.esperado) + ' · Total geral (Encontro + Equipe): ' + formatBRL(totalArrecadado);
             renderFeedback(); renderProntidao(); renderCamarimDash(); renderGame(); renderAvisos(); renderReports(); renderAccess(); renderMine(); renderBell();
             renderDashCharts();
             applyTableLabels();
